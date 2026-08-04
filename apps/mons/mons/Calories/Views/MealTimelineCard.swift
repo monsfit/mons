@@ -8,7 +8,7 @@ struct MealTimelineCard: View {
             Image(systemName: meal.category.systemImage)
                 .foregroundStyle(MonsColor.action)
                 .frame(width: 36, height: 36)
-                .background(MonsPalette.ember900, in: .circle)
+                .background(MonsColor.surfaceRaised, in: .circle)
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 4) {

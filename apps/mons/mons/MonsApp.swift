@@ -21,7 +21,6 @@ struct MonsApp: App {
                 .environment(store)
                 .environment(\.font, MonsTypography.body)
                 .tint(MonsColor.action)
-                .preferredColorScheme(.dark)
                 .task {
                     await store.bootstrap()
                 }

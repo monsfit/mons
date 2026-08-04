@@ -7,7 +7,7 @@ struct FoodSearchResultRow: View {
         HStack(spacing: 12) {
             Image(systemName: food.datasetKind == .raw ? "fork.knife" : "shippingbox.fill")
                 .font(MonsTypography.body)
-                .foregroundStyle(food.datasetKind == .raw ? NutritionColor.calories : MonsColor.performance)
+                .foregroundStyle(MonsColor.metric)
                 .frame(width: 32, height: 32)
                 .background(MonsColor.surfaceRaised, in: .circle)
                 .accessibilityHidden(true)

@@ -13,7 +13,7 @@ struct OnboardingNavigationControls: View {
             Button("Back", systemImage: "chevron.left", action: onBack)
                 .labelStyle(.iconOnly)
                 .frame(width: 48, height: 48)
-                .foregroundStyle(MonsColor.textWarm)
+                .foregroundStyle(MonsColor.textPrimary)
                 .background(MonsColor.surfaceRaised, in: .circle)
                 .disabled(step == .metabolism || isSaving)
 
@@ -34,4 +34,3 @@ struct OnboardingNavigationControls: View {
         }
     }
 }
-

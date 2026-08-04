@@ -14,7 +14,7 @@ struct DashboardWeightCard: View {
                 HStack {
                     Label("Weight Trend", systemImage: "scalemass")
                         .font(MonsTypography.title)
-                        .foregroundStyle(MonsColor.textWarm)
+                        .foregroundStyle(MonsColor.textPrimary)
                     Spacer()
                     Button("Log weight", systemImage: "plus", action: showWeightEntry)
                         .buttonStyle(MonsSecondaryButtonStyle())

@@ -41,7 +41,7 @@ struct WorkoutSetRow: View {
         .padding(.vertical, 8)
         .frame(minHeight: 52)
         .background(
-            isDropTargeted ? MonsColor.performance.opacity(0.14) : Color.clear,
+            isDropTargeted ? MonsColor.action.opacity(0.14) : Color.clear,
             in: RoundedRectangle(cornerRadius: 10)
         )
         .contentShape(.rect)

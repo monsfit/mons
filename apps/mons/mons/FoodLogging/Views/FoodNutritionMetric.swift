@@ -11,7 +11,7 @@ struct FoodNutritionMetric: View {
         VStack(alignment: .leading, spacing: 2) {
             Text(value, format: .number.precision(.fractionLength(0)))
                 .font(isPrimary ? MonsTypography.display : MonsTypography.title)
-                .foregroundStyle(isPrimary ? MonsColor.textWarm : color)
+                .foregroundStyle(isPrimary ? MonsColor.textPrimary : color)
                 .contentTransition(.numericText())
 
             Text(title)

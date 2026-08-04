@@ -31,7 +31,7 @@ struct MiniCalorieRing: View {
             Text(weekday)
                 .font(MonsTypography.caption)
                 .fontWeight(isSelected ? .bold : .medium)
-                .foregroundStyle(isSelected ? .white : .primary)
+                .foregroundStyle(isSelected ? MonsColor.actionForeground : MonsColor.textPrimary)
         }
         .frame(width: 34, height: 34)
         .accessibilityHidden(true)

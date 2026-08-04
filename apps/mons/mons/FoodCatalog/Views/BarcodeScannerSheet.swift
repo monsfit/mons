@@ -33,6 +33,7 @@ struct BarcodeScannerSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", action: dismiss.callAsFunction)
+                        .tint(MonsColor.error)
                 }
             }
         }

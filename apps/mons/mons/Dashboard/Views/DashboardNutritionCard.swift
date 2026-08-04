@@ -15,7 +15,7 @@ struct DashboardNutritionCard: View {
                     VStack(alignment: .leading, spacing: MonsSpacing.xSmall) {
                         Text("TODAY'S NUTRITION")
                             .font(MonsTypography.caption)
-                            .foregroundStyle(MonsColor.textWarm)
+                            .foregroundStyle(MonsColor.textPrimary)
                         Text("Food Log Focus")
                             .font(MonsTypography.title)
                     }
@@ -23,7 +23,7 @@ struct DashboardNutritionCard: View {
                     Button("Open calories", systemImage: "chevron.right", action: onShowCalories)
                         .labelStyle(.iconOnly)
                         .frame(minWidth: 44, minHeight: 44)
-                        .foregroundStyle(MonsColor.textWarm)
+                        .foregroundStyle(MonsColor.textPrimary)
                 }
 
                 HStack {

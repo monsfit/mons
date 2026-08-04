@@ -8,7 +8,7 @@ struct CompletionStepView: View {
         VStack(alignment: .leading, spacing: 28) {
             Text("Almost There")
                 .font(MonsTypography.display)
-                .foregroundStyle(MonsColor.textWarm)
+                .foregroundStyle(MonsColor.textPrimary)
 
             HStack(spacing: 0) {
                 ForEach(["person.fill", "scalemass.fill", "target", "fork.knife"], id: \.self) { image in

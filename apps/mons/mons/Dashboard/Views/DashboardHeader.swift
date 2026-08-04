@@ -10,7 +10,7 @@ struct DashboardHeader: View {
                 Spacer()
                 Image(systemName: "bell")
                     .font(MonsTypography.sectionTitle)
-                    .foregroundStyle(MonsColor.textWarm)
+                    .foregroundStyle(MonsColor.textPrimary)
                     .frame(width: 44, height: 44)
                     .background(MonsColor.surface, in: .circle)
                     .accessibilityHidden(true)

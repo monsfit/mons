@@ -24,7 +24,7 @@ struct FoodCatalogSearchBar: View {
         .padding(.trailing, 4)
         .frame(minHeight: 52)
         .glassEffect(.regular.interactive(), in: .capsule)
-        .tint(MonsColor.textWarm)
+        .tint(MonsColor.textPrimary)
         .padding(.horizontal)
         .padding(.vertical, 8)
     }

@@ -4,19 +4,15 @@ struct MonsWordmark: View {
     var body: some View {
         ZStack {
             Text("mons")
-                .foregroundStyle(MonsPalette.olive900)
-                .offset(y: 6)
-
-            Text("mons")
-                .foregroundStyle(MonsPalette.ember500)
+                .foregroundStyle(MonsColor.action.opacity(0.45))
                 .offset(y: 3)
 
             Text("mons")
-                .foregroundStyle(MonsColor.textWarm)
+                .foregroundStyle(MonsColor.textPrimary)
         }
         .font(Font.custom("SpaceGrotesk-Bold", size: 38, relativeTo: .largeTitle))
         .tracking(2)
-        .padding(.bottom, 6)
+        .padding(.bottom, 3)
         .compositingGroup()
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Mons")

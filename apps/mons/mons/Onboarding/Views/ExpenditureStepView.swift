@@ -7,7 +7,7 @@ struct ExpenditureStepView: View {
         VStack(alignment: .leading, spacing: 24) {
             Text("\(estimate.estimatedExpenditureKcal) kcal")
                 .font(MonsTypography.display)
-                .foregroundStyle(MonsColor.textWarm)
+                .foregroundStyle(MonsColor.textPrimary)
                 .contentTransition(.numericText())
 
             Text("Does this look right to you?")

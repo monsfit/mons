@@ -1,8 +1,8 @@
 import SwiftUI
 
 enum NutritionColor {
-    static let calories = MonsPalette.ember500
-    static let protein = MonsPalette.teal500
-    static let fat = MonsPalette.olive300
-    static let carbohydrates = MonsPalette.success500
+    static let calories = MonsColor.metric
+    static let protein = MonsColor.metric
+    static let fat = MonsColor.metric
+    static let carbohydrates = MonsColor.metric
 }

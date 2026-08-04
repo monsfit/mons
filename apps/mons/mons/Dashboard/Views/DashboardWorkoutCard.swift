@@ -10,12 +10,12 @@ struct DashboardWorkoutCard: View {
                 HStack {
                     Label("Workouts", systemImage: "dumbbell.fill")
                         .font(MonsTypography.title)
-                        .foregroundStyle(MonsColor.textWarm)
+                        .foregroundStyle(MonsColor.textPrimary)
                     Spacer()
                     Button("Open workouts", systemImage: "chevron.right", action: onShowWorkouts)
                         .labelStyle(.iconOnly)
                         .frame(minWidth: 44, minHeight: 44)
-                        .foregroundStyle(MonsColor.textWarm)
+                        .foregroundStyle(MonsColor.textPrimary)
                 }
 
                 HStack {
@@ -40,9 +40,9 @@ struct DashboardWorkoutCard: View {
                     HStack(spacing: MonsSpacing.medium) {
                         Image(systemName: "figure.run")
                             .font(MonsTypography.title)
-                            .foregroundStyle(MonsColor.performance)
+                            .foregroundStyle(MonsColor.metric)
                             .frame(width: 44, height: 44)
-                            .background(MonsPalette.teal900, in: .rect(cornerRadius: MonsRadius.small))
+                            .background(MonsColor.surfaceRaised, in: .rect(cornerRadius: MonsRadius.small))
                             .accessibilityHidden(true)
 
                         VStack(alignment: .leading, spacing: MonsSpacing.xSmall) {

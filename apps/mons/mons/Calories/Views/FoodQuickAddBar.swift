@@ -26,7 +26,7 @@ struct FoodQuickAddBar: View {
         .padding(.trailing, 4)
         .padding(.vertical, 4)
         .glassEffect(.regular.interactive(), in: .capsule)
-        .tint(MonsColor.textWarm)
+        .tint(MonsColor.textPrimary)
         .padding(.horizontal)
         .padding(.bottom, 6)
     }

@@ -47,17 +47,18 @@ and calendars so fixtures remain deterministic.
 
 ## Design system
 
-Mons uses a dark, warm performance palette with semantic roles instead of screen-level color
+Mons uses a monochrome Lunar Plum system with semantic roles instead of screen-level color
 choices. The source tokens live in `mons/DesignSystem/Foundation`:
 
-- ink and black olive form the app background and chrome;
-- surface and raised surface define cards, lists, and controls;
-- ivory and white carry the primary type hierarchy, with mist and muted for supporting text;
-- plum carries primary actions, selection, and interactive feedback;
-- ember is reserved for calorie energy and the warm edge of the wordmark;
-- teal communicates performance and progress;
-- olive anchors the brand, while teal and plum separate performance from interaction;
-- success and error have dedicated, non-accent semantic roles.
+- plum 25–150 provides light-mode backgrounds, surfaces, and borders;
+- plum 900–1000 provides dark-mode backgrounds and light-mode text;
+- near-white plum carries dark-mode text and high-contrast actions;
+- one adaptive plum metric token covers calories, macros, weight, workouts, progress, and selection;
+- Error Red is reserved for destructive actions, validation failures, and critical alerts.
+
+All semantic colors adapt automatically to the system light or dark appearance. Mons does not
+force a color scheme. Primary, secondary, muted, action, and error foregrounds maintain at least
+4.8:1 contrast against the app background in both appearances.
 
 Spacing, corner radii, button styles, cards, and the wordmark are shared components under
 `mons/DesignSystem`. Add new visual decisions there before adding one-off values to a feature.

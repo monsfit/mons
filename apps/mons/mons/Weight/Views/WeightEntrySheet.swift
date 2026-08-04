@@ -54,6 +54,7 @@ struct WeightEntrySheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", action: dismiss.callAsFunction)
+                        .tint(MonsColor.error)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save", action: save)

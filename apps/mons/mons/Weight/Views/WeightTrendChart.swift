@@ -10,9 +10,9 @@ struct WeightTrendChart: View {
             HStack(spacing: MonsSpacing.medium) {
                 Image(systemName: "chart.xyaxis.line")
                     .font(MonsTypography.title)
-                    .foregroundStyle(MonsColor.performance)
+                    .foregroundStyle(MonsColor.metric)
                     .frame(width: 44, height: 44)
-                    .background(MonsPalette.teal900, in: .rect(cornerRadius: MonsRadius.small))
+                    .background(MonsColor.surfaceRaised, in: .rect(cornerRadius: MonsRadius.small))
                     .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: MonsSpacing.xSmall) {
@@ -32,14 +32,14 @@ struct WeightTrendChart: View {
                     x: .value("Date", entry.measuredAt),
                     y: .value("Weight", system.displayedWeight(kilograms: entry.weightKg))
                 )
-                .foregroundStyle(MonsColor.performance)
+                .foregroundStyle(MonsColor.metric)
                 .interpolationMethod(.catmullRom)
 
                 PointMark(
                     x: .value("Date", entry.measuredAt),
                     y: .value("Weight", system.displayedWeight(kilograms: entry.weightKg))
                 )
-                .foregroundStyle(MonsColor.performance)
+                .foregroundStyle(MonsColor.metric)
                 .symbolSize(35)
             }
             .chartYScale(domain: yDomain)

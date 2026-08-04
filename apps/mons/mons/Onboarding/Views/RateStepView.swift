@@ -13,10 +13,10 @@ struct RateStepView: View {
         VStack(spacing: 28) {
             Text(isStandard ? "Standard (Recommended)" : "Faster (Use Caution)")
                 .font(MonsTypography.headline)
-                .foregroundStyle(isStandard ? MonsColor.success : MonsColor.action)
+                .foregroundStyle(MonsColor.action)
 
             Slider(value: $rate, in: 0.1...1.25, step: 0.05)
-                .tint(isStandard ? MonsColor.success : MonsColor.action)
+                .tint(MonsColor.action)
 
             VStack(spacing: 8) {
                 Text("\(rate.formatted(.number.precision(.fractionLength(2))))% of body weight / week")

@@ -7,7 +7,7 @@ struct WorkoutSessionRow: View {
         HStack {
             Image(systemName: session.metric.kind.systemImage)
                 .font(MonsTypography.title)
-                .foregroundStyle(session.metric.kind == .strength ? MonsColor.performance : MonsColor.action)
+                .foregroundStyle(MonsColor.metric)
                 .frame(minWidth: 32)
                 .accessibilityHidden(true)
 

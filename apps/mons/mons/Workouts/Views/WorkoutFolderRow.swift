@@ -15,7 +15,7 @@ struct WorkoutFolderRow: View {
             HStack(spacing: 12) {
                 Image(systemName: isExpanded ? "folder.fill.badge.minus" : "folder.fill")
                     .font(MonsTypography.sectionTitle)
-                    .foregroundStyle(MonsColor.performance)
+                    .foregroundStyle(MonsColor.metric)
                     .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 3) {
@@ -45,13 +45,13 @@ struct WorkoutFolderRow: View {
         }
         .buttonStyle(.plain)
         .background(
-            isDropTargeted ? MonsColor.performance.opacity(0.14) : Color.clear,
+            isDropTargeted ? MonsColor.action.opacity(0.14) : Color.clear,
             in: RoundedRectangle(cornerRadius: 12)
         )
         .overlay {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(
-                    isDropTargeted ? MonsColor.performance : .clear,
+                    isDropTargeted ? MonsColor.action : .clear,
                     style: StrokeStyle(lineWidth: 1.5, dash: [5, 5])
                 )
         }

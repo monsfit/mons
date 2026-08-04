@@ -1,23 +1,25 @@
 import SwiftUI
 
 enum MonsColor {
-    static let background = MonsPalette.ink
-    static let chrome = MonsPalette.blackOlive
-    static let surface = MonsPalette.surface
-    static let surfaceRaised = MonsPalette.surfaceRaised
-    static let border = MonsPalette.line
+    static let background = adaptive(light: MonsPalette.plum25, dark: MonsPalette.plum1000)
+    static let chrome = adaptive(light: MonsPalette.plumWhite, dark: MonsPalette.plum950)
+    static let surface = adaptive(light: MonsPalette.plumWhite, dark: MonsPalette.plum950)
+    static let surfaceRaised = adaptive(light: MonsPalette.plum50, dark: MonsPalette.plum900)
+    static let border = adaptive(light: MonsPalette.plum150, dark: MonsPalette.plum700)
 
-    static let textPrimary = MonsPalette.white
-    static let textWarm = MonsPalette.ivory
-    static let textSecondary = MonsPalette.mist
-    static let textMuted = MonsPalette.muted
+    static let textPrimary = adaptive(light: MonsPalette.plum900, dark: MonsPalette.plumWhite)
+    static let textSecondary = adaptive(light: MonsPalette.plum600, dark: MonsPalette.plum200)
+    static let textMuted = adaptive(light: MonsPalette.plum500, dark: MonsPalette.plum300)
 
-    static let brand = MonsPalette.olive700
-    static let brandBright = MonsPalette.olive300
-    static let performance = MonsPalette.teal500
-    static let action = MonsPalette.plum300
-    static let actionSurface = MonsPalette.plum700
-    static let recovery = MonsPalette.plum500
-    static let success = MonsPalette.success500
-    static let error = MonsPalette.error500
+    static let action = adaptive(light: MonsPalette.plum900, dark: MonsPalette.plum100)
+    static let actionSurface = action
+    static let actionForeground = adaptive(light: MonsPalette.plumWhite, dark: MonsPalette.plum1000)
+    static let metric = action
+
+    static let error = adaptive(light: MonsPalette.error600, dark: MonsPalette.error400)
+    static let errorSurface = adaptive(light: MonsPalette.error50, dark: MonsPalette.error900)
+
+    private static func adaptive(light: Color, dark: Color) -> Color {
+        Color(MonsAdaptiveColor(light: light, dark: dark))
+    }
 }
