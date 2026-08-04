@@ -5,6 +5,7 @@ export function toFoodSummary(food: FoodRecord): FoodSummary {
   return {
     brand: food.brand,
     calories: food.calories,
+    carbohydrates: food.carbohydrates_total,
     datasetKind: food.dataset_kind,
     foodId: food.food_id,
     gtin: food.gtin,

@@ -1,9 +1,13 @@
 import SwiftUI
 
 struct WorkoutListView: View {
+    @Environment(AppStore.self) private var store
+
+    @State private var isShowingEditor = false
+
     private let referenceDate: Date
     private let calendar: Calendar
-    private let sessions: [WorkoutSession]
+    private let previewSessions: [WorkoutSession]?
 
     init(
         referenceDate: Date = .now,
@@ -12,7 +16,11 @@ struct WorkoutListView: View {
     ) {
         self.referenceDate = referenceDate
         self.calendar = calendar
-        self.sessions = sessions ?? WorkoutSampleData.sessions(referenceDate: referenceDate, calendar: calendar)
+        previewSessions = sessions
+    }
+
+    private var sessions: [WorkoutSession] {
+        previewSessions ?? store.workouts
     }
 
     private var sections: [WorkoutSessionSection] {
@@ -58,21 +66,34 @@ struct WorkoutListView: View {
             }
             .navigationTitle("Workouts")
             .toolbar {
-                if let activeWorkout = sessions.first {
-                    ToolbarItem(placement: .primaryAction) {
+                ToolbarItemGroup(placement: .primaryAction) {
+                    if let activeWorkout = sessions.first {
                         NavigationLink {
                             ActiveWorkoutView(workout: activeWorkout)
                         } label: {
                             Label("Active workout", systemImage: "play.fill")
                         }
                     }
+
+                    Button("Log workout", systemImage: "plus") {
+                        isShowingEditor = true
+                    }
                 }
             }
             .navigationDestination(for: DetailDestination.self, destination: PlaceholderDetailView.init)
+            .sheet(isPresented: $isShowingEditor) {
+                WorkoutEditorView()
+            }
+            .task {
+                await store.loadWorkouts(referenceDate: referenceDate)
+            }
         }
     }
 }
 
 #Preview("Workouts") {
-    WorkoutListView()
+    WorkoutListView(
+        sessions: WorkoutSampleData.sessions(referenceDate: .now, calendar: .current)
+    )
+    .environment(AppStore.preview)
 }

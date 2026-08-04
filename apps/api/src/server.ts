@@ -1,5 +1,10 @@
 import { serve } from '@hono/node-server'
-import { KyselyCatalogReader, createDatabase } from '@regolith/database'
+import {
+  KyselyApplicationRepository,
+  KyselyCatalogReader,
+  createDatabase,
+  migrateApplicationDatabase,
+} from '@regolith/database'
 
 import { createApp } from './app.js'
 import { loadConfig } from './config.js'
@@ -7,7 +12,12 @@ import { loadConfig } from './config.js'
 const config = loadConfig()
 const database = createDatabase({ connectionString: config.databaseUrl })
 const catalog = new KyselyCatalogReader(database, config.schema)
-const app = createApp(catalog)
+await migrateApplicationDatabase(database, config.appSchema)
+const application = new KyselyApplicationRepository(database, {
+  appSchema: config.appSchema,
+  catalogSchema: config.schema,
+})
+const app = createApp(catalog, application)
 
 const server = serve({ fetch: app.fetch, port: config.port }, (info) => {
   console.log(`Regolith API listening on http://localhost:${info.port}`)

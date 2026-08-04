@@ -1,4 +1,5 @@
 export interface ApiConfig {
+  appSchema: string
   databaseUrl: string
   port: number
   schema: string
@@ -16,8 +17,13 @@ export function loadConfig(environment: NodeJS.ProcessEnv = process.env): ApiCon
   if (!schemaPattern.test(schema)) {
     throw new Error('REGOLITH_SCHEMA must be a safe lowercase PostgreSQL identifier')
   }
+  const appSchema = environment.REGOLITH_APP_SCHEMA ?? 'regolith_app'
+  if (!schemaPattern.test(appSchema)) {
+    throw new Error('REGOLITH_APP_SCHEMA must be a safe lowercase PostgreSQL identifier')
+  }
 
   return {
+    appSchema,
     databaseUrl:
       environment.DATABASE_URL ?? 'postgresql://regolith:regolith_local@localhost:5432/regolith',
     port,

@@ -12,6 +12,7 @@
   "scripts": {
     "build": "tsgo -p tsconfig.build.json",
     "lint": "oxlint src --deny-warnings",
+    "migrate": "oxnode --env-file-if-exists=../../.env src/migrate.ts",
     "test": "vitest run src",
     "typecheck": "tsgo -p tsconfig.json"
   },
@@ -20,6 +21,7 @@
     "pg": "catalog:"
   },
   "devDependencies": {
+    "@oxc-node/cli": "catalog:",
     "@types/node": "catalog:",
     "@types/pg": "catalog:",
     "@typescript/native-preview": "catalog:",

@@ -4,42 +4,36 @@ struct MealTimelineCard: View {
     let meal: MealEvent
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
+        HStack(spacing: 12) {
+            Image(systemName: meal.category.systemImage)
+                .foregroundStyle(.tint)
+                .frame(width: 36, height: 36)
+                .background(.quaternary, in: .circle)
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: 4) {
                 Text(meal.title)
                     .font(.headline)
-                    .lineLimit(2)
+                    .lineLimit(1)
 
-                Spacer(minLength: 4)
-
-                Text("\(meal.calories.formatted()) cal")
-                    .font(.subheadline)
-                    .bold()
-                    .foregroundStyle(.pink)
-                    .fixedSize()
-            }
-
-            HStack {
-                Text(meal.loggedAt, format: .dateTime.hour().minute())
+                Text("\(meal.calories.formatted()) cal  ·  \(meal.macros.protein) P  ·  \(meal.macros.fat) F  ·  \(meal.macros.carbohydrates) C")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
-
-                Spacer()
-
-                Image(systemName: "line.3.horizontal")
-                    .foregroundStyle(.secondary)
-                    .accessibilityHidden(true)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
 
-            HStack(spacing: 6) {
-                MacroBadge(label: "P", value: meal.macros.protein, color: .blue)
-                MacroBadge(label: "C", value: meal.macros.carbohydrates, color: .green)
-                MacroBadge(label: "F", value: meal.macros.fat, color: .orange)
-            }
+            Spacer(minLength: 4)
+
+            Image(systemName: "line.3.horizontal.decrease")
+                .foregroundStyle(.primary)
+                .accessibilityHidden(true)
         }
-        .padding(12)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
-        .contentShape(.dragPreview, RoundedRectangle(cornerRadius: 14))
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
+        .background(.background, in: .rect(cornerRadius: 12))
+        .contentShape(.dragPreview, .rect(cornerRadius: 12))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(meal.category.title), \(meal.title), \(meal.loggedAt.formatted(date: .omitted, time: .shortened))")
         .accessibilityValue("\(meal.calories) kilocalories. Protein \(meal.macros.protein) grams, carbohydrates \(meal.macros.carbohydrates) grams, fat \(meal.macros.fat) grams")

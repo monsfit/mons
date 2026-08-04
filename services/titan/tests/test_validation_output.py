@@ -5,7 +5,12 @@ import unittest
 from pathlib import Path
 
 from titan.common.output import write_jsonl
-from titan.common.postgres import _schema_ddl, default_manifest_path, load_verified_manifest
+from titan.common.postgres import (
+    _index_ddl,
+    _schema_ddl,
+    default_manifest_path,
+    load_verified_manifest,
+)
 from titan.common.schema import CORE_FOOD_FIELDS, SCHEMA_VERSION, json_schema
 from titan.common.validation import validate_normalized_row
 
@@ -116,6 +121,10 @@ class ValidationOutputTests(unittest.TestCase):
         self.assertIn("branded_foods PARTITION OF", ddl)
         self.assertIn("raw_portions PARTITION OF", ddl)
         self.assertIn("branded_portions PARTITION OF", ddl)
+        self.assertIn("search_document tsvector GENERATED ALWAYS", ddl)
+        indexes = "\n".join(_index_ddl("regolith_stage_test"))
+        self.assertIn("raw_foods_search_document_idx", indexes)
+        self.assertIn("branded_foods_search_document_idx", indexes)
         self.assertNotIn("UNIQUE (dataset_kind, source, source_id)", ddl)
 
 

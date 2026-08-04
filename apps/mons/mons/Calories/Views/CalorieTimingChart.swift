@@ -58,7 +58,7 @@ struct CalorieTimingChart: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: 12) {
             Chart {
                 ForEach(timingPoints) { point in
                     LineMark(

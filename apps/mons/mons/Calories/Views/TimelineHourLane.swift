@@ -16,63 +16,47 @@ struct TimelineHourLane: View {
     }
 
     var body: some View {
-        HStack(alignment: .top, spacing: 10) {
-            VStack(spacing: 4) {
-                HStack(spacing: 2) {
-                    Text(scheduledAt, format: .dateTime.hour())
-                        .font(.caption)
-                        .lineLimit(1)
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 4) {
+                Text(scheduledAt, format: .dateTime.hour())
+                    .font(.subheadline)
+                    .padding(.horizontal, 12)
+                    .frame(minHeight: 32)
+                    .background(.quaternary, in: .capsule)
 
-                    Button("Add meal", systemImage: "plus", action: addMeal)
-                        .labelStyle(.iconOnly)
-                        .frame(width: 44, height: 44)
-                        .contentShape(.circle)
-                }
+                Button("Add food at \(scheduledAt.formatted(date: .omitted, time: .shortened))", systemImage: "plus", action: addMeal)
+                    .labelStyle(.iconOnly)
+                    .frame(width: 44, height: 44)
+                    .contentShape(.circle)
+                    .background(.quaternary, in: .circle)
 
+                Spacer()
+            }
+
+            ZStack {
                 Rectangle()
                     .fill(isCurrentHour ? Color.accentColor : Color.secondary)
                     .frame(width: isCurrentHour ? 2 : 1)
                     .frame(maxHeight: .infinity)
+                    .padding(.leading, 25)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .accessibilityHidden(true)
-            }
-            .frame(width: 84)
-
-            ZStack {
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(isDropTargeted ? Color.accentColor.opacity(0.12) : .clear)
-
-                RoundedRectangle(cornerRadius: 14)
-                    .stroke(
-                        isDropTargeted ? Color.accentColor : .clear,
-                        style: StrokeStyle(lineWidth: 1.5, dash: [5, 5])
-                    )
 
                 if meals.isEmpty && isDropTargeted {
                     Label("Move to \(scheduledAt.formatted(date: .omitted, time: .shortened))", systemImage: "arrow.down.circle")
                         .font(.subheadline)
                         .foregroundStyle(.tint)
+                        .frame(maxWidth: .infinity)
                 } else {
                     LazyVStack(spacing: 8) {
                         ForEach(meals) { meal in
-                            NavigationLink(value: DetailDestination(meal: meal)) {
-                                MealTimelineCard(meal: meal)
-                            }
-                            .buttonStyle(.plain)
-                            .draggable(meal.id) {
-                                MealDragPreview(meal: meal)
-                            }
-                            .accessibilityAction(named: "Move one hour earlier") {
-                                move(meal, by: -1)
-                            }
-                            .accessibilityAction(named: "Move one hour later") {
-                                move(meal, by: 1)
-                            }
+                            MealTimelineRow(meal: meal, onMove: move)
                         }
                     }
-                    .padding(.vertical, meals.isEmpty ? 0 : 4)
+                    .padding(.vertical, meals.isEmpty ? 0 : 6)
                 }
             }
-            .frame(maxWidth: .infinity, minHeight: meals.isEmpty ? 58 : 84)
+            .frame(maxWidth: .infinity, minHeight: meals.isEmpty ? 30 : 72)
             .contentShape(.rect)
             .dropDestination(for: String.self, action: dropMeals, isTargeted: updateDropTarget)
             .animation(.easeInOut(duration: 0.15), value: isDropTargeted)
@@ -92,7 +76,7 @@ struct TimelineHourLane: View {
         isDropTargeted = isTargeted
     }
 
-    private func move(_ meal: MealEvent, by hourOffset: Int) {
+    private func move(_ meal: MealEvent, _ hourOffset: Int) {
         guard let destination = calendar.date(byAdding: .hour, value: hourOffset, to: meal.loggedAt) else {
             return
         }

@@ -66,8 +66,14 @@ intervals. Use `--output -` for non-transactional stdout without sidecars.
 Use `npx pnpm@11.20.0 titan <command> --help` for source-specific paths and options. Source
 provenance and redistribution status are maintained in [DATA_SOURCES.md](DATA_SOURCES.md).
 
-USDA wins when it and Open Food Facts contain the same valid GTIN. Invalid product codes do
-not discard otherwise usable branded foods; those rows retain `gtin: null`.
+USDA wins when it and Open Food Facts contain the same valid GTIN. Branded rows are published
+only when they have a valid GTIN, a display-safe name, and finite calories, protein, fat, and
+carbohydrate values per 100 g. Calories must be between 0 and 1,000 kcal, individual macros
+between 0 and 100 g, and their combined weight at most 120 g. Open Food Facts rows marked
+obsolete, without nutrition data, or with source quality-error tags are excluded. Titan reads
+only explicit Open Food Facts `100g` nutriment values; serving values are never relabeled as
+per-100-g data. Source names written entirely in uppercase are deterministically converted to
+display case; existing mixed-case and non-Latin names are preserved.
 
 ## Contract
 

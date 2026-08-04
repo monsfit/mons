@@ -8,6 +8,7 @@
     "dev": "oxnode --env-file-if-exists=../../.env --watch src/server.ts",
     "lint": "oxlint src --deny-warnings",
     "openapi": "oxnode src/generate-openapi.ts",
+    "openapi:check": "oxnode src/generate-openapi.ts --check",
     "start": "node --env-file-if-exists=../../.env dist/server.js",
     "test": "vitest run",
     "typecheck": "tsgo -p tsconfig.json"

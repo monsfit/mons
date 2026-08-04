@@ -22,9 +22,9 @@ struct CalorieTimelineList: View {
     var body: some View {
         LazyVStack(alignment: .leading, spacing: 0) {
             Text("Timeline")
-                .font(.title2)
+                .font(.headline)
                 .bold()
-                .padding(.bottom)
+                .padding(.bottom, 12)
 
             ForEach(hours, id: \.self) { hour in
                 TimelineHourLane(

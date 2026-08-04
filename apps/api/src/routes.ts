@@ -7,14 +7,17 @@ import {
   gtinPathSchema,
   healthSchema,
 } from '@regolith/contracts'
-import type { CatalogReader } from '@regolith/database'
+import type { ApplicationRepository, CatalogReader } from '@regolith/database'
 import { Hono } from 'hono'
 import { describeRoute, resolver, validator } from 'hono-openapi'
 
 import { toFoodSummary } from './mappers.js'
+import { createApplicationRoutes } from './application-routes.js'
 
-export function createRoutes(catalog: CatalogReader): Hono {
+export function createRoutes(catalog: CatalogReader, application: ApplicationRepository): Hono {
   const routes = new Hono()
+
+  routes.route('/', createApplicationRoutes(application))
 
   routes.get(
     '/health',

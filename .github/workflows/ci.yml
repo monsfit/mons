@@ -70,13 +70,18 @@ jobs:
       - run: uv run --project services/titan ruff check services/titan
       - run: uv run --project services/titan mypy --config-file services/titan/pyproject.toml services/titan/titan
       - run: uv run --project services/titan python -m unittest discover -s services/titan/tests -v
-      - run: uv run --project services/titan titan schema
-      - run: git diff --exit-code -- packages/contracts/schema
+      - run: uv run --project services/titan titan schema --check
 
   mons:
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
+      - run: >-
+          xcodebuild build -quiet
+          -project apps/mons/mons.xcodeproj
+          -scheme mons
+          -destination 'generic/platform=iOS Simulator'
+          CODE_SIGNING_ALLOWED=NO
       - run: >-
           xcodebuild test
           -project apps/mons/mons.xcodeproj

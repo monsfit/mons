@@ -1,9 +1,13 @@
 import SwiftUI
 
 struct CalorieProgressRing: View {
-    @ScaledMetric(relativeTo: .body) private var lineWidth = 18.0
+    @ScaledMetric(relativeTo: .body) private var lineWidth = 10.0
 
     let day: CalorieDayData
+
+    private var targets: NutritionTargets {
+        NutritionTargets(calorieGoal: day.calorieGoal)
+    }
 
     private var progress: Double {
         guard day.calorieGoal > 0 else { return 0 }
@@ -18,6 +22,12 @@ struct CalorieProgressRing: View {
         abs(day.remainingCalories)
     }
 
+    private var compactStatus: String {
+        day.remainingCalories >= 0
+            ? "\(statusValue.formatted()) left"
+            : "\(statusValue.formatted()) over"
+    }
+
     var body: some View {
         ZStack {
             Circle()
@@ -26,30 +36,27 @@ struct CalorieProgressRing: View {
             Circle()
                 .trim(from: 0, to: progress)
                 .stroke(
-                    day.remainingCalories >= 0 ? Color.accentColor : Color.orange,
+                    day.remainingCalories >= 0 ? NutritionColor.calories : Color.orange,
                     style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)
                 )
                 .rotationEffect(.degrees(-90))
+
+            MacroProgressRing(macros: day.macros, targets: targets)
+                .padding(19)
 
             VStack {
                 Text(day.consumedCalories, format: .number)
                     .font(.title)
                     .bold()
 
-                Text("of \(day.calorieGoal.formatted()) kcal")
-                    .foregroundStyle(.secondary)
-
-                Label(
-                    "\(statusValue.formatted()) \(statusTitle)",
-                    systemImage: day.remainingCalories >= 0 ? "checkmark.circle" : "exclamationmark.circle"
-                )
+                Text(compactStatus)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
             }
         }
         .aspectRatio(1, contentMode: .fit)
-        .frame(maxWidth: 280)
-        .padding()
+        .frame(maxWidth: 210)
+        .padding(.vertical, 16)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Daily calorie progress")
         .accessibilityValue(

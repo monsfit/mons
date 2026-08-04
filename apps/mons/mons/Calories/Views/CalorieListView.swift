@@ -1,14 +1,15 @@
 import SwiftUI
 
 struct CalorieListView: View {
-    @State private var selectedDate: Date
-    @State private var days: [CalorieDayData]
-    @State private var addMealRequest: AddMealRequest?
+    @Environment(AppStore.self) private var store
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var selectedDate: Date
+    @State private var addMealRequest: AddMealRequest?
+    @State private var isNutritionSummaryPinned = false
 
     private let referenceDate: Date
     private let calendar: Calendar
+    private let previewDays: [CalorieDayData]?
 
     init(
         referenceDate: Date = .now,
@@ -17,10 +18,24 @@ struct CalorieListView: View {
     ) {
         self.referenceDate = referenceDate
         self.calendar = calendar
-        let initialDays = days ?? CalorieSampleData.days(referenceDate: referenceDate, calendar: calendar)
+        previewDays = days
         _selectedDate = State(initialValue: calendar.startOfDay(for: referenceDate))
-        _days = State(initialValue: initialDays)
         _addMealRequest = State(initialValue: nil)
+    }
+
+    private var days: [CalorieDayData] {
+        if let previewDays {
+            return previewDays
+        }
+        return (-7...7).compactMap { offset in
+            guard let date = calendar.date(byAdding: .day, value: offset, to: selectedDate) else {
+                return nil
+            }
+            let meals = store.foodLog
+                .filter { calendar.isDate($0.loggedAt, inSameDayAs: date) }
+                .map(Self.mealEvent)
+            return CalorieDayData(date: date, calorieGoal: store.calorieGoal, meals: meals)
+        }
     }
 
     private var selectedDay: CalorieDayData {
@@ -31,60 +46,74 @@ struct CalorieListView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                LazyVStack(alignment: .leading) {
-                    DateNavigationRow(
-                        selectedDate: $selectedDate,
-                        maximumDate: referenceDate,
-                        calendar: calendar
-                    )
-
-                    WeekCalorieStrip(
-                        selectedDate: $selectedDate,
-                        maximumDate: referenceDate,
-                        days: days,
-                        calendar: calendar
-                    )
-
+                LazyVStack(alignment: .leading, spacing: 16, pinnedViews: [.sectionHeaders]) {
                     CalorieSummaryRow(day: selectedDay)
+                        .padding(.horizontal)
+                        .scrollTransition(.interactive, axis: .vertical) { content, phase in
+                            content
+                                .opacity(phase.isIdentity ? 1 : 0)
+                        }
 
-                    MacroSummaryRow(macros: selectedDay.macros)
-
-                    Divider()
-
-                    Text("Calories through the day")
-                        .font(.headline)
-
-                    if selectedDay.meals.isEmpty {
-                        ContentUnavailableView(
-                            "No calorie activity",
-                            systemImage: "chart.bar.xaxis",
-                            description: Text("Meal spikes will appear here as calories are logged.")
-                        )
-                    } else {
+                    Section {
                         CalorieTimingChart(
                             meals: selectedDay.meals,
                             day: selectedDay.date,
                             calendar: calendar
                         )
+                        .padding(.top, 12)
+                        .padding(.horizontal)
+
+                        Divider()
+                            .padding(.horizontal)
+                            .padding(.vertical, 8)
+
+                        CalorieTimelineList(
+                            meals: selectedDay.meals,
+                            day: selectedDay.date,
+                            referenceDate: referenceDate,
+                            calendar: calendar,
+                            onAddMeal: requestMealEntry,
+                            onMoveMeal: moveMeal
+                        )
+                        .padding(.horizontal)
+                    } header: {
+                        CompactNutritionSummary(
+                            day: selectedDay,
+                            isPinned: isNutritionSummaryPinned
+                        )
+                        .onGeometryChange(for: Bool.self) { geometry in
+                            geometry.frame(in: .scrollView(axis: .vertical)).minY <= 0
+                        } action: { isPinned in
+                            isNutritionSummaryPinned = isPinned
+                        }
                     }
-
-                    Divider()
-
-                    CalorieTimelineList(
-                        meals: selectedDay.meals,
-                        day: selectedDay.date,
-                        referenceDate: referenceDate,
-                        calendar: calendar,
-                        onAddMeal: requestMealEntry,
-                        onMoveMeal: moveMeal
-                    )
                 }
-                .padding(.horizontal)
-                .padding(.bottom, 100)
+                .padding(.vertical)
             }
+            .background(Color.secondary.opacity(0.06))
+            .safeAreaInset(edge: .top, spacing: 0) {
+                CalorieTimelineHeader(
+                    selectedDate: $selectedDate,
+                    maximumDate: referenceDate,
+                    days: days,
+                    calendar: calendar
+                )
+            }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                FoodQuickAddBar(onSearch: addFood, onScan: scanFood)
+            }
+#if os(iOS)
+            .toolbar(.hidden, for: .navigationBar)
+#endif
             .navigationDestination(for: DetailDestination.self, destination: PlaceholderDetailView.init)
             .sheet(item: $addMealRequest) { request in
-                MealEntrySheet(scheduledAt: request.scheduledAt, onSave: addMeal)
+                FoodSearchView(
+                    loggedAt: request.scheduledAt,
+                    startsWithScanner: request.mode == .scanner
+                ) { }
+            }
+            .task(id: selectedDate) {
+                await store.loadFoodLog(around: selectedDate)
             }
         }
     }
@@ -93,49 +122,51 @@ struct CalorieListView: View {
         addMealRequest = AddMealRequest(scheduledAt: date)
     }
 
-    private func addMeal(_ meal: MealEvent) {
-        guard
-            let dayIndex = selectedDayIndex,
-            let updatedDay = CalorieScheduleEditor.adding(meal, to: days[dayIndex], calendar: calendar)
-        else {
-            return
-        }
+    private func addFood() {
+        addMealRequest = AddMealRequest(scheduledAt: defaultMealTime)
+    }
 
-        updateDay(updatedDay, at: dayIndex)
+    private func scanFood() {
+        addMealRequest = AddMealRequest(scheduledAt: defaultMealTime, mode: .scanner)
+    }
+
+    private var defaultMealTime: Date {
+        let scheduledAt: Date
+        if calendar.isDate(selectedDate, inSameDayAs: referenceDate) {
+            scheduledAt = referenceDate
+        } else {
+            scheduledAt = calendar.date(bySettingHour: 12, minute: 0, second: 0, of: selectedDate)
+                ?? selectedDate
+        }
+        return scheduledAt
     }
 
     private func moveMeal(_ identifier: String, to destination: Date) -> Bool {
-        guard
-            let dayIndex = selectedDayIndex,
-            let updatedDay = CalorieScheduleEditor.rescheduling(
-                meal: identifier,
-                to: destination,
-                in: days[dayIndex],
-                calendar: calendar
-            )
-        else {
-            return false
+        guard let entryId = UUID(uuidString: identifier) else { return false }
+        Task {
+            await store.rescheduleFoodLogEntry(entryId, to: destination)
         }
-
-        updateDay(updatedDay, at: dayIndex)
         return true
     }
 
-    private var selectedDayIndex: Int? {
-        days.firstIndex { calendar.isDate($0.date, inSameDayAs: selectedDate) }
-    }
-
-    private func updateDay(_ day: CalorieDayData, at index: Int) {
-        if reduceMotion {
-            days[index] = day
-        } else {
-            withAnimation(.snappy) {
-                days[index] = day
-            }
-        }
+    private static func mealEvent(_ entry: FoodLogEntry) -> MealEvent {
+        MealEvent(
+            id: entry.entryId.uuidString,
+            title: entry.name,
+            category: entry.mealCategory,
+            loggedAt: entry.loggedAt,
+            itemCount: 1,
+            calories: Int((entry.calories ?? 0).rounded()),
+            macros: MacroTotals(
+                protein: Int((entry.protein ?? 0).rounded()),
+                carbohydrates: Int((entry.carbohydrates ?? 0).rounded()),
+                fat: Int((entry.fat ?? 0).rounded())
+            )
+        )
     }
 }
 
 #Preview("Calories") {
-    CalorieListView()
+    CalorieListView(days: CalorieSampleData.days(referenceDate: .now, calendar: .current))
+        .environment(AppStore.preview)
 }

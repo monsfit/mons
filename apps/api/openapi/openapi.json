@@ -6,6 +6,478 @@
     "version": "0.1.0"
   },
   "paths": {
+    "/v1/profiles/{profileId}": {
+      "put": {
+        "operationId": "ensureProfile",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            },
+            "description": "Profile is ready"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid profile identifier"
+          }
+        },
+        "tags": [
+          "profiles"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "profileId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ]
+      }
+    },
+    "/v1/profiles/{profileId}/nutrition-plan": {
+      "get": {
+        "operationId": "getNutritionPlan",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NutritionPlanResponse"
+                }
+              }
+            },
+            "description": "Saved nutrition plan, or null before onboarding is complete"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid profile identifier"
+          }
+        },
+        "tags": [
+          "profiles"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "profileId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ]
+      },
+      "put": {
+        "operationId": "saveNutritionPlan",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NutritionPlan"
+                }
+              }
+            },
+            "description": "Calculated and saved nutrition plan"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid or unsupported nutrition plan"
+          }
+        },
+        "tags": [
+          "profiles"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "profileId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveNutritionPlan"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/profiles/{profileId}/food-log": {
+      "get": {
+        "operationId": "listFoodLog",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FoodLogResponse"
+                }
+              }
+            },
+            "description": "Food log entries in the requested time range"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid profile or time range"
+          }
+        },
+        "tags": [
+          "food-log"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "profileId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "required": true
+          }
+        ]
+      },
+      "post": {
+        "operationId": "createFoodLogEntry",
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FoodLogEntry"
+                }
+              }
+            },
+            "description": "Created or updated food log entry"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid food log entry"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Catalog food not found"
+          }
+        },
+        "tags": [
+          "food-log"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "profileId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFoodLogEntry"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/profiles/{profileId}/food-log/{entryId}": {
+      "delete": {
+        "operationId": "deleteFoodLogEntry",
+        "responses": {
+          "204": {
+            "description": "Food log entry deleted"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid identifiers"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Food log entry not found"
+          }
+        },
+        "tags": [
+          "food-log"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entryId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "profileId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ]
+      }
+    },
+    "/v1/profiles/{profileId}/workouts": {
+      "get": {
+        "operationId": "listWorkouts",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkoutResponse"
+                }
+              }
+            },
+            "description": "Workout sessions in the requested time range"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid profile or time range"
+          }
+        },
+        "tags": [
+          "workouts"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "profileId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "required": true
+          }
+        ]
+      }
+    },
+    "/v1/profiles/{profileId}/workouts/{sessionId}": {
+      "put": {
+        "operationId": "saveWorkout",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Workout"
+                }
+              }
+            },
+            "description": "Saved workout session"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid workout"
+          }
+        },
+        "tags": [
+          "workouts"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "profileId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "sessionId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveWorkout"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteWorkout",
+        "responses": {
+          "204": {
+            "description": "Workout deleted"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid identifiers"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Workout not found"
+          }
+        },
+        "tags": [
+          "workouts"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "profileId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "sessionId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ]
+      }
+    },
     "/health": {
       "get": {
         "operationId": "getHealth",
@@ -163,6 +635,579 @@
   },
   "components": {
     "schemas": {
+      "Profile": {
+        "type": "object",
+        "properties": {
+          "profileId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "profileId"
+        ]
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ]
+      },
+      "NutritionPlan": {
+        "type": "object",
+        "properties": {
+          "birthDate": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "currentWeightKg": {
+            "type": "number",
+            "minimum": 30,
+            "maximum": 350
+          },
+          "dailyActivity": {
+            "enum": [
+              "mostly_sedentary",
+              "moderately_active",
+              "very_active"
+            ],
+            "type": "string"
+          },
+          "exerciseFrequency": {
+            "enum": [
+              "none",
+              "one_to_three",
+              "four_to_six",
+              "seven_plus"
+            ],
+            "type": "string"
+          },
+          "heightCm": {
+            "type": "number",
+            "minimum": 100,
+            "maximum": 250
+          },
+          "metabolicSex": {
+            "enum": [
+              "female",
+              "male"
+            ],
+            "type": "string"
+          },
+          "targetWeightKg": {
+            "type": "number",
+            "minimum": 30,
+            "maximum": 350
+          },
+          "weeklyWeightChangePercent": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1.25
+          },
+          "weightGoal": {
+            "enum": [
+              "lose",
+              "maintain",
+              "gain"
+            ],
+            "type": "string"
+          },
+          "calculatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "calorieTargetKcal": {
+            "type": "integer",
+            "minimum": 1000
+          },
+          "estimatedExpenditureKcal": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "estimatedWeeks": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rateLimited": {
+            "type": "boolean"
+          },
+          "restingEnergyKcal": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "birthDate",
+          "currentWeightKg",
+          "dailyActivity",
+          "exerciseFrequency",
+          "heightCm",
+          "metabolicSex",
+          "targetWeightKg",
+          "weeklyWeightChangePercent",
+          "weightGoal",
+          "calculatedAt",
+          "calorieTargetKcal",
+          "estimatedExpenditureKcal",
+          "estimatedWeeks",
+          "rateLimited",
+          "restingEnergyKcal"
+        ]
+      },
+      "NutritionPlanResponse": {
+        "type": "object",
+        "properties": {
+          "plan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NutritionPlan"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "plan"
+        ]
+      },
+      "SaveNutritionPlan": {
+        "type": "object",
+        "properties": {
+          "birthDate": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "currentWeightKg": {
+            "type": "number",
+            "minimum": 30,
+            "maximum": 350
+          },
+          "dailyActivity": {
+            "enum": [
+              "mostly_sedentary",
+              "moderately_active",
+              "very_active"
+            ],
+            "type": "string"
+          },
+          "exerciseFrequency": {
+            "enum": [
+              "none",
+              "one_to_three",
+              "four_to_six",
+              "seven_plus"
+            ],
+            "type": "string"
+          },
+          "heightCm": {
+            "type": "number",
+            "minimum": 100,
+            "maximum": 250
+          },
+          "metabolicSex": {
+            "enum": [
+              "female",
+              "male"
+            ],
+            "type": "string"
+          },
+          "targetWeightKg": {
+            "type": "number",
+            "minimum": 30,
+            "maximum": 350
+          },
+          "weeklyWeightChangePercent": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1.25
+          },
+          "weightGoal": {
+            "enum": [
+              "lose",
+              "maintain",
+              "gain"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "birthDate",
+          "currentWeightKg",
+          "dailyActivity",
+          "exerciseFrequency",
+          "heightCm",
+          "metabolicSex",
+          "targetWeightKg",
+          "weeklyWeightChangePercent",
+          "weightGoal"
+        ]
+      },
+      "FoodLogEntry": {
+        "type": "object",
+        "properties": {
+          "brand": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "calories": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "carbohydrates": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "datasetKind": {
+            "enum": [
+              "raw",
+              "branded"
+            ],
+            "type": "string"
+          },
+          "entryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fat": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "foodId": {
+            "type": "string"
+          },
+          "gtin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "loggedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "mealCategory": {
+            "enum": [
+              "breakfast",
+              "lunch",
+              "dinner",
+              "snack"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "protein": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "quantityGrams": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "brand",
+          "calories",
+          "carbohydrates",
+          "datasetKind",
+          "entryId",
+          "fat",
+          "foodId",
+          "gtin",
+          "loggedAt",
+          "mealCategory",
+          "name",
+          "protein",
+          "quantityGrams"
+        ]
+      },
+      "FoodLogResponse": {
+        "type": "object",
+        "properties": {
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FoodLogEntry"
+            }
+          }
+        },
+        "required": [
+          "entries"
+        ]
+      },
+      "CreateFoodLogEntry": {
+        "type": "object",
+        "properties": {
+          "datasetKind": {
+            "enum": [
+              "raw",
+              "branded"
+            ],
+            "type": "string"
+          },
+          "entryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "foodId": {
+            "type": "string",
+            "pattern": "^\\d+$"
+          },
+          "loggedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "mealCategory": {
+            "enum": [
+              "breakfast",
+              "lunch",
+              "dinner",
+              "snack"
+            ],
+            "type": "string"
+          },
+          "quantityGrams": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 100000
+          }
+        },
+        "required": [
+          "datasetKind",
+          "entryId",
+          "foodId",
+          "loggedAt",
+          "mealCategory",
+          "quantityGrams"
+        ]
+      },
+      "WorkoutSet": {
+        "type": "object",
+        "properties": {
+          "detail": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "setId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "value": {
+            "type": "string",
+            "maxLength": 200
+          }
+        },
+        "required": [
+          "detail",
+          "setId",
+          "title",
+          "value"
+        ]
+      },
+      "Workout": {
+        "type": "object",
+        "properties": {
+          "completedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "distanceKilometers": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "durationMinutes": {
+            "type": "number"
+          },
+          "kind": {
+            "enum": [
+              "strength",
+              "cardio"
+            ],
+            "type": "string"
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkoutSet"
+            }
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "completedAt",
+          "distanceKilometers",
+          "durationMinutes",
+          "kind",
+          "sessionId",
+          "sets",
+          "startedAt",
+          "title"
+        ]
+      },
+      "WorkoutResponse": {
+        "type": "object",
+        "properties": {
+          "workouts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Workout"
+            }
+          }
+        },
+        "required": [
+          "workouts"
+        ]
+      },
+      "SaveWorkout": {
+        "type": "object",
+        "properties": {
+          "completedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "distanceKilometers": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "durationMinutes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10080
+          },
+          "kind": {
+            "enum": [
+              "strength",
+              "cardio"
+            ],
+            "type": "string"
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkoutSet"
+            },
+            "maxItems": 500
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        },
+        "required": [
+          "completedAt",
+          "distanceKilometers",
+          "durationMinutes",
+          "kind",
+          "sessionId",
+          "sets",
+          "startedAt",
+          "title"
+        ]
+      },
       "Health": {
         "type": "object",
         "properties": {
@@ -261,6 +1306,16 @@
               }
             ]
           },
+          "carbohydrates": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "datasetKind": {
             "enum": [
               "raw",
@@ -314,6 +1369,7 @@
         "required": [
           "brand",
           "calories",
+          "carbohydrates",
           "datasetKind",
           "foodId",
           "gtin",
@@ -324,21 +1380,6 @@
           "totalFat"
         ],
         "description": "Snapshot-scoped normalized food summary"
-      },
-      "Error": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "message": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "code",
-          "message"
-        ]
       },
       "FoodSearchResponse": {
         "type": "object",

@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from titan.schema_contracts import write_schemas
+from titan.schema_contracts import check_schemas, write_schemas
 
 
 class SchemaContractTests(unittest.TestCase):
@@ -15,6 +15,7 @@ class SchemaContractTests(unittest.TestCase):
             write_schemas(output_directory)
 
             self.assertEqual(first_bytes, (raw_path.read_bytes(), branded_path.read_bytes()))
+            self.assertEqual(check_schemas(output_directory), (raw_path, branded_path))
             raw = json.loads(raw_path.read_text(encoding="utf-8"))
             branded = json.loads(branded_path.read_text(encoding="utf-8"))
             self.assertNotIn("gtin", raw["properties"])

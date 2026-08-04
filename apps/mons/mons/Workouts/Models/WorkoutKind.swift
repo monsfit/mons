@@ -1,8 +1,10 @@
 import Foundation
 
-enum WorkoutKind: String, Hashable {
+nonisolated enum WorkoutKind: String, CaseIterable, Codable, Hashable, Identifiable, Sendable {
     case strength
     case cardio
+
+    var id: Self { self }
 
     var title: String {
         rawValue.capitalized

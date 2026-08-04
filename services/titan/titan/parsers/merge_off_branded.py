@@ -40,17 +40,58 @@ ROOT_KEY_BRANDED_FOODS = "BrandedFoods"
 SODIUM_FROM_SALT_FACTOR = 0.3934
 
 NON_NUTRIENT_FIELDS = {"source_id", "source", "name", "portions"}
-CRITICAL_MACRO_FIELDS = {
+MAX_DISPLAY_NAME_LENGTH = 160
+MAX_CALORIES_PER_100G = 1000.0
+MAX_MACRO_GRAMS_PER_100G = 100.0
+MAX_MACRO_TOTAL_PER_100G = 120.0
+REQUIRED_CORE_NUTRIENTS = (
     "calories",
     "protein",
     "total_fat",
     "carbohydrates_total",
-    "carbohydrates_net_calculated",
-    "fiber",
-    "total_sugars",
+)
+
+DISPLAY_NAME_ACRONYMS = {
+    "ALA",
+    "BCAA",
+    "BBQ",
+    "BLT",
+    "DHA",
+    "EPA",
+    "GF",
+    "KG",
+    "LB",
+    "MCT",
+    "MG",
+    "ML",
+    "MSG",
+    "OZ",
+    "PB",
+    "RTE",
+    "UK",
+    "USA",
+    "USDA",
+    "V8",
+}
+DISPLAY_NAME_LOWERCASE_WORDS = {
+    "a",
+    "an",
+    "and",
+    "at",
+    "by",
+    "for",
+    "from",
+    "in",
+    "of",
+    "on",
+    "or",
+    "the",
+    "to",
+    "with",
 }
 
 PARENTHETICAL_SEGMENT = re.compile(r"\(([^()]*)\)")
+DISPLAY_NAME_WORD = re.compile(r"[^\W\d_]+(?:'[^\W\d_]+)?", re.UNICODE)
 NUMBER_AND_UNIT = re.compile(
     r"([-+]?\d+(?:[.,]\d+)?(?:/\d+(?:[.,]\d+)?)?)\s*([A-Za-z0-9%/.\u00b5 _-]+)"
 )
@@ -219,7 +260,57 @@ ENERGY_FACTORS_TO_KJ: dict[str, float] = {
 
 
 def has_display_name(value: Any) -> bool:
-    return normalize_text(value) is not None
+    name = normalize_text(value)
+    return (
+        name is not None
+        and len(name) <= MAX_DISPLAY_NAME_LENGTH
+        and sum(character.isalpha() for character in name) >= 2
+    )
+
+
+def is_finite_number(value: Any) -> bool:
+    return (
+        not isinstance(value, bool)
+        and isinstance(value, (int, float))
+        and math.isfinite(float(value))
+    )
+
+
+def has_valid_core_nutrition(row: dict[str, Any]) -> bool:
+    if not all(is_finite_number(row.get(field)) for field in REQUIRED_CORE_NUTRIENTS):
+        return False
+
+    calories = float(row["calories"])
+    protein = float(row["protein"])
+    fat = float(row["total_fat"])
+    carbohydrates = float(row["carbohydrates_total"])
+    macros = (protein, fat, carbohydrates)
+
+    if not 0 <= calories <= MAX_CALORIES_PER_100G:
+        return False
+    if any(not 0 <= value <= MAX_MACRO_GRAMS_PER_100G for value in macros):
+        return False
+    if sum(macros) > MAX_MACRO_TOTAL_PER_100G:
+        return False
+
+    macro_calories = protein * 4 + fat * 9 + carbohydrates * 4
+    return calories > 0 or macro_calories == 0
+
+
+def normalize_valid_food_identity(row: dict[str, Any]) -> bool:
+    name = normalize_text(row.get("name"))
+    source = normalize_text(row.get("source"))
+    source_id = normalize_text(row.get("source_id"))
+    gtin = normalize_gtin(row.get(EXTRA_FIELD))
+    if not has_display_name(name) or source is None or source_id is None or gtin is None:
+        return False
+
+    row["name"] = normalize_display_name(name)
+    row["source"] = source
+    row["source_id"] = source_id
+    row[EXTRA_FIELD] = gtin
+    row[BRAND_FIELD] = normalize_text(row.get(BRAND_FIELD))
+    return True
 
 
 def is_invalid_nutrient_value(field: str, value: Any) -> bool:
@@ -234,8 +325,7 @@ def is_invalid_nutrient_value(field: str, value: Any) -> bool:
     return False
 
 
-def sanitize_row_for_display(row: dict[str, Any]) -> int:
-    invalid_macro_count = 0
+def sanitize_row_for_display(row: dict[str, Any]) -> None:
     for field in CORE_FOOD_FIELDS:
         if field in NON_NUTRIENT_FIELDS:
             continue
@@ -245,8 +335,6 @@ def sanitize_row_for_display(row: dict[str, Any]) -> int:
             continue
 
         row[field] = None
-        if field in CRITICAL_MACRO_FIELDS:
-            invalid_macro_count += 1
 
     # Derived fields must reflect the sanitized operands. A negative source fibre,
     # for example, cannot survive indirectly as net carbohydrate greater than total.
@@ -257,16 +345,13 @@ def sanitize_row_for_display(row: dict[str, Any]) -> int:
         [row.get(field) for field in ("omega_3_ala", "omega_3_epa", "omega_3_dha")]
     )
 
-    return invalid_macro_count
-
-
 def enforce_display_safety(rows: Iterable[dict[str, Any]]) -> Iterator[dict[str, Any]]:
     for row in rows:
-        if not has_display_name(row.get("name")):
+        if not normalize_valid_food_identity(row):
             continue
 
-        invalid_macro_count = sanitize_row_for_display(row)
-        if invalid_macro_count >= 2:
+        sanitize_row_for_display(row)
+        if not has_valid_core_nutrition(row):
             continue
 
         yield row
@@ -278,9 +363,33 @@ def normalize_text(value: Any) -> str | None:
         # it as unavailable instead of publishing a value the database cannot load.
         if "\x00" in value:
             return None
-        candidate = value.strip()
+        candidate = " ".join(value.split())
         return candidate if candidate else None
     return None
+
+
+def normalize_display_name(value: Any) -> str | None:
+    text = normalize_text(value)
+    if text is None:
+        return None
+
+    cased_characters = [
+        character for character in text if character.lower() != character.upper()
+    ]
+    if len(cased_characters) < 2 or any(character.islower() for character in cased_characters):
+        return text
+
+    def display_word(match: re.Match[str]) -> str:
+        word = match.group(0)
+        if word in DISPLAY_NAME_ACRONYMS:
+            return word
+
+        lowercase = word.lower()
+        if match.start() > 0 and lowercase in DISPLAY_NAME_LOWERCASE_WORDS:
+            return lowercase
+        return lowercase[0].upper() + lowercase[1:]
+
+    return DISPLAY_NAME_WORD.sub(display_word, text)
 
 
 def coerce_number(value: Any) -> float | None:
@@ -641,11 +750,18 @@ def build_off_nutriments_index(raw_nutriments: Any) -> dict[str, dict[str, Any]]
 def extract_off_nutriment_value(
     item: dict[str, Any],
 ) -> tuple[float, str | None] | tuple[None, None]:
-    for candidate_key in ("100g", "value", "serving"):
-        amount = coerce_number(item.get(candidate_key))
-        if amount is not None:
-            return float(amount), normalize_unit_token(item.get("unit"))
+    amount = coerce_number(item.get("100g"))
+    if amount is not None:
+        return float(amount), normalize_unit_token(item.get("unit"))
     return None, None
+
+
+def has_acceptable_off_source_quality(food_row: dict[str, Any]) -> bool:
+    if food_row.get("obsolete") is True or food_row.get("no_nutrition_data") is True:
+        return False
+
+    errors = food_row.get("data_quality_errors_tags")
+    return not isinstance(errors, list) or not errors
 
 
 def resolve_off_field_value(
@@ -847,12 +963,17 @@ def iter_off_rows(
             "brand",
             "brand_owner",
             "brands_imported",
+            "data_quality_errors_tags",
+            "no_nutrition_data",
+            "obsolete",
         )
         if column in schema_names
     ]
 
     for batch in parquet.iter_batches(batch_size=batch_size, columns=columns):
         for food_row in batch.to_pylist():
+            if not has_acceptable_off_source_quality(food_row):
+                continue
             mapped_row = map_off_row(food_row, target_units, core_fields)
             if not has_display_name(mapped_row.get("name")):
                 continue

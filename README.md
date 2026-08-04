@@ -50,6 +50,7 @@ Run commands from the repository root:
 npx pnpm@11.20.0 install
 uv sync --project services/titan --all-extras
 npx pnpm@11.20.0 db:up
+npx pnpm@11.20.0 db:migrate
 npx pnpm@11.20.0 db:status
 npx pnpm@11.20.0 dev
 ```
@@ -66,10 +67,12 @@ kept in the `regolith-postgres` Docker volume between container restarts.
 |---|---|
 | `npx pnpm@11.20.0 dev` | Run the API in watch mode through the Oxc TypeScript runner |
 | `npx pnpm@11.20.0 db:status` | Inspect the active PostgreSQL snapshot |
+| `npx pnpm@11.20.0 db:migrate` | Migrate stable app tables and catalog full-text search |
 | `npx pnpm@11.20.0 db:ingest` | Atomically ingest the schema-v2 raw and branded snapshots |
 | `npx pnpm@11.20.0 contracts` | Regenerate raw and branded JSON Schemas |
 | `npx pnpm@11.20.0 openapi` | Regenerate the OpenAPI document |
 | `npx pnpm@11.20.0 mons:test` | Build and test the Mons Xcode project on macOS |
+| `npx pnpm@11.20.0 mons:build:ios` | Compile the iOS app and barcode scanner path |
 | `npx pnpm@11.20.0 verify` | Run every local formatting, build, test, contract, database, and Xcode check |
 
 `db:ingest` expects the manifest-backed files under `data/outputs/v2`. Titan verifies their
@@ -82,6 +85,14 @@ schema versions and SHA-256 hashes before loading them.
   details, and field coverage in sidecar manifests.
 - PostgreSQL ingestion uses staging schemas and an atomic schema swap.
 - Raw and branded foods share one schema while remaining separate table partitions.
+- USDA branded records win valid GTIN duplicates before Open Food Facts records are considered.
+- Branded snapshots require valid product identity and complete, bounded core nutrition per 100 g.
+- Catalog names and brands use weighted PostgreSQL full-text search with trigram fallback and
+  a defensive quality predicate.
+- Profiles, food logs, and workouts live in `regolith_app`, outside replaceable catalog snapshots.
+- Adult onboarding inputs and the resulting nutrition plan live in `regolith_app`; the API
+  calculates RMR, TDEE, goal velocity, and the daily calorie target on the server.
+- Food logs snapshot nutrients per 100 g so historical totals survive catalog refreshes.
 - JSON Schema and OpenAPI artifacts are generated deterministically and checked in CI.
 - CI independently verifies TypeScript, Python 3.11–3.13, PostgreSQL, and Mons.
 

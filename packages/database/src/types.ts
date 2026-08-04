@@ -1,10 +1,15 @@
 import type { ColumnType, Generated, JSONColumnType } from 'kysely'
 
 export type DatasetKind = 'raw' | 'branded'
+export type DailyActivity = 'mostly_sedentary' | 'moderately_active' | 'very_active'
+export type ExerciseFrequency = 'none' | 'one_to_three' | 'four_to_six' | 'seven_plus'
+export type MetabolicSex = 'female' | 'male'
+export type WeightGoal = 'lose' | 'maintain' | 'gain'
 
 export interface FoodTable {
   brand: string | null
   calories: number | null
+  carbohydrates_total: number | null
   dataset_kind: DatasetKind
   food_id: Generated<string>
   gtin: string | null
@@ -14,6 +19,76 @@ export interface FoodTable {
   source: string
   source_id: string
   total_fat: number | null
+}
+
+export interface ProfileTable {
+  created_at: ColumnType<Date, Date | string | undefined, never>
+  profile_id: string
+  updated_at: ColumnType<Date, Date | string | undefined, Date | string>
+}
+
+export interface NutritionPlanTable {
+  birth_date: string
+  calculated_at: ColumnType<Date, Date | string, Date | string>
+  calorie_target_kcal: number
+  current_weight_kg: number
+  daily_activity: DailyActivity
+  estimated_expenditure_kcal: number
+  estimated_weeks: number | null
+  exercise_frequency: ExerciseFrequency
+  height_cm: number
+  metabolic_sex: MetabolicSex
+  profile_id: string
+  rate_limited: boolean
+  resting_energy_kcal: number
+  target_weight_kg: number
+  updated_at: ColumnType<Date, Date | string | undefined, Date | string>
+  weekly_weight_change_percent: number
+  weight_goal: WeightGoal
+}
+
+export type MealCategory = 'breakfast' | 'lunch' | 'dinner' | 'snack'
+
+export interface FoodLogEntryTable {
+  brand: string | null
+  calories_per_100g: number | null
+  carbohydrates_per_100g: number | null
+  created_at: ColumnType<Date, Date | string | undefined, never>
+  dataset_kind: DatasetKind
+  entry_id: string
+  fat_per_100g: number | null
+  food_id: string
+  gtin: string | null
+  logged_at: ColumnType<Date, Date | string, Date | string>
+  meal_category: MealCategory
+  name: string
+  profile_id: string
+  protein_per_100g: number | null
+  quantity_grams: number
+}
+
+export type WorkoutKind = 'strength' | 'cardio'
+
+export interface WorkoutSessionTable {
+  completed_at: ColumnType<Date | null, Date | string | null, Date | string | null>
+  created_at: ColumnType<Date, Date | string | undefined, never>
+  distance_kilometers: number | null
+  duration_minutes: number
+  kind: WorkoutKind
+  profile_id: string
+  session_id: string
+  started_at: ColumnType<Date, Date | string, Date | string>
+  title: string
+  updated_at: ColumnType<Date, Date | string | undefined, Date | string>
+}
+
+export interface WorkoutSetTable {
+  detail: string
+  ordinal: number
+  session_id: string
+  set_id: string
+  title: string
+  value: string
 }
 
 export interface IngestionRunTable {
@@ -30,8 +105,17 @@ export interface IngestionRunTable {
 }
 
 export interface CatalogDatabase {
+  app_migrations: {
+    applied_at: ColumnType<Date, Date | string | undefined, never>
+    version: string
+  }
   branded_foods: FoodTable
+  food_log_entries: FoodLogEntryTable
   foods: FoodTable
   ingestion_runs: IngestionRunTable
+  nutrition_plans: NutritionPlanTable
+  profiles: ProfileTable
   raw_foods: FoodTable
+  workout_sessions: WorkoutSessionTable
+  workout_sets: WorkoutSetTable
 }

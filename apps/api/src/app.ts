@@ -1,5 +1,5 @@
 import { Scalar } from '@scalar/hono-api-reference'
-import type { CatalogReader } from '@regolith/database'
+import type { ApplicationRepository, CatalogReader } from '@regolith/database'
 import { Hono } from 'hono'
 import { openAPIRouteHandler } from 'hono-openapi'
 
@@ -16,8 +16,8 @@ const documentation = {
   },
 }
 
-export function createApp(catalog: CatalogReader): Hono {
-  const routes = createRoutes(catalog)
+export function createApp(catalog: CatalogReader, application: ApplicationRepository): Hono {
+  const routes = createRoutes(catalog, application)
   const app = new Hono()
 
   app.route('/', routes)

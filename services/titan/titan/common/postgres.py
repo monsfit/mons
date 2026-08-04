@@ -108,6 +108,10 @@ CREATE TABLE "{schema}".foods (
     name text NOT NULL CHECK (btrim(name) <> ''),
 {nutrient_columns},
     brand text,
+    search_document tsvector GENERATED ALWAYS AS (
+        setweight(to_tsvector('simple', coalesce(name, '')), 'A') ||
+        setweight(to_tsvector('simple', coalesce(brand, '')), 'B')
+    ) STORED,
     gtin char(14),
     ingestion_run_id uuid NOT NULL REFERENCES "{schema}".ingestion_runs(run_id),
     PRIMARY KEY (dataset_kind, food_id),
@@ -154,6 +158,8 @@ def _index_ddl(schema: str) -> tuple[str, ...]:
         f'CREATE INDEX raw_foods_name_trgm_idx ON "{schema}".raw_foods USING gin (name gin_trgm_ops)',
         f'CREATE INDEX branded_foods_name_trgm_idx ON "{schema}".branded_foods USING gin (name gin_trgm_ops)',
         f'CREATE INDEX branded_foods_brand_trgm_idx ON "{schema}".branded_foods USING gin (brand gin_trgm_ops)',
+        f'CREATE INDEX raw_foods_search_document_idx ON "{schema}".raw_foods USING gin (search_document)',
+        f'CREATE INDEX branded_foods_search_document_idx ON "{schema}".branded_foods USING gin (search_document)',
         f'CREATE UNIQUE INDEX branded_foods_gtin_idx ON "{schema}".branded_foods (gtin) WHERE gtin IS NOT NULL',
         f'CREATE INDEX raw_foods_source_idx ON "{schema}".raw_foods (source, source_id)',
         f'CREATE INDEX branded_foods_source_idx ON "{schema}".branded_foods (source, source_id)',
