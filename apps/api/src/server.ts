@@ -1,0 +1,28 @@
+import { serve } from '@hono/node-server'
+import { KyselyCatalogReader, createDatabase } from '@regolith/database'
+
+import { createApp } from './app.js'
+import { loadConfig } from './config.js'
+
+const config = loadConfig()
+const database = createDatabase({ connectionString: config.databaseUrl })
+const catalog = new KyselyCatalogReader(database, config.schema)
+const app = createApp(catalog)
+
+const server = serve({ fetch: app.fetch, port: config.port }, (info) => {
+  console.log(`Regolith API listening on http://localhost:${info.port}`)
+})
+
+async function shutdown(signal: string): Promise<void> {
+  console.log(`Received ${signal}; shutting down`)
+  server.close(async (error) => {
+    await database.destroy()
+    if (error !== undefined) {
+      console.error(error)
+      process.exitCode = 1
+    }
+  })
+}
+
+process.once('SIGINT', () => void shutdown('SIGINT'))
+process.once('SIGTERM', () => void shutdown('SIGTERM'))

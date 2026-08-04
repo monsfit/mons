@@ -1,6 +1,9 @@
 # Python-generated files
 __pycache__/
 *.py[oc]
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
 build/
 dist/
 wheels/
@@ -9,6 +12,23 @@ wheels/
 
 # Virtual environments
 .venv
+.env
+
+# Monorepo tooling
+node_modules/
+.turbo/
+.oxlintcache
+pnpm-debug.log*
+coverage/
+*.tsbuildinfo
+
+# Preserved local repository history
+.history/
+
+# Xcode user and build state
+**/xcuserdata/
+**/*.xcuserstate
+DerivedData/
 
 # OS/editor artifacts
 .DS_Store

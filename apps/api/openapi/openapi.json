@@ -1,0 +1,359 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Regolith API",
+    "description": "Regolith food catalog API",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            },
+            "description": "API is healthy"
+          }
+        },
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    "/v1/catalog": {
+      "get": {
+        "operationId": "getCatalogStatus",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogStatus"
+                }
+              }
+            },
+            "description": "Active catalog snapshot"
+          }
+        },
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/v1/foods/by-gtin/{gtin}": {
+      "get": {
+        "operationId": "getFoodByGtin",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FoodSummary"
+                }
+              }
+            },
+            "description": "Food matching the GTIN"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid GTIN"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Food not found"
+          }
+        },
+        "tags": [
+          "foods"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "gtin",
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{14}$"
+            },
+            "required": true
+          }
+        ]
+      }
+    },
+    "/v1/foods/search": {
+      "get": {
+        "operationId": "searchFoods",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FoodSearchResponse"
+                }
+              }
+            },
+            "description": "Ranked food search results"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid search query"
+          }
+        },
+        "tags": [
+          "foods"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "kind",
+            "schema": {
+              "enum": [
+                "raw",
+                "branded"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "pattern": "^\\d+$",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 200
+            },
+            "required": true
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Health": {
+        "type": "object",
+        "properties": {
+          "service": {
+            "const": "api"
+          },
+          "status": {
+            "const": "ok"
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "service",
+          "status",
+          "version"
+        ],
+        "description": "API health status"
+      },
+      "CatalogStatus": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "brandedFoods": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "completedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rawFoods": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "schemaVersion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "snapshotId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "active",
+          "brandedFoods",
+          "completedAt",
+          "rawFoods",
+          "schemaVersion",
+          "snapshotId"
+        ],
+        "description": "Active catalog snapshot status"
+      },
+      "FoodSummary": {
+        "type": "object",
+        "properties": {
+          "brand": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "calories": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "datasetKind": {
+            "enum": [
+              "raw",
+              "branded"
+            ],
+            "type": "string"
+          },
+          "foodId": {
+            "type": "string"
+          },
+          "gtin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "protein": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source": {
+            "type": "string"
+          },
+          "sourceId": {
+            "type": "string"
+          },
+          "totalFat": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "brand",
+          "calories",
+          "datasetKind",
+          "foodId",
+          "gtin",
+          "name",
+          "protein",
+          "source",
+          "sourceId",
+          "totalFat"
+        ],
+        "description": "Snapshot-scoped normalized food summary"
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ]
+      },
+      "FoodSearchResponse": {
+        "type": "object",
+        "properties": {
+          "foods": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FoodSummary"
+            }
+          }
+        },
+        "required": [
+          "foods"
+        ]
+      }
+    }
+  }
+}

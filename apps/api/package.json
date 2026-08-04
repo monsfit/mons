@@ -1,0 +1,37 @@
+{
+  "name": "@regolith/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsgo -p tsconfig.build.json",
+    "dev": "oxnode --env-file-if-exists=../../.env --watch src/server.ts",
+    "lint": "oxlint src --deny-warnings",
+    "openapi": "oxnode src/generate-openapi.ts",
+    "start": "node --env-file-if-exists=../../.env dist/server.js",
+    "test": "vitest run",
+    "typecheck": "tsgo -p tsconfig.json"
+  },
+  "dependencies": {
+    "@hono/node-server": "catalog:",
+    "@hono/standard-validator": "catalog:",
+    "@regolith/contracts": "workspace:*",
+    "@regolith/database": "workspace:*",
+    "@scalar/hono-api-reference": "catalog:",
+    "@standard-community/standard-json": "catalog:",
+    "@standard-community/standard-openapi": "catalog:",
+    "@valibot/to-json-schema": "catalog:",
+    "hono": "catalog:",
+    "hono-openapi": "catalog:",
+    "openapi-types": "catalog:",
+    "valibot": "catalog:"
+  },
+  "devDependencies": {
+    "@oxc-node/cli": "catalog:",
+    "@types/json-schema": "catalog:",
+    "@types/node": "catalog:",
+    "@typescript/native-preview": "catalog:",
+    "oxlint": "catalog:",
+    "vitest": "catalog:"
+  }
+}

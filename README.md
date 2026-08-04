@@ -1,246 +1,95 @@
-# NDP
+# Regolith
 
-Normalize food composition datasets into a common JSONL schema (`CORE_FOOD_FIELDS`).
+Regolith is a food-data and fitness application maintained as a polyglot monorepo.
 
-## Install
+```text
+source datasets
+      │
+      ▼
+Titan (Python) ──► versioned JSONL + manifests ──► PostgreSQL
+      │                                               │
+      └──► generated JSON Schemas                     ▼
+                                            Hono API (TypeScript)
+                                                      │
+                                                      ▼
+                                               Mons (SwiftUI)
+```
+
+## Repository layout
+
+```text
+apps/
+  api/                 TypeScript HTTP API and generated OpenAPI document
+  mons/                SwiftUI application and Xcode tests
+packages/
+  contracts/           Valibot API contracts and generated food JSON Schemas
+  database/            Kysely database types and catalog repository
+services/
+  titan/               Python normalization and PostgreSQL ingestion library
+data/                   Local inputs and generated snapshots; intentionally ignored
+```
+
+See [the API guide](apps/api/README.md), [the Titan guide](services/titan/README.md), and
+[data-source policy](services/titan/DATA_SOURCES.md) for component-specific details.
+
+## Requirements
+
+- Node.js 24 or newer
+- Docker Desktop
+- Python 3.11 or newer and `uv`
+- Xcode 26 for the Mons app
+
+The workspace pins pnpm, TypeScript 7 native preview, Turborepo, Oxfmt, Oxlint, Hono,
+Kysely, and Vitest in `pnpm-workspace.yaml` and `pnpm-lock.yaml`.
+
+## Quick start
+
+Run commands from the repository root:
 
 ```bash
-uv sync
+npx pnpm@11.20.0 install
+uv sync --project services/titan --all-extras
+npx pnpm@11.20.0 db:up
+npx pnpm@11.20.0 db:status
+npx pnpm@11.20.0 dev
 ```
 
-Or with pip:
-
-```bash
-pip install -e .
-```
-
-## CLI
-
-All parsers write JSONL to `data/outputs/<source>.jsonl` by default. Use `--output -` for stdout.
-
-```bash
-ndp <source> [source options] [--output path-or--]
-```
-
-### Sources
-
-1. Australia
-
-```bash
-ndp australia --workbook /path/to/australia.xlsx [--sheet "All solids & liquids per 100 g"]
-```
-
-2. Canada (CNF)
-
-```bash
-ndp canada --directory /path/to/cnf-fcen-csv
-# or explicit files:
-ndp canada --food-name-path /path/FOOD\ NAME.csv --nutrient-name-path /path/NUTRIENT\ NAME.csv --nutrient-amount-path /path/NUTRIENT\ AMOUNT.csv
-```
-
-3. UK CoFID
-
-```bash
-ndp cofid --workbook /path/to/cofid.xlsx
-```
-
-4. Netherlands NEVO
-
-```bash
-ndp nevo --workbook /path/to/nevo.xlsx [--sheet NEVO2025] [--nutrients-sheet NEVO2025_Nutrienten_Nutrients]
-```
-
-5. New Zealand
-
-```bash
-ndp new-zealand --workbook /path/to/new_zealand.xlsx [--sheet "Concisen Tables 14th Edition wi"]
-```
-
-6. USDA FoodData Central
-
-```bash
-ndp usda \
-  --survey-json /path/FoodData_Central_survey_food_json.json \
-  --foundation-json /path/FoodData_Central_foundation_food_json_2025-12-18.json \
-  --sr-legacy-json /path/FoodData_Central_sr_legacy_food_json_2018-04.json \
-  --nutrient-csv /path/nutrient.csv
-```
-
-7. Normalize Raw (Non-Branded Multi-Source)
-
-```bash
-ndp normalize-raw [--inputs-dir data/inputs] [--allow-duplicate-names]
-```
-
-Default output: `data/outputs/raw-foods.jsonl`
-By default, duplicate normalized names are deduped with USDA rows preferred; otherwise the row with more populated nutrient fields is kept.
-
-8. Merged Branded (USDA + Open Food Facts)
-
-USDA UPCs are prioritized: if a UPC exists in both sources, only the USDA row is emitted.
-
-```bash
-ndp merge-off-branded \
-  --usda-branded /path/FoodData_Central_branded_food_json_2025-12-18.zip \
-  --off-parquet /path/food.parquet \
-  --nutrient-csv /path/nutrient.csv
-```
-
-Default output: `data/outputs/branded-foods.jsonl`
-
-## Outputs
-
-Generated output is ignored by git:
-
-- `outputs/`
-- `*.jsonl`
-- `data/outputs/`
-
-Raw and branded outputs are intentionally separated:
-
-- `normalize-raw` writes `data/outputs/raw-foods.jsonl`
-- `merge-off-branded` writes `data/outputs/branded-foods.jsonl`
-
-Nutrient units are defined in `CORE_FIELD_UNITS` in `nutrient_mapping.py`.
-
-If you want a materialized file for downstream DB/schema use, generate it with:
-
-```bash
-uv run python - <<'PY'
-from pathlib import Path
-
-from common.nutrients import write_tracked_nutrient_units
-from nutrient_mapping import CORE_FIELD_UNITS, CORE_FOOD_FIELDS
-
-write_tracked_nutrient_units(
-    Path("data/outputs"),
-    CORE_FOOD_FIELDS,
-    CORE_FIELD_UNITS,
-)
-PY
-```
-
-This writes `data/outputs/nutrient-units.json`.
-
-The file includes only tracked nutrient fields (non-nutrient fields like `source_id`, `source`, `name`, and `portions` are excluded):
-
-```json
-{
-  "nutrients": [
-    {"field": "calories", "unit": "kcal"},
-    {"field": "protein", "unit": "g"},
-    {"field": "selenium", "unit": "mcg"}
-  ]
-}
-```
-
-`merge-off-branded` output rows contain all `CORE_FOOD_FIELDS` plus two extra fields:
-
-- `upc`
-- `brand`
-
-## Data Sources And Local Mapping
-
-This project keeps original source files under `data/inputs/` and generated artifacts under `data/outputs/`.
-
-### Open Food Facts (OFF)
-
-- Source URL:
-  - `https://huggingface.co/datasets/openfoodfacts/product-database/resolve/main/food.parquet?download=true`
-- Local input:
-  - `data/inputs/food.parquet`
-- Used by:
-  - `merge-off-branded` stage
-
-### Australian Food Composition Database (AFCD)
-
-- Source URL:
-  - `https://www.foodstandards.gov.au/science-data/food-nutrient-databases/afcd/data-files`
-- Local inputs:
-  - `data/inputs/australian-food-composition-database.xlsx`
-  - `data/inputs/AFCD Release 3 - Nutrient details.xlsx`
-  - `data/inputs/AFCD Release 3 - Recipes.xlsx`
-- Used by:
-  - `normalize-raw` stage
-
-### USDA FoodData Central
-
-- Source URL:
-  - `https://fdc.nal.usda.gov/`
-- Local inputs:
-  - `data/inputs/FoodData_Central_csv_2025-04-24/`
-  - `data/inputs/FoodData_Central_csv_2025-04-24.zip`
-  - `data/inputs/FoodData_Central_foundation_food_json_2025-04-24.zip`
-  - `data/inputs/FoodData_Central_sr_legacy_food_json_2018-04.zip`
-  - `data/inputs/FoodData_Central_survey_food_json_2024-10-31.zip`
-  - `data/inputs/FoodData_Central_branded_food_json_2025-12-18.zip`
-  - `data/inputs/FoodData_Central_branded_food_json_2025-12-18.json` (optional extracted file)
-- Used by:
-  - `normalize-raw`, `make-lean-raw`, `make-usda-branded`, `merge-off-branded`
-
-### Canadian Nutrient File (CNF)
-
-- Source URL:
-  - `https://www.canada.ca/en/health-canada/services/food-nutrition/healthy-eating/nutrient-data/canadian-nutrient-file-2015-download-files.html`
-- Local input:
-  - `data/inputs/canadian-nutrient-files/`
-- Used by:
-  - `normalize-raw` stage
-
-### UK CoFID
-
-- Source URL:
-  - `https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid`
-- Local input:
-  - `data/inputs/CoFID.xlsx`
-- Used by:
-  - `normalize-raw` stage
-
-### Dutch Food Composition Database (NEVO)
-
-- Source URL:
-  - `https://www.rivm.nl/en/dutch-food-composition-database`
-- Local input:
-  - `data/inputs/dutch-nutrient-database/`
-- Used by:
-  - `normalize-raw` stage
-
-### New Zealand FOODfiles
-
-- Source URL:
-  - `https://www.foodcomposition.co.nz/foodfiles/concise-tables/`
-- Local input:
-  - `data/inputs/new-zealand-food-concise.xlsx`
-- Used by:
-  - `normalize-raw` stage
-
-### Notes
-
-- `data/inputs/` contains raw source material used by the pipeline.
-- `data/outputs/` contains generated JSONL + SQLite outputs.
-- Keep license/terms from each source in mind when redistributing derived data.
-
-## Mapping Contract
-
-Mappings live in `nutrient_mapping.py` and are standardized to `FieldSpec` objects with:
-
-- `kind` (`literal`, `source`, `nutrient_id`, `computed`, `missing`)
-- `source`
-- optional fallbacks (`fallback_sources`, `fallback_mode`)
-- optional metadata (for reference fields like nutrient number and source name)
-
-Unit expectations for normalized outputs are declared in `CORE_FIELD_UNITS` in `nutrient_mapping.py`.
-All parsers are expected to convert source values to those units before writing JSONL.
-
-## Testing
-
-Run all tests:
-
-```bash
-uv run python -m unittest discover -s tests -v
-```
-
-Notes:
-
-- Unit tests run without local source data.
-- Integration tests in `tests/test_integration_sources.py` automatically run when `data/inputs/` exists and skip otherwise.
+The API starts at <http://localhost:3000>. OpenAPI JSON is served at `/openapi.json`, and
+interactive API documentation is served at `/docs`.
+
+Copy `.env.example` to `.env` only when overriding the local defaults. PostgreSQL data is
+kept in the `regolith-postgres` Docker volume between container restarts.
+
+## Common commands
+
+| Command | Purpose |
+|---|---|
+| `npx pnpm@11.20.0 dev` | Run the API in watch mode through the Oxc TypeScript runner |
+| `npx pnpm@11.20.0 db:status` | Inspect the active PostgreSQL snapshot |
+| `npx pnpm@11.20.0 db:ingest` | Atomically ingest the schema-v2 raw and branded snapshots |
+| `npx pnpm@11.20.0 contracts` | Regenerate raw and branded JSON Schemas |
+| `npx pnpm@11.20.0 openapi` | Regenerate the OpenAPI document |
+| `npx pnpm@11.20.0 mons:test` | Build and test the Mons Xcode project on macOS |
+| `npx pnpm@11.20.0 verify` | Run every local formatting, build, test, contract, database, and Xcode check |
+
+`db:ingest` expects the manifest-backed files under `data/outputs/v2`. Titan verifies their
+schema versions and SHA-256 hashes before loading them.
+
+## Development guarantees
+
+- Dependency versions are exact and resolved by one pnpm lockfile.
+- Titan emits stable JSONL bytes and records hashes, row counts, source hashes, rejection
+  details, and field coverage in sidecar manifests.
+- PostgreSQL ingestion uses staging schemas and an atomic schema swap.
+- Raw and branded foods share one schema while remaining separate table partitions.
+- JSON Schema and OpenAPI artifacts are generated deterministically and checked in CI.
+- CI independently verifies TypeScript, Python 3.11–3.13, PostgreSQL, and Mons.
+
+The former standalone Mons repository history is retained locally under
+`.history/mons.git` and is intentionally excluded from the monorepo working tree.
+
+## Data licensing
+
+Apache-2.0 covers the software only. Input datasets and derived datasets retain their
+providers' terms and must not be published until the review gate in
+[DATA_SOURCES.md](services/titan/DATA_SOURCES.md) is complete.
