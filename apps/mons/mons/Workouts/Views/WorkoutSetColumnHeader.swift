@@ -8,6 +8,7 @@ struct WorkoutSetColumnHeader: View {
             Text("Weight").frame(maxWidth: .infinity)
             Text("Reps").frame(maxWidth: .infinity)
             Text("Rest").frame(width: 72)
+            Color.clear.frame(width: 44)
         }
         .font(MonsTypography.caption)
         .foregroundStyle(MonsColor.textSecondary)

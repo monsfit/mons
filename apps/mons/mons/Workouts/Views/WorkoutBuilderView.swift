@@ -4,6 +4,7 @@ struct WorkoutBuilderView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var exercises: [WorkoutExerciseDraft] = []
+    @State private var editingExerciseID: UUID?
     @State private var isPickingExercises = false
     @State private var isStartingWorkout = false
     @State private var sessionId = UUID()
@@ -38,6 +39,7 @@ struct WorkoutBuilderView: View {
                         ForEach(exercises) { exercise in
                             WorkoutExerciseSelectionRow(
                                 exercise: exercise,
+                                onEdit: { edit(exercise.id) },
                                 onRemove: { remove(exercise.id) }
                             )
                         }
@@ -93,6 +95,13 @@ struct WorkoutBuilderView: View {
                     onSaved: dismiss.callAsFunction
                 )
             }
+            .navigationDestination(item: $editingExerciseID) { exerciseID in
+                if let index = exercises.firstIndex(where: { $0.id == exerciseID }) {
+                    ExerciseSetLoggingView(exercise: $exercises[index])
+                } else {
+                    ContentUnavailableView("Exercise unavailable", systemImage: "dumbbell")
+                }
+            }
         }
         .tint(MonsColor.workoutAccent)
     }
@@ -119,6 +128,10 @@ struct WorkoutBuilderView: View {
 
     private func remove(_ identifier: UUID) {
         exercises.removeAll { $0.id == identifier }
+    }
+
+    private func edit(_ identifier: UUID) {
+        editingExerciseID = identifier
     }
 
     private func startWorkout() {

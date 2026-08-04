@@ -21,4 +21,20 @@ struct WorkoutExerciseDraft: Identifiable, Hashable {
     var completedSetCount: Int {
         sets.count(where: \.isCompleted)
     }
+
+    mutating func addSet(id: UUID = UUID()) {
+        let previous = sets.last
+        sets.append(
+            WorkoutLoggingSet(
+                id: id,
+                weightPounds: previous?.weightPounds ?? 0,
+                repetitions: previous?.repetitions ?? 8,
+                restSeconds: previous?.restSeconds ?? 120
+            )
+        )
+    }
+
+    mutating func removeSet(id: UUID) {
+        sets.removeAll { $0.id == id }
+    }
 }

@@ -41,33 +41,49 @@ struct WorkoutListView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                Section("This week") {
-                    WorkoutWeeklySummaryRow(summary: weeklySummary)
-                        .listRowBackground(MonsColor.surfaceRaised)
-                }
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: MonsSpacing.large) {
+                    Text("This week")
+                        .font(MonsTypography.sectionTitle)
 
-                if sections.isEmpty {
-                    ContentUnavailableView(
-                        "No workouts yet",
-                        systemImage: "figure.run",
-                        description: Text("Completed strength and cardio sessions will appear here.")
-                    )
-                } else {
-                    ForEach(sections) { section in
-                        Section(section.kind.title) {
-                            ForEach(section.sessions) { session in
-                                NavigationLink(value: DetailDestination(workout: session)) {
-                                    WorkoutSessionRow(session: session)
+                    WorkoutWeeklySummaryRow(summary: weeklySummary)
+
+                    if sections.isEmpty {
+                        ContentUnavailableView {
+                            Label("No workouts yet", systemImage: "figure.strengthtraining.traditional")
+                        } description: {
+                            Text("Build a workout, log its sets, and track your weekly progress.")
+                        } actions: {
+                            Button("Create Workout", systemImage: "plus", action: showWorkoutBuilder)
+                                .buttonStyle(
+                                    MonsPrimaryButtonStyle(
+                                        tint: MonsColor.workoutAccent,
+                                        foreground: MonsColor.accentForeground
+                                    )
+                                )
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, MonsSpacing.xLarge)
+                    } else {
+                        ForEach(sections) { section in
+                            VStack(alignment: .leading, spacing: MonsSpacing.medium) {
+                                Text(section.kind.title)
+                                    .font(MonsTypography.sectionTitle)
+
+                                ForEach(section.sessions) { session in
+                                    NavigationLink(value: DetailDestination(workout: session)) {
+                                        MonsCard {
+                                            WorkoutSessionRow(session: session)
+                                        }
+                                    }
+                                    .buttonStyle(.plain)
                                 }
-                                .listRowBackground(MonsColor.surface)
-                                .listRowSeparatorTint(MonsColor.border)
                             }
                         }
                     }
                 }
+                .padding(MonsSpacing.large)
             }
-            .scrollContentBackground(.hidden)
             .background(MonsColor.background)
             .foregroundStyle(MonsColor.textPrimary)
             .navigationTitle("Workouts")

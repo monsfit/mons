@@ -19,11 +19,12 @@ struct ExerciseSetLoggingView: View {
 
                 WorkoutSetColumnHeader()
 
-                ForEach(Array(exercise.sets.indices), id: \.self) { index in
+                ForEach(Array(exercise.sets.enumerated()), id: \.element.id) { index, workoutSet in
                     WorkoutLoggingSetRow(
                         workoutSet: $exercise.sets[index],
                         number: index + 1,
-                        onCompleted: startRestTimer
+                        onCompleted: startRestTimer,
+                        onRemove: { removeSet(workoutSet.id) }
                     )
                 }
 
@@ -68,14 +69,11 @@ struct ExerciseSetLoggingView: View {
     }
 
     private func addSet() {
-        let previous = exercise.sets.last
-        exercise.sets.append(
-            WorkoutLoggingSet(
-                weightPounds: previous?.weightPounds ?? 0,
-                repetitions: previous?.repetitions ?? 8,
-                restSeconds: previous?.restSeconds ?? 120
-            )
-        )
+        exercise.addSet()
+    }
+
+    private func removeSet(_ identifier: UUID) {
+        exercise.removeSet(id: identifier)
     }
 
     private func startRestTimer(seconds: Int) {

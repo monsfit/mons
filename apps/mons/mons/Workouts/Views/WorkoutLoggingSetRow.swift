@@ -5,6 +5,7 @@ struct WorkoutLoggingSetRow: View {
 
     let number: Int
     let onCompleted: (Int) -> Void
+    let onRemove: () -> Void
 
     var body: some View {
         HStack(spacing: MonsSpacing.small) {
@@ -51,6 +52,12 @@ struct WorkoutLoggingSetRow: View {
                     .background(MonsColor.surfaceRaised, in: .rect(cornerRadius: MonsRadius.small))
             }
             .accessibilityLabel("Set \(number) rest time")
+
+            Button("Remove set \(number)", systemImage: "minus.circle", role: .destructive, action: onRemove)
+                .labelStyle(.iconOnly)
+                .font(MonsTypography.title)
+                .foregroundStyle(MonsColor.error)
+                .frame(width: 44, height: 44)
         }
         .padding(MonsSpacing.medium)
         .background(MonsColor.surface, in: .rect(cornerRadius: MonsRadius.medium))

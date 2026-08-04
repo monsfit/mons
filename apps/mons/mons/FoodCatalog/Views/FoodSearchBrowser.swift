@@ -60,6 +60,7 @@ struct FoodSearchBrowser: View {
             .scrollContentBackground(.hidden)
             .background(.clear)
             .foregroundStyle(MonsColor.textPrimary)
+            .searchable(text: $searchText, placement: .toolbar, prompt: "Search for a food")
             .navigationTitle(showsModalChrome ? "Add Food" : "Food")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)

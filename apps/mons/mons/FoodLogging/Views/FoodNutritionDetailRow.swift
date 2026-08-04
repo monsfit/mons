@@ -33,12 +33,10 @@ struct FoodNutritionDetailRow: View {
                     .frame(minWidth: 48, alignment: .trailing)
             }
 
-            if target != nil {
-                ProgressView(value: progress)
-                    .progressViewStyle(.linear)
-                    .tint(MonsColor.metric)
-                    .accessibilityHidden(true)
-            }
+            FoodNutrientProgressBar(
+                progress: target == nil ? nil : progress,
+                accent: accent
+            )
         }
         .font(MonsTypography.subheadline)
         .padding(.horizontal, MonsSpacing.large)
@@ -53,6 +51,21 @@ struct FoodNutritionDetailRow: View {
         guard let target else { return "\(value) \(nutrient.unit)" }
         let targetValue = target.amount.formatted(.number.precision(.fractionLength(0...2)))
         return "\(value) / \(targetValue) \(target.unit)"
+    }
+
+    private var accent: Color {
+        switch nutrient.group {
+        case .carbohydrates:
+            MonsColor.carbohydrateAccent
+        case .fats:
+            MonsColor.fatAccent
+        case .protein:
+            MonsColor.proteinAccent
+        case .other where nutrient.field == "calories":
+            MonsColor.calorieAccent
+        case .minerals, .other, .vitamins:
+            MonsColor.weightAccent
+        }
     }
 
     private var accessibilityValue: String {

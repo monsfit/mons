@@ -33,6 +33,7 @@ struct FoodSearchResultsContent: View {
                 )
             )
             .listRowSeparator(.hidden)
+            .listRowBackground(Color.clear)
         } else {
             if !commonResults.isEmpty {
                 FoodSearchSection(title: "Common", foods: commonResults, onSelect: onSelect)

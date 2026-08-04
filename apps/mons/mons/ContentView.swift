@@ -10,7 +10,6 @@ import SwiftUI
 struct ContentView: View {
     @Environment(AppStore.self) private var store
 
-    @State private var isSearchPresented = false
     @State private var searchText = ""
     @State private var selection = AppTab.dashboard
 
@@ -53,11 +52,6 @@ struct ContentView: View {
                         )
                     }
                 }
-                .searchable(
-                    text: $searchText,
-                    isPresented: $isSearchPresented,
-                    prompt: "Search for a food"
-                )
             }
         }
         .foregroundStyle(MonsColor.textPrimary)

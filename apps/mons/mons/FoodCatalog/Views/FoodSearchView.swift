@@ -25,7 +25,6 @@ struct FoodSearchView: View {
             showsModalChrome: true,
             onLogged: onLogged
         )
-        .searchable(text: $searchText, placement: .toolbar, prompt: "Search for a food")
         .monsSheetPresentation()
     }
 }

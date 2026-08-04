@@ -4,32 +4,45 @@ struct WorkoutWeeklySummaryRow: View {
     let summary: WorkoutWeeklySummary
 
     var body: some View {
-        VStack(alignment: .leading) {
-            LabeledContent("Sessions") {
-                Text(summary.sessionCount, format: .number)
-                    .bold()
-            }
+        MonsCard(isRaised: true) {
+            HStack(spacing: MonsSpacing.medium) {
+                VStack(alignment: .leading, spacing: MonsSpacing.xSmall) {
+                    Text(summary.sessionCount, format: .number)
+                        .font(MonsTypography.title)
+                        .bold()
+                    Text("Sessions")
+                        .font(MonsTypography.subheadline)
+                        .foregroundStyle(MonsColor.textSecondary)
+                }
 
-            LabeledContent("Total time") {
-                Text("\(summary.totalMinutes.formatted()) min")
-                    .bold()
-            }
+                Divider()
 
-            LabeledContent {
-                Text("\(summary.totalSets.formatted()) sets")
-                    .bold()
-            } label: {
-                Label("\(summary.strengthSessionCount) strength", systemImage: WorkoutKind.strength.systemImage)
-            }
+                VStack(alignment: .leading, spacing: MonsSpacing.xSmall) {
+                    Text(summary.totalMinutes, format: .number)
+                        .font(MonsTypography.title)
+                        .bold()
+                    Text("Minutes")
+                        .font(MonsTypography.subheadline)
+                        .foregroundStyle(MonsColor.textSecondary)
+                }
 
-            LabeledContent {
-                Text("\(summary.totalDistanceKilometers.formatted(.number.precision(.fractionLength(1)))) km")
-                    .bold()
-            } label: {
-                Label("\(summary.cardioSessionCount) cardio", systemImage: WorkoutKind.cardio.systemImage)
+                Divider()
+
+                VStack(alignment: .leading, spacing: MonsSpacing.xSmall) {
+                    Text(summary.totalSets, format: .number)
+                        .font(MonsTypography.title)
+                        .bold()
+                    Text("Sets")
+                        .font(MonsTypography.subheadline)
+                        .foregroundStyle(MonsColor.textSecondary)
+                }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .font(MonsTypography.body)
-        .foregroundStyle(MonsColor.textPrimary)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Weekly workout summary")
+        .accessibilityValue(
+            "\(summary.sessionCount) sessions, \(summary.totalMinutes) minutes, \(summary.totalSets) sets"
+        )
     }
 }

@@ -10,7 +10,8 @@ It connects to the Regolith API for:
 - separate Common, Branded, and Recently Added food sections with compact nutrition summaries;
 - camera barcode scanning with normalized UPC/EAN/GTIN lookup;
 - quantity-scaled full nutrient details, daily-target progress, logging, and day summaries;
-- exercise search, starter templates, active set logging, rest timing, and persistent workouts;
+- exercise search, starter templates, pre-workout set editing, active set logging, rest timing,
+  and persistent workouts;
 - canonical weight tracking with pound and kilogram entry.
 
 Open `mons.xcodeproj` in Xcode, or build and test it from the repository root:
@@ -74,7 +75,8 @@ Sheet content uses system material backgrounds so controls remain legible in bot
 Food detail uses the profile's calculated calorie and macro goals. Other compatible nutrients use
 the FDA Daily Values for adults and children age four or older as deterministic nutrition-label
 references. Nutrients without an applicable Daily Value are shown as `No DV`; Mons does not invent
-targets or present these reference values as individualized clinical recommendations.
+targets or present these reference values as individualized clinical recommendations. Their
+square-ended, lightly tinted bars are contextual indicators rather than percentage progress.
 The fat breakdown intentionally presents only canonical user-facing totals (total, saturated,
 monounsaturated, polyunsaturated, trans, omega-3, and omega-6), preferring source-reported totals
 and hiding zero-value component/provenance rows.
