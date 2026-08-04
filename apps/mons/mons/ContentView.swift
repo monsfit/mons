@@ -10,7 +10,8 @@ import SwiftUI
 struct ContentView: View {
     @Environment(AppStore.self) private var store
 
-    @State private var addMealRequest: AddMealRequest?
+    @State private var isSearchPresented = false
+    @State private var searchText = ""
     @State private var selection = AppTab.dashboard
 
     var body: some View {
@@ -33,25 +34,33 @@ struct ContentView: View {
                             onShowCalories: showCalories,
                             onShowWorkouts: showWorkouts
                         )
-                        #if os(iOS)
-                        .toolbar(.hidden, for: .tabBar)
-                        #endif
                     }
 
                     Tab("Calories", systemImage: "fork.knife", value: .calories) {
                         CalorieListView()
-                            #if os(iOS)
-                            .toolbar(.hidden, for: .tabBar)
-                            #endif
                     }
 
                     Tab("Workouts", systemImage: "figure.run", value: .workouts) {
                         WorkoutListView()
-                            #if os(iOS)
-                            .toolbar(.hidden, for: .tabBar)
-                            #endif
+                    }
+
+                    Tab(value: .search, role: .search) {
+                        FoodSearchBrowser(
+                            searchText: $searchText,
+                            loggedAt: .now,
+                            showsModalChrome: false,
+                            onLogged: showCalories
+                        )
                     }
                 }
+                .searchable(
+                    text: $searchText,
+                    isPresented: $isSearchPresented,
+                    prompt: "Search for a food"
+                )
+                #if os(iOS)
+                .tabBarMinimizeBehavior(.onScrollDown)
+                #endif
             }
         }
         .foregroundStyle(MonsColor.textPrimary)
@@ -61,17 +70,7 @@ struct ContentView: View {
                 if let error = store.lastError {
                     AppErrorBanner(message: error, onDismiss: store.clearError)
                 }
-
-                if store.hasLoadedNutritionPlan, store.nutritionPlan != nil {
-                    MonsAppDock(selection: $selection, onScan: scanFood, onSearch: addFood)
-                }
             }
-        }
-        .sheet(item: $addMealRequest) { request in
-            FoodSearchView(
-                loggedAt: request.scheduledAt,
-                startsWithScanner: request.mode == .scanner
-            ) { }
         }
     }
 
@@ -83,13 +82,6 @@ struct ContentView: View {
         selection = .workouts
     }
 
-    private func addFood() {
-        addMealRequest = AddMealRequest(scheduledAt: .now)
-    }
-
-    private func scanFood() {
-        addMealRequest = AddMealRequest(scheduledAt: .now, mode: .scanner)
-    }
 }
 
 #Preview {

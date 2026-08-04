@@ -6,7 +6,8 @@ It connects to the Regolith API for:
 
 - adult onboarding that estimates TDEE and a weight-goal calorie target;
 - a dashboard for today's nutrition, weekly workouts, and weight trend;
-- global food search and barcode actions from every primary tab;
+- a native search-role tab that morphs into the bottom search field, with an adjacent glass
+  barcode action;
 - separate Common, Branded, and Recently Added food sections with compact nutrition summaries;
 - camera barcode scanning with normalized UPC/EAN/GTIN lookup;
 - quantity-scaled full nutrient details, daily-target progress, logging, and day summaries;
@@ -63,8 +64,9 @@ force a color scheme. Primary, secondary, muted, action, and error foregrounds m
 
 Spacing, corner radii, button styles, cards, and the wordmark are shared components under
 `mons/DesignSystem`. Add new visual decisions there before adding one-off values to a feature.
-Liquid Glass is limited to floating navigation and actions; sheet content uses system material
-backgrounds so controls remain legible in both appearances.
+Liquid Glass is limited to system navigation and floating actions. The native tab bar owns the
+dedicated food search presentation, while sheet content uses system material backgrounds so
+controls remain legible in both appearances.
 
 Food detail uses the profile's calculated calorie and macro goals. Other compatible nutrients use
 the FDA Daily Values for adults and children age four or older as deterministic nutrition-label
