@@ -34,10 +34,11 @@ struct DesignSystemTests {
         }
     }
 
-    @Test func nutritionUsesOneMonochromeMetricColor() {
-        #expect(NutritionColor.calories == NutritionColor.protein)
-        #expect(NutritionColor.protein == NutritionColor.fat)
-        #expect(NutritionColor.fat == NutritionColor.carbohydrates)
+    @Test func nutritionUsesDistinctSemanticAccents() {
+        #expect(NutritionColor.calories != NutritionColor.protein)
+        #expect(NutritionColor.protein != NutritionColor.fat)
+        #expect(NutritionColor.fat != NutritionColor.carbohydrates)
+        #expect(NutritionColor.carbohydrates != NutritionColor.calories)
     }
 
     private func contrastRatio(

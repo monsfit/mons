@@ -16,6 +16,14 @@ enum MonsColor {
     static let actionForeground = adaptive(light: MonsPalette.plumWhite, dark: MonsPalette.plum1000)
     static let metric = action
 
+    static let calorieAccent = MonsPalette.calorieFlame
+    static let proteinAccent = MonsPalette.protein500
+    static let fatAccent = MonsPalette.fat500
+    static let carbohydrateAccent = MonsPalette.carbohydrate500
+    static let weightAccent = MonsPalette.weight500
+    static let workoutAccent = MonsPalette.workout500
+    static let accentForeground = MonsPalette.plumWhite
+
     static let error = adaptive(light: MonsPalette.error600, dark: MonsPalette.error400)
     static let errorSurface = adaptive(light: MonsPalette.error50, dark: MonsPalette.error900)
 

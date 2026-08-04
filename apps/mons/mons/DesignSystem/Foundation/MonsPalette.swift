@@ -17,6 +17,14 @@ enum MonsPalette {
     static let plum25 = Color(monsHex: 0xFBF9FA)
     static let plumWhite = Color(monsHex: 0xFFFEFE)
 
+    // Semantic data accents. Keep these limited to data, progress, and focused actions.
+    static let protein500 = Color(monsHex: 0xFB2C36)
+    static let fat500 = Color(monsHex: 0xF59E0B)
+    static let carbohydrate500 = Color(monsHex: 0x2B7FFF)
+    static let calorieFlame = Color(monsHex: 0xFF6900)
+    static let weight500 = Color(monsHex: 0x615FFF)
+    static let workout500 = Color(monsHex: 0x2B7FFF)
+
     static let error950 = Color(monsHex: 0x220F13)
     static let error900 = Color(monsHex: 0x351419)
     static let error800 = Color(monsHex: 0x561D24)

@@ -8,7 +8,7 @@ struct FoodNutritionDetails: View {
     var body: some View {
         VStack(alignment: .leading, spacing: MonsSpacing.xLarge) {
             ForEach(FoodNutrientGroup.allCases) { group in
-                let nutrients = scaledNutrients.filter { $0.group == group }
+                let nutrients = FoodNutrientPresentation.nutrients(scaledNutrients, in: group)
                 if !nutrients.isEmpty {
                     FoodNutritionSection(group: group, nutrients: nutrients, targets: targets)
                 }

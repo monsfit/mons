@@ -3,7 +3,7 @@ import SwiftUI
 struct WorkoutListView: View {
     @Environment(AppStore.self) private var store
 
-    @State private var isShowingEditor = false
+    @State private var isShowingBuilder = false
 
     private let referenceDate: Date
     private let calendar: Calendar
@@ -72,29 +72,29 @@ struct WorkoutListView: View {
             .foregroundStyle(MonsColor.textPrimary)
             .navigationTitle("Workouts")
             .toolbar {
-                ToolbarItemGroup(placement: .primaryAction) {
-                    if let activeWorkout = sessions.first {
-                        NavigationLink {
-                            ActiveWorkoutView(workout: activeWorkout)
-                        } label: {
-                            Label("Active workout", systemImage: "play.fill")
-                        }
-                    }
-
-                    Button("Log workout", systemImage: "plus") {
-                        isShowingEditor = true
-                    }
+                ToolbarItem(placement: .primaryAction) {
+                    Button("New workout", systemImage: "plus", action: showWorkoutBuilder)
                 }
             }
             .navigationDestination(for: DetailDestination.self, destination: PlaceholderDetailView.init)
-            .sheet(isPresented: $isShowingEditor) {
-                WorkoutEditorView()
+            #if os(iOS)
+            .fullScreenCover(isPresented: $isShowingBuilder) {
+                WorkoutBuilderView()
             }
+            #else
+            .sheet(isPresented: $isShowingBuilder) {
+                WorkoutBuilderView()
+            }
+            #endif
             .task {
                 await store.loadWorkouts(referenceDate: referenceDate)
             }
         }
-        .tint(MonsColor.action)
+        .tint(MonsColor.workoutAccent)
+    }
+
+    private func showWorkoutBuilder() {
+        isShowingBuilder = true
     }
 }
 

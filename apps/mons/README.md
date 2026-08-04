@@ -6,11 +6,11 @@ It connects to the Regolith API for:
 
 - adult onboarding that estimates TDEE and a weight-goal calorie target;
 - a dashboard for today's nutrition, weekly workouts, and weight trend;
-- native labeled tabs with a dedicated Search role, bottom search field, and scanner action;
+- native labeled tabs with a dedicated Search role, bottom search field, and top add menu;
 - separate Common, Branded, and Recently Added food sections with compact nutrition summaries;
 - camera barcode scanning with normalized UPC/EAN/GTIN lookup;
 - quantity-scaled full nutrient details, daily-target progress, logging, and day summaries;
-- persistent strength/cardio workouts and ordered sets;
+- exercise search, starter templates, active set logging, rest timing, and persistent workouts;
 - canonical weight tracking with pound and kilogram entry.
 
 Open `mons.xcodeproj` in Xcode, or build and test it from the repository root:
@@ -48,13 +48,16 @@ and calendars so fixtures remain deterministic.
 
 ## Design system
 
-Mons uses a monochrome Lunar Plum system with semantic roles instead of screen-level color
-choices. The source tokens live in `mons/DesignSystem/Foundation`:
+Mons uses Lunar Plum as its monochrome foundation, with a deliberately small set of semantic data
+accents instead of screen-level color choices. The source tokens live in
+`mons/DesignSystem/Foundation`:
 
 - plum 25–150 provides light-mode backgrounds, surfaces, and borders;
 - plum 900–1000 provides dark-mode backgrounds and light-mode text;
 - near-white plum carries dark-mode text and high-contrast actions;
-- one adaptive plum metric token covers calories, macros, weight, workouts, progress, and selection;
+- flame orange identifies calories, protein red identifies protein, fat amber identifies fat, and
+  carbohydrate blue identifies carbs;
+- weight indigo is reserved for weight trends, while workout blue marks active workout controls;
 - Error Red is reserved for destructive actions, validation failures, and critical alerts.
 
 All semantic colors adapt automatically to the system light or dark appearance. Mons does not
@@ -64,13 +67,17 @@ force a color scheme. Primary, secondary, muted, action, and error foregrounds m
 Spacing, corner radii, button styles, cards, and the wordmark are shared components under
 `mons/DesignSystem`. Add new visual decisions there before adding one-off values to a feature.
 Liquid Glass is limited to navigation and floating actions. The native Search tab owns the bottom
-search field, while barcode scanning is a circular system toolbar action on the Search screen.
+search field. A circular system `+` action stays in the top toolbar and exposes barcode scanning
+without competing with the native search control.
 Sheet content uses system material backgrounds so controls remain legible in both appearances.
 
 Food detail uses the profile's calculated calorie and macro goals. Other compatible nutrients use
 the FDA Daily Values for adults and children age four or older as deterministic nutrition-label
 references. Nutrients without an applicable Daily Value are shown as `No DV`; Mons does not invent
 targets or present these reference values as individualized clinical recommendations.
+The fat breakdown intentionally presents only canonical user-facing totals (total, saturated,
+monounsaturated, polyunsaturated, trans, omega-3, and omega-6), preferring source-reported totals
+and hiding zero-value component/provenance rows.
 
 [Space Grotesk](https://floriankarsten.github.io/space-grotesk/) is bundled locally in Regular,
 Medium, and Bold weights under the SIL Open Font License. `MonsTypography` provides Dynamic

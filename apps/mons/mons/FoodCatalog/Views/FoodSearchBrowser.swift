@@ -110,10 +110,30 @@ struct FoodSearchBrowser: View {
                     }
                     #endif
                 } else {
-                    ToolbarItemGroup(placement: .primaryAction) {
-                        Button("Scan barcode", systemImage: "barcode.viewfinder", action: showScanner)
+                    #if os(iOS)
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Menu("Add food", systemImage: "plus") {
+                            Button(
+                                "Scan barcode",
+                                systemImage: "barcode.viewfinder",
+                                action: showScanner
+                            )
+                        }
+                    }
+                    #else
+                    ToolbarItem(placement: .primaryAction) {
+                        Menu("Add food", systemImage: "plus") {
+                            Button(
+                                "Scan barcode",
+                                systemImage: "barcode.viewfinder",
+                                action: showScanner
+                            )
+                        }
+                    }
+                    #endif
 
-                        if !pendingItems.isEmpty {
+                    if !pendingItems.isEmpty {
+                        ToolbarItem(placement: .confirmationAction) {
                             FoodPendingLogButton(
                                 count: pendingItems.count,
                                 isLogging: isLogging,

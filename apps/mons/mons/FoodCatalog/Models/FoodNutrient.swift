@@ -22,6 +22,8 @@ nonisolated struct FoodNutrient: Codable, Hashable, Identifiable, Sendable {
         case "polyunsaturated_fat": "Polyunsaturated Fat"
         case "saturated_fat": "Saturated Fat"
         case "trans_fat": "Trans Fat"
+        case "omega_3_total_reported", "omega_3_ala_epa_dha_sum": "Omega-3 Fat"
+        case "omega_6_total_reported", "omega_6_linoleic_acid": "Omega-6 Fat"
         case "dietary_cholesterol": "Cholesterol"
         default: name
         }
