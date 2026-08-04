@@ -15,6 +15,7 @@ export type {
   CatalogReader,
   CatalogSnapshotRecord,
   FoodRecord,
+  FoodPortionRecord,
   FoodSearchOptions,
 } from './catalog-repository.js'
 export { createDatabase } from './client.js'
@@ -37,6 +38,7 @@ export type {
   MealCategory,
   MetabolicSex,
   NutritionPlanTable,
+  PortionTable,
   ProfileTable,
   WeightGoal,
   WeightLogEntryTable,

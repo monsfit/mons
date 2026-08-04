@@ -21,7 +21,7 @@ struct DateNavigationRow: View {
             Button("Previous day", systemImage: "chevron.left", action: previousDay)
                 .labelStyle(.iconOnly)
                 .frame(minWidth: 44, minHeight: 44)
-                .buttonStyle(.bordered)
+                .buttonStyle(.glass)
                 .buttonBorderShape(.circle)
 
             Spacer()
@@ -38,7 +38,7 @@ struct DateNavigationRow: View {
             Button("Next day", systemImage: "chevron.right", action: nextDay)
                 .labelStyle(.iconOnly)
                 .frame(minWidth: 44, minHeight: 44)
-                .buttonStyle(.bordered)
+                .buttonStyle(.glass)
                 .buttonBorderShape(.circle)
                 .disabled(calendar.isDate(selectedDate, inSameDayAs: maximumDate))
         }

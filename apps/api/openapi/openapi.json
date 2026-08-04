@@ -1502,6 +1502,33 @@
         ],
         "description": "Active catalog snapshot status"
       },
+      "FoodPortion": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "minimum": 0.1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "unit": {
+            "enum": [
+              "g",
+              "ml"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount",
+          "name",
+          "unit"
+        ],
+        "description": "Normalized household portion"
+      },
       "FoodSummary": {
         "type": "object",
         "properties": {
@@ -1558,6 +1585,12 @@
           "name": {
             "type": "string"
           },
+          "portions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FoodPortion"
+            }
+          },
           "protein": {
             "anyOf": [
               {
@@ -1593,6 +1626,7 @@
           "foodId",
           "gtin",
           "name",
+          "portions",
           "protein",
           "source",
           "sourceId",

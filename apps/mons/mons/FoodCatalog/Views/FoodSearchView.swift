@@ -10,7 +10,9 @@ struct FoodSearchView: View {
     @State private var brandedResults: [CatalogFood] = []
     @State private var commonResults: [CatalogFood] = []
     @State private var isSearching = false
+    @State private var isLogging = false
     @State private var navigationPath = NavigationPath()
+    @State private var pendingItems: [PendingFoodLogItem] = []
     @State private var searchText = ""
     #if os(iOS)
     @State private var isShowingScanner: Bool
@@ -52,13 +54,20 @@ struct FoodSearchView: View {
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .navigationDestination(for: CatalogFood.self) { food in
-                FoodLogEditorView(food: food, loggedAt: loggedAt) {
-                    onLogged()
-                }
+                FoodLogEditorView(
+                    food: food,
+                    loggedAt: loggedAt,
+                    pendingItemCount: pendingItems.count,
+                    onAdd: addToPending,
+                    onLog: logIncluding
+                )
             }
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 FoodCatalogSearchBar(
                     searchText: $searchText,
+                    isLogging: isLogging,
+                    pendingItemCount: pendingItems.count,
+                    onLog: logPending,
                     onScan: showScanner
                 )
             }
@@ -116,6 +125,34 @@ struct FoodSearchView: View {
 
     private func selectFood(_ food: CatalogFood) {
         navigationPath.append(food)
+    }
+
+    private func addToPending(_ item: PendingFoodLogItem) {
+        pendingItems.append(item)
+    }
+
+    private func logIncluding(_ item: PendingFoodLogItem) async -> Bool {
+        await log(pendingItems + [item])
+    }
+
+    private func logPending() {
+        Task {
+            _ = await log(pendingItems)
+        }
+    }
+
+    private func log(_ items: [PendingFoodLogItem]) async -> Bool {
+        guard !items.isEmpty, !isLogging else { return false }
+        isLogging = true
+        defer { isLogging = false }
+
+        let saved = await store.log(items: items)
+        if saved {
+            pendingItems = []
+            onLogged()
+            dismiss()
+        }
+        return saved
     }
 
     private func lookupBarcode(_ barcode: String) {

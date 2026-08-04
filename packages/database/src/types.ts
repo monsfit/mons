@@ -21,6 +21,15 @@ export interface FoodTable {
   total_fat: number | null
 }
 
+export interface PortionTable {
+  amount: number
+  dataset_kind: DatasetKind
+  food_id: string
+  name: string
+  ordinal: number
+  unit: 'g' | 'ml'
+}
+
 export interface ProfileTable {
   created_at: ColumnType<Date, Date | string | undefined, never>
   profile_id: string
@@ -123,8 +132,11 @@ export interface CatalogDatabase {
   foods: FoodTable
   ingestion_runs: IngestionRunTable
   nutrition_plans: NutritionPlanTable
+  portions: PortionTable
   profiles: ProfileTable
+  raw_portions: PortionTable
   raw_foods: FoodTable
+  branded_portions: PortionTable
   workout_sessions: WorkoutSessionTable
   workout_sets: WorkoutSetTable
   weight_log_entries: WeightLogEntryTable

@@ -24,4 +24,17 @@ nonisolated enum MealCategory: String, CaseIterable, Codable, Hashable, Identifi
             "moon.stars.fill"
         }
     }
+
+    static func inferred(from date: Date, calendar: Calendar = .current) -> Self {
+        switch calendar.component(.hour, from: date) {
+        case 5..<11:
+            .breakfast
+        case 11..<15:
+            .lunch
+        case 17..<22:
+            .dinner
+        default:
+            .snack
+        }
+    }
 }

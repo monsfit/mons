@@ -49,6 +49,12 @@ struct CalorieListView: View {
                 LazyVStack(alignment: .leading, spacing: MonsSpacing.large, pinnedViews: [.sectionHeaders]) {
                     CalorieSummaryRow(day: selectedDay)
                         .padding(.horizontal)
+                        .padding(.top, MonsSpacing.large)
+                        .onGeometryChange(for: Bool.self) { geometry in
+                            geometry.frame(in: .scrollView(axis: .vertical)).maxY <= 0
+                        } action: { isPastSummary in
+                            isNutritionSummaryPinned = isPastSummary
+                        }
                         .scrollTransition(.interactive, axis: .vertical) { content, phase in
                             content
                                 .opacity(phase.isIdentity ? 1 : 0)
@@ -81,11 +87,6 @@ struct CalorieListView: View {
                             day: selectedDay,
                             isPinned: isNutritionSummaryPinned
                         )
-                        .onGeometryChange(for: Bool.self) { geometry in
-                            geometry.frame(in: .scrollView(axis: .vertical)).minY <= 0
-                        } action: { isPinned in
-                            isNutritionSummaryPinned = isPinned
-                        }
                     }
                 }
                 .padding(.vertical)

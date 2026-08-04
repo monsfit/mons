@@ -11,6 +11,10 @@ struct CatalogFoodNutritionTests {
             foodId: "1",
             gtin: "00000000000001",
             name: "Egg Fried",
+            portions: [
+                FoodPortion(amount: 50, name: "1 large egg", unit: .grams),
+                FoodPortion(amount: 45, name: "3 tbsp", unit: .milliliters)
+            ],
             protein: 6.3,
             source: "fixture",
             sourceId: "food-1",
@@ -21,5 +25,8 @@ struct CatalogFoodNutritionTests {
         #expect(food.scaled(food.protein, quantityGrams: 200) == 12.6)
         #expect(food.scaled(nil, quantityGrams: 100) == 0)
         #expect(food.scaled(food.calories, quantityGrams: -20) == 0)
+        #expect(food.gramPortions.map(\.name) == ["1 large egg"])
+        #expect(food.quantityGrams(amount: 2, portion: food.gramPortions.first) == 100)
+        #expect(food.quantityGrams(amount: 75, portion: nil) == 75)
     }
 }

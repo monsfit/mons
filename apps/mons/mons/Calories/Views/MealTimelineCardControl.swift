@@ -27,10 +27,6 @@ struct MealTimelineCardControl: View {
                 .accessibilityHidden(true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(MonsColor.surface, in: .rect(cornerRadius: MonsRadius.medium))
-        .overlay {
-            RoundedRectangle(cornerRadius: MonsRadius.medium)
-                .stroke(MonsColor.border, lineWidth: 1)
-        }
+        .glassEffect(.regular.interactive(), in: .rect(cornerRadius: MonsRadius.medium))
     }
 }

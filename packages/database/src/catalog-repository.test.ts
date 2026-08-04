@@ -63,6 +63,15 @@ integration('KyselyCatalogReader with PostgreSQL', () => {
       CREATE INDEX foods_search_document_idx ON ${schema}.foods USING gin (search_document);
       CREATE VIEW ${schema}.branded_foods AS
         SELECT * FROM ${schema}.foods WHERE dataset_kind = 'branded';
+      CREATE TABLE ${schema}.portions (
+        amount double precision NOT NULL,
+        dataset_kind text NOT NULL,
+        food_id bigint NOT NULL,
+        name text NOT NULL,
+        ordinal integer NOT NULL,
+        unit text NOT NULL,
+        PRIMARY KEY (dataset_kind, food_id, ordinal)
+      );
     `)
     await pool.query(
       `INSERT INTO ${schema}.ingestion_runs VALUES
@@ -90,6 +99,13 @@ integration('KyselyCatalogReader with PostgreSQL', () => {
        '00000000-0000-0000-0000-000000000001', 'Cardamom Seed', 10.8, 'australian_food_composition', 'au-1', 6.7)
     `)
     await pool.query(`UPDATE ${schema}.foods SET carbohydrates_available = 40 WHERE food_id = 7`)
+    await pool.query(`INSERT INTO ${schema}.portions
+      (amount, dataset_kind, food_id, name, ordinal, unit)
+      VALUES
+      (182, 'branded', 1, '1 medium apple', 0, 'g'),
+      (30, 'branded', 1, '1 cup, sliced', 1, 'g'),
+      (15, 'raw', 3, '1 slice', 0, 'g')
+    `)
     await migrateApplicationDatabase(database, appSchema)
   })
 
@@ -114,12 +130,17 @@ integration('KyselyCatalogReader with PostgreSQL', () => {
     await expect(catalog.findByGtin('00000000000001')).resolves.toMatchObject({
       food_id: '1',
       name: 'Apple',
+      portions: [
+        { amount: 182, name: '1 medium apple', unit: 'g' },
+        { amount: 30, name: '1 cup, sliced', unit: 'g' },
+      ],
     })
   })
 
   test('searches deterministically and filters by dataset kind', async () => {
     const foods = await catalog.search({ kind: 'raw', limit: 10, query: 'apple' })
     expect(foods.map((food) => food.food_id)).toEqual(['3'])
+    expect(foods[0]?.portions).toEqual([{ amount: 15, name: '1 slice', unit: 'g' }])
   })
 
   test('uses available carbohydrates when a raw source has no total value', async () => {

@@ -10,10 +10,6 @@ struct CompactNutritionSummary: View {
         NutritionTargets(calorieGoal: day.calorieGoal)
     }
 
-    private var topRadius: Double {
-        isPinned ? 0 : 12
-    }
-
     var body: some View {
         HStack(spacing: 12) {
             NutritionProgressMetric(
@@ -49,20 +45,13 @@ struct CompactNutritionSummary: View {
                 color: NutritionColor.carbohydrates
             )
         }
-        .padding(12)
-        .background(
-            isPinned ? MonsColor.chrome : MonsColor.surfaceRaised,
-            in: .rect(
-                topLeadingRadius: topRadius,
-                bottomLeadingRadius: 12,
-                bottomTrailingRadius: 12,
-                topTrailingRadius: topRadius
-            )
-        )
-        .padding(.horizontal, isPinned ? 0 : 16)
-        .padding(.top, isPinned ? 0 : 8)
-        .padding(.bottom, 8)
+        .padding(.horizontal, 12)
+        .padding(.vertical, isPinned ? 12 : 0)
+        .background(MonsColor.chrome)
         .frame(maxWidth: .infinity)
+        .frame(maxHeight: isPinned ? nil : 0)
+        .opacity(isPinned ? 1 : 0)
+        .clipped()
         .overlay(alignment: .bottom) {
             Divider()
                 .overlay(MonsColor.border)

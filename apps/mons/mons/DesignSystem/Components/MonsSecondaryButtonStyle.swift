@@ -7,11 +7,11 @@ struct MonsSecondaryButtonStyle: ButtonStyle {
             .foregroundStyle(MonsColor.textPrimary)
             .frame(minHeight: 44)
             .padding(.horizontal, MonsSpacing.large)
-            .background(MonsColor.surfaceRaised.opacity(configuration.isPressed ? 0.72 : 1))
-            .clipShape(.rect(cornerRadius: MonsRadius.medium))
-            .overlay {
-                RoundedRectangle(cornerRadius: MonsRadius.medium)
-                    .stroke(MonsColor.border, lineWidth: 1)
-            }
+            .glassEffect(
+                .regular.interactive(),
+                in: .rect(cornerRadius: MonsRadius.medium)
+            )
+            .scaleEffect(configuration.isPressed ? 0.98 : 1)
+            .animation(.snappy(duration: 0.16), value: configuration.isPressed)
     }
 }

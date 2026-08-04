@@ -35,7 +35,10 @@ struct OnboardingChoiceCard: View {
             .multilineTextAlignment(.leading)
             .padding(16)
             .frame(maxWidth: .infinity, minHeight: 72, alignment: .leading)
-            .background(isSelected ? MonsColor.surfaceRaised : MonsColor.surface, in: .rect(cornerRadius: MonsRadius.medium))
+            .glassEffect(
+                .regular.tint(isSelected ? MonsColor.action.opacity(0.16) : .clear).interactive(),
+                in: .rect(cornerRadius: MonsRadius.medium)
+            )
             .overlay {
                 RoundedRectangle(cornerRadius: MonsRadius.medium)
                     .stroke(isSelected ? MonsColor.action : MonsColor.border, lineWidth: isSelected ? 2 : 1)

@@ -24,6 +24,8 @@ struct DashboardNutritionCard: View {
                         .labelStyle(.iconOnly)
                         .frame(minWidth: 44, minHeight: 44)
                         .foregroundStyle(MonsColor.textPrimary)
+                        .buttonStyle(.glass)
+                        .buttonBorderShape(.circle)
                 }
 
                 HStack {

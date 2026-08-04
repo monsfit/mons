@@ -14,7 +14,8 @@ struct OnboardingNavigationControls: View {
                 .labelStyle(.iconOnly)
                 .frame(width: 48, height: 48)
                 .foregroundStyle(MonsColor.textPrimary)
-                .background(MonsColor.surfaceRaised, in: .circle)
+                .buttonStyle(.glass)
+                .buttonBorderShape(.circle)
                 .disabled(step == .metabolism || isSaving)
 
             Spacer()

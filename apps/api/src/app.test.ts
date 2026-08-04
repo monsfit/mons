@@ -20,6 +20,7 @@ const sampleFood: FoodRecord = {
   gtin: '00012345678905',
   ingestion_run_id: '00000000-0000-0000-0000-000000000001',
   name: 'Example Food',
+  portions: [{ amount: 30, name: '1 bar', unit: 'g' }],
   protein: 5,
   source: 'test',
   source_id: 'food-42',
@@ -142,7 +143,11 @@ describe('Regolith API', () => {
   test('returns food by GTIN', async () => {
     const response = await app.request('/v1/foods/by-gtin/00012345678905')
     expect(response.status).toBe(200)
-    await expect(response.json()).resolves.toMatchObject({ foodId: '42', name: 'Example Food' })
+    await expect(response.json()).resolves.toMatchObject({
+      foodId: '42',
+      name: 'Example Food',
+      portions: [{ amount: 30, name: '1 bar', unit: 'g' }],
+    })
   })
 
   test('validates search input', async () => {

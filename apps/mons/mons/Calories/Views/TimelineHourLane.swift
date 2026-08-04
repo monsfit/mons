@@ -17,22 +17,24 @@ struct TimelineHourLane: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 4) {
-                Text(scheduledAt, format: .dateTime.hour())
-                    .font(MonsTypography.subheadline)
-                    .lineLimit(1)
-                    .fixedSize(horizontal: true, vertical: false)
-                    .padding(.horizontal, 12)
-                    .frame(minHeight: 32)
-                    .background(MonsColor.surfaceRaised, in: .capsule)
+            GlassEffectContainer(spacing: 4) {
+                HStack(spacing: 4) {
+                    Text(scheduledAt, format: .dateTime.hour())
+                        .font(MonsTypography.subheadline)
+                        .lineLimit(1)
+                        .fixedSize(horizontal: true, vertical: false)
+                        .padding(.horizontal, 12)
+                        .frame(minHeight: 32)
+                        .glassEffect(.regular, in: .capsule)
 
-                Button("Add food at \(scheduledAt.formatted(date: .omitted, time: .shortened))", systemImage: "plus", action: addMeal)
-                    .labelStyle(.iconOnly)
-                    .frame(width: 44, height: 44)
-                    .contentShape(.circle)
-                    .background(MonsColor.surfaceRaised, in: .circle)
+                    Button("Add food at \(scheduledAt.formatted(date: .omitted, time: .shortened))", systemImage: "plus", action: addMeal)
+                        .labelStyle(.iconOnly)
+                        .frame(width: 44, height: 44)
+                        .buttonStyle(.glass)
+                        .buttonBorderShape(.circle)
 
-                Spacer()
+                    Spacer()
+                }
             }
 
             ZStack {

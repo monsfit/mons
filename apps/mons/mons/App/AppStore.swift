@@ -170,6 +170,21 @@ final class AppStore {
         }
     }
 
+    @discardableResult
+    func log(items: [PendingFoodLogItem]) async -> Bool {
+        for item in items {
+            let saved = await log(
+                food: item.food,
+                quantityGrams: item.quantityGrams,
+                category: item.mealCategory,
+                loggedAt: item.loggedAt,
+                entryId: item.entryId
+            )
+            guard saved else { return false }
+        }
+        return true
+    }
+
     func rescheduleFoodLogEntry(_ entryId: UUID, to date: Date) async {
         guard let index = foodLog.firstIndex(where: { $0.entryId == entryId }) else { return }
         let original = foodLog[index]
@@ -182,7 +197,7 @@ final class AppStore {
                     entryId: original.entryId,
                     foodId: original.foodId,
                     loggedAt: date,
-                    mealCategory: original.mealCategory,
+                    mealCategory: MealCategory.inferred(from: date),
                     quantityGrams: original.quantityGrams
                 )
             )

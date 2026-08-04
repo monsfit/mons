@@ -10,6 +10,7 @@ export function toFoodSummary(food: FoodRecord): FoodSummary {
     foodId: food.food_id,
     gtin: food.gtin,
     name: food.name,
+    portions: food.portions,
     protein: food.protein,
     source: food.source,
     sourceId: food.source_id,

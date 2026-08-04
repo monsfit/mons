@@ -2,7 +2,13 @@ import { sql, type Kysely, type Selectable } from 'kysely'
 
 import type { CatalogDatabase, DatasetKind, FoodTable } from './types.js'
 
-export type FoodRecord = Selectable<FoodTable>
+export interface FoodPortionRecord {
+  amount: number
+  name: string
+  unit: 'g' | 'ml'
+}
+
+export type FoodRecord = Selectable<FoodTable> & { portions: FoodPortionRecord[] }
 
 export interface CatalogSnapshotRecord {
   active: boolean
@@ -69,6 +75,7 @@ export class KyselyCatalogReader implements CatalogReader {
         'ingestion_run_id',
         'name',
         'protein',
+        this.portions('branded_foods'),
         'source',
         'source_id',
         'total_fat',
@@ -122,6 +129,7 @@ export class KyselyCatalogReader implements CatalogReader {
         'ingestion_run_id',
         'name',
         'protein',
+        this.portions('foods'),
         'source',
         'source_id',
         'total_fat',
@@ -156,5 +164,20 @@ export class KyselyCatalogReader implements CatalogReader {
 
   private catalog(): Kysely<CatalogDatabase> {
     return this.database.withSchema(this.schema)
+  }
+
+  private portions(table: 'branded_foods' | 'foods') {
+    return sql<FoodPortionRecord[]>`coalesce(
+      (
+        SELECT json_agg(
+          json_build_object('amount', portion.amount, 'name', portion.name, 'unit', portion.unit)
+          ORDER BY portion.ordinal
+        )
+        FROM ${sql.table(`${this.schema}.portions`)} AS portion
+        WHERE portion.dataset_kind = ${sql.ref(`${table}.dataset_kind`)}
+          AND portion.food_id = ${sql.ref(`${table}.food_id`)}
+      ),
+      '[]'::json
+    )`.as('portions')
   }
 }

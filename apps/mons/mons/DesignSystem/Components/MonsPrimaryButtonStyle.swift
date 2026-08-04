@@ -7,7 +7,11 @@ struct MonsPrimaryButtonStyle: ButtonStyle {
             .foregroundStyle(MonsColor.actionForeground)
             .frame(maxWidth: .infinity, minHeight: 52)
             .padding(.horizontal, MonsSpacing.large)
-            .background(MonsColor.actionSurface.opacity(configuration.isPressed ? 0.78 : 1))
-            .clipShape(.rect(cornerRadius: MonsRadius.medium))
+            .glassEffect(
+                .regular.tint(MonsColor.actionSurface).interactive(),
+                in: .rect(cornerRadius: MonsRadius.medium)
+            )
+            .scaleEffect(configuration.isPressed ? 0.98 : 1)
+            .animation(.snappy(duration: 0.16), value: configuration.isPressed)
     }
 }
