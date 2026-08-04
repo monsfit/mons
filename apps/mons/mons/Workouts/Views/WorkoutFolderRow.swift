@@ -14,28 +14,28 @@ struct WorkoutFolderRow: View {
         Button(action: onToggle) {
             HStack(spacing: 12) {
                 Image(systemName: isExpanded ? "folder.fill.badge.minus" : "folder.fill")
-                    .font(.title3)
-                    .foregroundStyle(.tint)
+                    .font(MonsTypography.sectionTitle)
+                    .foregroundStyle(MonsColor.performance)
                     .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(session.title)
-                        .font(.headline)
+                        .font(MonsTypography.headline)
 
                     Text("\(session.metric.summary) · \(session.durationMinutes) min")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .font(MonsTypography.subheadline)
+                        .foregroundStyle(MonsColor.textSecondary)
                 }
 
                 Spacer()
 
                 Image(systemName: "line.3.horizontal")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(MonsColor.textSecondary)
                     .accessibilityHidden(true)
 
                 Image(systemName: "chevron.right")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(MonsTypography.subheadline)
+                    .foregroundStyle(MonsColor.textSecondary)
                     .rotationEffect(.degrees(isExpanded ? 90 : 0))
                     .accessibilityHidden(true)
             }
@@ -45,13 +45,13 @@ struct WorkoutFolderRow: View {
         }
         .buttonStyle(.plain)
         .background(
-            isDropTargeted ? Color.accentColor.opacity(0.12) : Color.clear,
+            isDropTargeted ? MonsColor.performance.opacity(0.14) : Color.clear,
             in: RoundedRectangle(cornerRadius: 12)
         )
         .overlay {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(
-                    isDropTargeted ? Color.accentColor : .clear,
+                    isDropTargeted ? MonsColor.performance : .clear,
                     style: StrokeStyle(lineWidth: 1.5, dash: [5, 5])
                 )
         }

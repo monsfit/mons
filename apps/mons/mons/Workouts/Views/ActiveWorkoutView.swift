@@ -16,16 +16,16 @@ struct ActiveWorkoutView: View {
             LazyVStack(alignment: .leading, spacing: 12) {
                 HStack {
                     Label("In progress", systemImage: "timer")
-                        .foregroundStyle(.tint)
+                        .foregroundStyle(MonsColor.action)
 
                     Spacer()
 
                     Text("\(sessions.first?.sets.count ?? 0) items")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(MonsColor.textSecondary)
                 }
-                .font(.subheadline)
+                .font(MonsTypography.subheadline)
 
-                Divider()
+                Divider().overlay(MonsColor.border)
 
                 WorkoutHierarchyList(
                     sessions: sessions,
@@ -40,6 +40,8 @@ struct ActiveWorkoutView: View {
             .padding(.horizontal)
             .padding(.bottom, 100)
         }
+        .background(MonsColor.background)
+        .foregroundStyle(MonsColor.textPrimary)
         .navigationTitle("Active Workout")
     }
 

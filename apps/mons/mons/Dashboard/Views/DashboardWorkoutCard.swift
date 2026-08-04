@@ -5,44 +5,57 @@ struct DashboardWorkoutCard: View {
     let onShowWorkouts: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Label("Workouts", systemImage: "figure.run")
-                    .font(.title2)
-                    .bold()
-                Spacer()
-                Button("Open workouts", systemImage: "chevron.right", action: onShowWorkouts)
-                    .labelStyle(.iconOnly)
-                    .frame(minWidth: 44, minHeight: 44)
-            }
-
-            HStack {
-                LabeledContent("This week", value: "\(snapshot.weeklyWorkoutCount)")
-                Divider()
-                LabeledContent("Minutes", value: "\(snapshot.weeklyWorkoutMinutes)")
-            }
-            .font(.headline)
-
-            if let workout = snapshot.recentWorkout {
-                VStack(alignment: .leading) {
-                    Text("Most recent")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    Text(workout.title)
-                        .font(.headline)
-                    Text("\(workout.durationMinutes) min · \(workout.metric.summary)")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+        MonsCard {
+            VStack(alignment: .leading, spacing: MonsSpacing.large) {
+                HStack {
+                    Label("Workouts", systemImage: "dumbbell.fill")
+                        .font(MonsTypography.title)
+                        .foregroundStyle(MonsColor.textWarm)
+                    Spacer()
+                    Button("Open workouts", systemImage: "chevron.right", action: onShowWorkouts)
+                        .labelStyle(.iconOnly)
+                        .frame(minWidth: 44, minHeight: 44)
+                        .foregroundStyle(MonsColor.textWarm)
                 }
-            } else {
-                ContentUnavailableView(
-                    "No workouts yet",
-                    systemImage: "figure.run",
-                    description: Text("Your latest session will appear here.")
-                )
+
+                HStack {
+                    LabeledContent("This week", value: "\(snapshot.weeklyWorkoutCount)")
+                    Divider().overlay(MonsColor.border)
+                    LabeledContent("Minutes", value: "\(snapshot.weeklyWorkoutMinutes)")
+                }
+                .font(MonsTypography.headline)
+
+                if let workout = snapshot.recentWorkout {
+                    VStack(alignment: .leading, spacing: MonsSpacing.xSmall) {
+                        Text("Most recent")
+                            .font(MonsTypography.subheadline)
+                            .foregroundStyle(MonsColor.textSecondary)
+                        Text(workout.title)
+                            .font(MonsTypography.headline)
+                        Text("\(workout.durationMinutes) min · \(workout.metric.summary)")
+                            .font(MonsTypography.subheadline)
+                            .foregroundStyle(MonsColor.textSecondary)
+                    }
+                } else {
+                    HStack(spacing: MonsSpacing.medium) {
+                        Image(systemName: "figure.run")
+                            .font(MonsTypography.title)
+                            .foregroundStyle(MonsColor.performance)
+                            .frame(width: 44, height: 44)
+                            .background(MonsPalette.teal900, in: .rect(cornerRadius: MonsRadius.small))
+                            .accessibilityHidden(true)
+
+                        VStack(alignment: .leading, spacing: MonsSpacing.xSmall) {
+                            Text("No workouts yet")
+                                .font(MonsTypography.headline)
+                            Text("Your latest session will appear here.")
+                                .font(MonsTypography.subheadline)
+                                .foregroundStyle(MonsColor.textSecondary)
+                        }
+                    }
+                    .accessibilityElement(children: .combine)
+                }
             }
         }
-        .padding()
-        .background(.thinMaterial, in: .rect(cornerRadius: 20))
     }
 }

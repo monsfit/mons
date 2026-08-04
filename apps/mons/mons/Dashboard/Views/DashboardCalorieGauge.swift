@@ -12,7 +12,7 @@ struct DashboardCalorieGauge: View {
         ZStack {
             Circle()
                 .trim(from: 0.08, to: 0.92)
-                .stroke(.quaternary, style: StrokeStyle(lineWidth: 7, lineCap: .round))
+                .stroke(MonsColor.border, style: StrokeStyle(lineWidth: 7, lineCap: .round))
                 .rotationEffect(.degrees(90))
 
             Circle()
@@ -25,12 +25,11 @@ struct DashboardCalorieGauge: View {
 
             VStack {
                 Text(day.consumedCalories, format: .number)
-                    .font(.title)
-                    .bold()
+                    .font(MonsTypography.metric)
                     .contentTransition(.numericText())
                 Text("Consumed")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(MonsTypography.subheadline)
+                    .foregroundStyle(MonsColor.textSecondary)
             }
         }
         .aspectRatio(1, contentMode: .fit)

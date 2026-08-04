@@ -28,14 +28,14 @@ struct FoodTargetImpactMetric: View {
                     .rotationEffect(.degrees(-90))
 
                 Text("\(percentage)%")
-                    .font(.subheadline.weight(.medium))
+                    .font(MonsTypography.headline)
                     .contentTransition(.numericText())
             }
             .frame(width: 54, height: 54)
 
             Text(title)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .font(MonsTypography.caption)
+                .foregroundStyle(MonsColor.textSecondary)
                 .lineLimit(1)
         }
         .frame(maxWidth: .infinity)

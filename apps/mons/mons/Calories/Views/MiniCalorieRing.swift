@@ -17,7 +17,7 @@ struct MiniCalorieRing: View {
             Circle()
                 .trim(from: 0, to: progress)
                 .stroke(
-                    isOverGoal ? Color.orange : Color.accentColor,
+                    isOverGoal ? MonsColor.error : MonsColor.action,
                     style: StrokeStyle(lineWidth: 2.5, lineCap: .round)
                 )
                 .rotationEffect(.degrees(-90))
@@ -29,7 +29,7 @@ struct MiniCalorieRing: View {
             }
 
             Text(weekday)
-                .font(.caption)
+                .font(MonsTypography.caption)
                 .fontWeight(isSelected ? .bold : .medium)
                 .foregroundStyle(isSelected ? .white : .primary)
         }

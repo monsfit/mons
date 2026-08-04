@@ -7,9 +7,9 @@ struct MacroMetricView: View {
     var body: some View {
         VStack(alignment: .leading) {
             Text(title)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(MonsColor.textSecondary)
             Text("\(grams.formatted()) g")
-                .font(.headline)
+                .font(MonsTypography.headline)
         }
     }
 }

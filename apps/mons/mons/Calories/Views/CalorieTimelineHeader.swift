@@ -22,12 +22,11 @@ struct CalorieTimelineHeader: View {
                 calendar: calendar
             )
         }
-        .padding(.horizontal)
+        .padding(.horizontal, MonsSpacing.large)
         .padding(.bottom, 12)
-        .background(Color.primary.opacity(0.08))
-        .background(.background)
+        .background(MonsColor.chrome)
         .overlay(alignment: .bottom) {
-            Divider()
+            Divider().overlay(MonsColor.border)
         }
     }
 }

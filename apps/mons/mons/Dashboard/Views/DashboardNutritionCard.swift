@@ -9,45 +9,48 @@ struct DashboardNutritionCard: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            HStack {
-                Text("Food Log Focus")
-                    .font(.title2)
-                    .bold()
-                Spacer()
-                Button("Open calories", systemImage: "chevron.right", action: onShowCalories)
-                    .labelStyle(.iconOnly)
-                    .frame(minWidth: 44, minHeight: 44)
-            }
-
-            HStack {
-                VStack {
-                    Text(max(day.remainingCalories, 0), format: .number)
-                        .font(.title2)
-                        .bold()
-                    Text("Remaining")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+        MonsCard {
+            VStack(alignment: .leading, spacing: MonsSpacing.xLarge) {
+                HStack {
+                    VStack(alignment: .leading, spacing: MonsSpacing.xSmall) {
+                        Text("TODAY'S NUTRITION")
+                            .font(MonsTypography.caption)
+                            .foregroundStyle(MonsColor.textWarm)
+                        Text("Food Log Focus")
+                            .font(MonsTypography.title)
+                    }
+                    Spacer()
+                    Button("Open calories", systemImage: "chevron.right", action: onShowCalories)
+                        .labelStyle(.iconOnly)
+                        .frame(minWidth: 44, minHeight: 44)
+                        .foregroundStyle(MonsColor.textWarm)
                 }
-                .frame(maxWidth: .infinity)
 
-                DashboardCalorieGauge(day: day)
+                HStack {
+                    VStack {
+                        Text(max(day.remainingCalories, 0), format: .number)
+                            .font(MonsTypography.title)
+                        Text("Remaining")
+                            .font(MonsTypography.subheadline)
+                            .foregroundStyle(MonsColor.textSecondary)
+                    }
                     .frame(maxWidth: .infinity)
 
-                VStack {
-                    Text(day.calorieGoal, format: .number)
-                        .font(.title2)
-                        .bold()
-                    Text("Target")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-                .frame(maxWidth: .infinity)
-            }
+                    DashboardCalorieGauge(day: day)
+                        .frame(maxWidth: .infinity)
 
-            DashboardMacroRow(macros: day.macros, targets: targets)
+                    VStack {
+                        Text(day.calorieGoal, format: .number)
+                            .font(MonsTypography.title)
+                        Text("Target")
+                            .font(MonsTypography.subheadline)
+                            .foregroundStyle(MonsColor.textSecondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+
+                DashboardMacroRow(macros: day.macros, targets: targets)
+            }
         }
-        .padding()
-        .background(.thinMaterial, in: .rect(cornerRadius: 20))
     }
 }

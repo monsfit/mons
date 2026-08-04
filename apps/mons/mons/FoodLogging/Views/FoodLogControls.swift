@@ -15,7 +15,7 @@ struct FoodLogControls: View {
                 #endif
 
             Text("g")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(MonsColor.textSecondary)
 
             Button(action: onAdd) {
                 if isSaving {

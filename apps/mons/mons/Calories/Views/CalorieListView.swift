@@ -46,7 +46,7 @@ struct CalorieListView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 16, pinnedViews: [.sectionHeaders]) {
+                LazyVStack(alignment: .leading, spacing: MonsSpacing.large, pinnedViews: [.sectionHeaders]) {
                     CalorieSummaryRow(day: selectedDay)
                         .padding(.horizontal)
                         .scrollTransition(.interactive, axis: .vertical) { content, phase in
@@ -90,7 +90,8 @@ struct CalorieListView: View {
                 }
                 .padding(.vertical)
             }
-            .background(Color.secondary.opacity(0.06))
+            .background(MonsColor.background)
+            .foregroundStyle(MonsColor.textPrimary)
             .safeAreaInset(edge: .top, spacing: 0) {
                 CalorieTimelineHeader(
                     selectedDate: $selectedDate,

@@ -19,23 +19,23 @@ struct TimelineHourLane: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 4) {
                 Text(scheduledAt, format: .dateTime.hour())
-                    .font(.subheadline)
+                    .font(MonsTypography.subheadline)
                     .padding(.horizontal, 12)
                     .frame(minHeight: 32)
-                    .background(.quaternary, in: .capsule)
+                    .background(MonsColor.surfaceRaised, in: .capsule)
 
                 Button("Add food at \(scheduledAt.formatted(date: .omitted, time: .shortened))", systemImage: "plus", action: addMeal)
                     .labelStyle(.iconOnly)
                     .frame(width: 44, height: 44)
                     .contentShape(.circle)
-                    .background(.quaternary, in: .circle)
+                    .background(MonsColor.surfaceRaised, in: .circle)
 
                 Spacer()
             }
 
             ZStack {
                 Rectangle()
-                    .fill(isCurrentHour ? Color.accentColor : Color.secondary)
+                    .fill(isCurrentHour ? MonsColor.action : MonsColor.textMuted)
                     .frame(width: isCurrentHour ? 2 : 1)
                     .frame(maxHeight: .infinity)
                     .padding(.leading, 25)
@@ -44,8 +44,8 @@ struct TimelineHourLane: View {
 
                 if meals.isEmpty && isDropTargeted {
                     Label("Move to \(scheduledAt.formatted(date: .omitted, time: .shortened))", systemImage: "arrow.down.circle")
-                        .font(.subheadline)
-                        .foregroundStyle(.tint)
+                        .font(MonsTypography.subheadline)
+                        .foregroundStyle(MonsColor.action)
                         .frame(maxWidth: .infinity)
                 } else {
                     LazyVStack(spacing: 8) {

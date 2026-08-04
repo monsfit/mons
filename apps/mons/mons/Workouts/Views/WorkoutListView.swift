@@ -44,6 +44,7 @@ struct WorkoutListView: View {
             List {
                 Section("This week") {
                     WorkoutWeeklySummaryRow(summary: weeklySummary)
+                        .listRowBackground(MonsColor.surfaceRaised)
                 }
 
                 if sections.isEmpty {
@@ -59,11 +60,16 @@ struct WorkoutListView: View {
                                 NavigationLink(value: DetailDestination(workout: session)) {
                                     WorkoutSessionRow(session: session)
                                 }
+                                .listRowBackground(MonsColor.surface)
+                                .listRowSeparatorTint(MonsColor.border)
                             }
                         }
                     }
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(MonsColor.background)
+            .foregroundStyle(MonsColor.textPrimary)
             .navigationTitle("Workouts")
             .toolbar {
                 ToolbarItemGroup(placement: .primaryAction) {
@@ -88,6 +94,7 @@ struct WorkoutListView: View {
                 await store.loadWorkouts(referenceDate: referenceDate)
             }
         }
+        .tint(MonsColor.action)
     }
 }
 

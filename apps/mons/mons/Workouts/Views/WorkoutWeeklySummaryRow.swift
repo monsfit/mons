@@ -29,5 +29,7 @@ struct WorkoutWeeklySummaryRow: View {
                 Label("\(summary.cardioSessionCount) cardio", systemImage: WorkoutKind.cardio.systemImage)
             }
         }
+        .font(MonsTypography.body)
+        .foregroundStyle(MonsColor.textPrimary)
     }
 }

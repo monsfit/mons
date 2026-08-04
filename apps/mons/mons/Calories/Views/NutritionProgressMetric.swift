@@ -27,12 +27,12 @@ struct NutritionProgressMetric: View {
                 }
 
                 Text("\(value.formatted()) / \(goal.formatted())")
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(MonsColor.textPrimary)
                     .monospacedDigit()
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
             }
-            .font(.footnote)
+            .font(MonsTypography.caption)
 
             ProgressView(value: progress)
                 .tint(color)

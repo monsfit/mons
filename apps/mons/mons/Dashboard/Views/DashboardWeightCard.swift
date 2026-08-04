@@ -9,42 +9,42 @@ struct DashboardWeightCard: View {
     let system: MeasurementSystem
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Label("Weight Trend", systemImage: "scalemass")
-                    .font(.title2)
-                    .bold()
-                Spacer()
-                Button("Log weight", systemImage: "plus", action: showWeightEntry)
-                    .buttonStyle(.bordered)
-                    .buttonBorderShape(.capsule)
-            }
-
-            if let weight = displayedWeightKg {
-                HStack(alignment: .firstTextBaseline) {
-                    Text(system.displayedWeight(kilograms: weight), format: .number.precision(.fractionLength(1)))
-                        .font(.title)
-                        .bold()
-                    Text(system.weightSymbol)
-                        .foregroundStyle(.secondary)
+        MonsCard {
+            VStack(alignment: .leading, spacing: MonsSpacing.large) {
+                HStack {
+                    Label("Weight Trend", systemImage: "scalemass")
+                        .font(MonsTypography.title)
+                        .foregroundStyle(MonsColor.textWarm)
                     Spacer()
-                    if let change = snapshot.weightChangeKg {
-                        VStack(alignment: .trailing) {
-                            Text("Change")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                            Text(
-                                "\(system.displayedWeight(kilograms: change), format: .number.sign(strategy: .always()).precision(.fractionLength(1))) \(system.weightSymbol)"
-                            )
+                    Button("Log weight", systemImage: "plus", action: showWeightEntry)
+                        .buttonStyle(MonsSecondaryButtonStyle())
+                }
+
+                if let weight = displayedWeightKg {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(system.displayedWeight(kilograms: weight), format: .number.precision(.fractionLength(1)))
+                            .font(MonsTypography.metric)
+                        Text(system.weightSymbol)
+                            .font(MonsTypography.subheadline)
+                            .foregroundStyle(MonsColor.textSecondary)
+                        Spacer()
+                        if let change = snapshot.weightChangeKg {
+                            VStack(alignment: .trailing) {
+                                Text("Change")
+                                    .font(MonsTypography.subheadline)
+                                    .foregroundStyle(MonsColor.textSecondary)
+                                Text(
+                                    "\(system.displayedWeight(kilograms: change), format: .number.sign(strategy: .always()).precision(.fractionLength(1))) \(system.weightSymbol)"
+                                )
+                                .font(MonsTypography.headline)
+                            }
                         }
                     }
                 }
-            }
 
-            WeightTrendChart(entries: snapshot.weightEntries, system: system)
+                WeightTrendChart(entries: snapshot.weightEntries, system: system)
+            }
         }
-        .padding()
-        .background(.thinMaterial, in: .rect(cornerRadius: 20))
         .sheet(isPresented: $isShowingWeightEntry) {
             WeightEntrySheet(initialWeightKg: initialWeightKg, system: system) { weightKg, date in
                 await store.logWeight(weightKg: weightKg, measuredAt: date)

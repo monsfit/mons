@@ -33,9 +33,9 @@ struct WeekDayProgressButton: View {
                 )
 
                 Text(calendar.component(.day, from: date), format: .number)
-                    .font(.caption)
+                    .font(MonsTypography.caption)
                     .fontWeight(isSelected ? .semibold : .regular)
-                    .foregroundStyle(isSelected ? .primary : .secondary)
+                    .foregroundStyle(isSelected ? MonsColor.textPrimary : MonsColor.textMuted)
                     .monospacedDigit()
             }
             .frame(maxWidth: .infinity, minHeight: 54)

@@ -51,16 +51,7 @@ struct CompactNutritionSummary: View {
         }
         .padding(12)
         .background(
-            Color.primary.opacity(0.08),
-            in: .rect(
-                topLeadingRadius: topRadius,
-                bottomLeadingRadius: 12,
-                bottomTrailingRadius: 12,
-                topTrailingRadius: topRadius
-            )
-        )
-        .background(
-            .background,
+            isPinned ? MonsColor.chrome : MonsColor.surfaceRaised,
             in: .rect(
                 topLeadingRadius: topRadius,
                 bottomLeadingRadius: 12,
@@ -74,6 +65,7 @@ struct CompactNutritionSummary: View {
         .frame(maxWidth: .infinity)
         .overlay(alignment: .bottom) {
             Divider()
+                .overlay(MonsColor.border)
                 .opacity(isPinned ? 1 : 0)
         }
         .animation(reduceMotion ? nil : .snappy(duration: 0.22), value: isPinned)

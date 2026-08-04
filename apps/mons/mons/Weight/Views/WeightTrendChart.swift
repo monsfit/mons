@@ -7,25 +7,39 @@ struct WeightTrendChart: View {
 
     var body: some View {
         if entries.isEmpty {
-            ContentUnavailableView(
-                "No weight entries",
-                systemImage: "chart.xyaxis.line",
-                description: Text("Log a weight to begin your trend.")
-            )
+            HStack(spacing: MonsSpacing.medium) {
+                Image(systemName: "chart.xyaxis.line")
+                    .font(MonsTypography.title)
+                    .foregroundStyle(MonsColor.performance)
+                    .frame(width: 44, height: 44)
+                    .background(MonsPalette.teal900, in: .rect(cornerRadius: MonsRadius.small))
+                    .accessibilityHidden(true)
+
+                VStack(alignment: .leading, spacing: MonsSpacing.xSmall) {
+                    Text("No weight entries")
+                        .font(MonsTypography.headline)
+                    Text("Log a weight to begin your trend.")
+                        .font(MonsTypography.subheadline)
+                        .foregroundStyle(MonsColor.textSecondary)
+                }
+
+                Spacer()
+            }
+            .accessibilityElement(children: .combine)
         } else {
             Chart(entries) { entry in
                 LineMark(
                     x: .value("Date", entry.measuredAt),
                     y: .value("Weight", system.displayedWeight(kilograms: entry.weightKg))
                 )
-                .foregroundStyle(.purple)
+                .foregroundStyle(MonsColor.performance)
                 .interpolationMethod(.catmullRom)
 
                 PointMark(
                     x: .value("Date", entry.measuredAt),
                     y: .value("Weight", system.displayedWeight(kilograms: entry.weightKg))
                 )
-                .foregroundStyle(.purple)
+                .foregroundStyle(MonsColor.performance)
                 .symbolSize(35)
             }
             .chartYScale(domain: yDomain)

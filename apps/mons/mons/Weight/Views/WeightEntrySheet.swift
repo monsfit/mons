@@ -43,6 +43,9 @@ struct WeightEntrySheet: View {
                     DatePicker("Measured", selection: $measuredAt, in: ...Date.now)
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(MonsColor.background)
+            .foregroundStyle(MonsColor.textPrimary)
             .navigationTitle("Log Weight")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
@@ -58,6 +61,7 @@ struct WeightEntrySheet: View {
                 }
             }
         }
+        .tint(MonsColor.action)
         .presentationDetents([.medium])
     }
 

@@ -12,9 +12,9 @@ struct MacroBadge: View {
                 .foregroundStyle(color)
 
             Text("\(value) g")
-                .foregroundStyle(.primary)
+                .foregroundStyle(MonsColor.textPrimary)
         }
-        .font(.caption)
+        .font(MonsTypography.caption)
         .padding(.horizontal, 7)
         .padding(.vertical, 4)
         .background(color.opacity(0.13), in: Capsule())

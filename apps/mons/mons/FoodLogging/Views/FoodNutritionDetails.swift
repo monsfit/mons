@@ -30,6 +30,10 @@ struct FoodNutritionDetails: View {
                 color: NutritionColor.carbohydrates
             )
         }
-        .background(.background, in: .rect(cornerRadius: 14))
+        .background(MonsColor.surface, in: .rect(cornerRadius: MonsRadius.medium))
+        .overlay {
+            RoundedRectangle(cornerRadius: MonsRadius.medium)
+                .stroke(MonsColor.border, lineWidth: 1)
+        }
     }
 }

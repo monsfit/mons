@@ -16,9 +16,9 @@ struct FoodNutritionDetailRow: View {
             Text(title)
             Spacer()
             Text("\(value.formatted(.number.precision(.fractionLength(1)))) \(unit)")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(MonsColor.textSecondary)
         }
-        .font(.subheadline)
+        .font(MonsTypography.subheadline)
         .padding(.horizontal, 14)
         .frame(minHeight: 48)
         .overlay(alignment: .bottom) {

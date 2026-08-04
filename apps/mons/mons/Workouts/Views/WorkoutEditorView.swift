@@ -49,6 +49,9 @@ struct WorkoutEditorView: View {
                     Button("Add item", systemImage: "plus", action: addSet)
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(MonsColor.background)
+            .foregroundStyle(MonsColor.textPrimary)
             .navigationTitle("Log workout")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -60,6 +63,7 @@ struct WorkoutEditorView: View {
                 }
             }
         }
+        .tint(MonsColor.action)
     }
 
     private var trimmedTitle: String {

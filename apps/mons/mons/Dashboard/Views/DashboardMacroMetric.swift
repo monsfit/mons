@@ -14,12 +14,12 @@ struct DashboardMacroMetric: View {
     var body: some View {
         VStack(alignment: .leading) {
             Text(title)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .font(MonsTypography.subheadline)
+                .foregroundStyle(MonsColor.textSecondary)
             ProgressView(value: progress)
                 .tint(color)
             Text("\(consumed.formatted()) / \(target.formatted()) g")
-                .font(.subheadline)
+                .font(MonsTypography.subheadline)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .combine)

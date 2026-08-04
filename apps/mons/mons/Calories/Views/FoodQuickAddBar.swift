@@ -8,7 +8,8 @@ struct FoodQuickAddBar: View {
         HStack(spacing: 4) {
             Button(action: onSearch) {
                 Label("Search for a food", systemImage: "magnifyingglass")
-                    .foregroundStyle(.secondary)
+                    .font(MonsTypography.body)
+                    .foregroundStyle(MonsColor.textSecondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .contentShape(.rect)
             }
@@ -25,6 +26,7 @@ struct FoodQuickAddBar: View {
         .padding(.trailing, 4)
         .padding(.vertical, 4)
         .glassEffect(.regular.interactive(), in: .capsule)
+        .tint(MonsColor.textWarm)
         .padding(.horizontal)
         .padding(.bottom, 6)
     }

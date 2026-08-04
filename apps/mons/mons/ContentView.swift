@@ -15,7 +15,12 @@ struct ContentView: View {
     var body: some View {
         Group {
             if !store.hasLoadedNutritionPlan {
-                ProgressView("Loading profile")
+                ZStack {
+                    MonsColor.background.ignoresSafeArea()
+                    ProgressView("Loading profile")
+                        .font(MonsTypography.body)
+                        .foregroundStyle(MonsColor.textSecondary)
+                }
             } else if store.nutritionPlan == nil {
                 OnboardingFlowView { draft in
                     await store.completeOnboarding(draft)
@@ -39,6 +44,8 @@ struct ContentView: View {
                 }
             }
         }
+        .foregroundStyle(MonsColor.textPrimary)
+        .background(MonsColor.background.ignoresSafeArea())
         .safeAreaInset(edge: .bottom) {
             if let error = store.lastError {
                 AppErrorBanner(message: error, onDismiss: store.clearError)

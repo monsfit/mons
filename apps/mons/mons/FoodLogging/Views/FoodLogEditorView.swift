@@ -24,7 +24,7 @@ struct FoodLogEditorView: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 24) {
+            LazyVStack(alignment: .leading, spacing: MonsSpacing.xLarge) {
                 FoodNutritionSummary(food: food, quantityGrams: quantityGrams)
 
                 sourceSummary
@@ -38,7 +38,7 @@ struct FoodLogEditorView: View {
 
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Impact on Targets")
-                        .font(.title3.weight(.semibold))
+                        .font(MonsTypography.sectionTitle)
 
                     FoodTargetImpactRow(
                         food: food,
@@ -51,7 +51,7 @@ struct FoodLogEditorView: View {
 
                 VStack(alignment: .leading, spacing: 14) {
                     Text("Nutrition per 100 g")
-                        .font(.title3.weight(.semibold))
+                        .font(MonsTypography.sectionTitle)
 
                     FoodNutritionDetails(food: food)
                 }
@@ -59,7 +59,8 @@ struct FoodLogEditorView: View {
             .padding()
             .padding(.bottom, 12)
         }
-        .background(Color.secondary.opacity(0.05))
+        .background(MonsColor.background)
+        .foregroundStyle(MonsColor.textPrimary)
         .navigationTitle(food.name)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
@@ -81,17 +82,21 @@ struct FoodLogEditorView: View {
             VStack(alignment: .leading, spacing: 2) {
                 if let brand = food.brand, !brand.isEmpty {
                     Text(brand)
-                        .font(.subheadline.weight(.medium))
+                        .font(MonsTypography.headline)
                 }
                 Text(food.datasetKind.title)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(MonsTypography.caption)
+                    .foregroundStyle(MonsColor.textSecondary)
             }
 
             Spacer()
         }
         .padding(12)
-        .background(.background, in: .rect(cornerRadius: 14))
+        .background(MonsColor.surface, in: .rect(cornerRadius: MonsRadius.medium))
+        .overlay {
+            RoundedRectangle(cornerRadius: MonsRadius.medium)
+                .stroke(MonsColor.border, lineWidth: 1)
+        }
     }
 
     private func save() {

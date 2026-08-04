@@ -11,10 +11,17 @@ import SwiftUI
 struct MonsApp: App {
     @State private var store = AppStore()
 
+    init() {
+        MonsFontRegistrar.registerBundledFonts()
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environment(store)
+                .environment(\.font, MonsTypography.body)
+                .tint(MonsColor.action)
+                .preferredColorScheme(.dark)
                 .task {
                     await store.bootstrap()
                 }

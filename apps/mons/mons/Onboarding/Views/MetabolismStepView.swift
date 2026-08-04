@@ -17,8 +17,8 @@ struct MetabolismStepView: View {
             }
 
             Text("This is a coefficient in the Mifflin–St Jeor estimate, not a gender-identity question.")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
+                .font(MonsTypography.caption)
+                .foregroundStyle(MonsColor.textSecondary)
                 .padding(.top, 8)
         }
     }

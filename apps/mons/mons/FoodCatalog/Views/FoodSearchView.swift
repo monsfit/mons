@@ -34,6 +34,9 @@ struct FoodSearchView: View {
                 resultsContent
             }
             .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .background(MonsColor.background)
+            .foregroundStyle(MonsColor.textPrimary)
             .navigationTitle("Add Food")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
@@ -107,6 +110,8 @@ struct FoodSearchView: View {
                         FoodSearchResultRow(food: food)
                     }
                     .buttonStyle(.plain)
+                    .listRowBackground(MonsColor.surface)
+                    .listRowSeparatorTint(MonsColor.border)
                 }
             }
         }

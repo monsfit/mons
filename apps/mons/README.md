@@ -39,3 +39,24 @@ measurements, exercise frequency, normal daily activity, weight goal, and goal v
 app previews the estimate locally, then saves the inputs to the API and uses the authoritative
 returned calorie target throughout the calorie log. Dates and calculators accept injected clocks
 and calendars so fixtures remain deterministic.
+
+## Design system
+
+Mons uses a dark, warm performance palette with semantic roles instead of screen-level color
+choices. The source tokens live in `mons/DesignSystem/Foundation`:
+
+- ink and black olive form the app background and chrome;
+- surface and raised surface define cards, lists, and controls;
+- ivory and white carry the primary type hierarchy, with mist and muted for supporting text;
+- ember is reserved for primary actions and calorie energy;
+- teal communicates performance and progress;
+- olive anchors the brand, while plum is reserved for recovery-oriented data;
+- success and error have dedicated, non-accent semantic roles.
+
+Spacing, corner radii, button styles, cards, and the wordmark are shared components under
+`mons/DesignSystem`. Add new visual decisions there before adding one-off values to a feature.
+
+[Space Grotesk](https://floriankarsten.github.io/space-grotesk/) is bundled locally in Regular,
+Medium, and Bold weights under the SIL Open Font License. `MonsTypography` provides Dynamic
+Type-aware roles; feature views should use those roles rather than fixed font sizes. The bundled
+license is preserved at `mons/DesignSystem/Fonts/SPACE_GROTESK_LICENSE.txt`.

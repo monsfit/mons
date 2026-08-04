@@ -22,7 +22,7 @@ struct CalorieTimelineList: View {
     var body: some View {
         LazyVStack(alignment: .leading, spacing: 0) {
             Text("Timeline")
-                .font(.headline)
+                .font(MonsTypography.headline)
                 .bold()
                 .padding(.bottom, 12)
 

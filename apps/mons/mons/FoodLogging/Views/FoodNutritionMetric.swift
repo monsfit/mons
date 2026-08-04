@@ -10,17 +10,17 @@ struct FoodNutritionMetric: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(value, format: .number.precision(.fractionLength(0)))
-                .font(isPrimary ? .largeTitle.weight(.semibold) : .title2.weight(.semibold))
-                .foregroundStyle(isPrimary ? Color.primary : color)
+                .font(isPrimary ? MonsTypography.display : MonsTypography.title)
+                .foregroundStyle(isPrimary ? MonsColor.textWarm : color)
                 .contentTransition(.numericText())
 
             Text(title)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .font(MonsTypography.caption)
+                .foregroundStyle(MonsColor.textSecondary)
 
             Text(unit)
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
+                .font(MonsTypography.smallCaption)
+                .foregroundStyle(MonsColor.textMuted)
         }
         .accessibilityElement(children: .combine)
     }

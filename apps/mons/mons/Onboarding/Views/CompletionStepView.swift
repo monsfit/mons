@@ -7,35 +7,36 @@ struct CompletionStepView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 28) {
             Text("Almost There")
-                .font(.largeTitle.weight(.bold))
+                .font(MonsTypography.display)
+                .foregroundStyle(MonsColor.textWarm)
 
             HStack(spacing: 0) {
                 ForEach(["person.fill", "scalemass.fill", "target", "fork.knife"], id: \.self) { image in
                     Image(systemName: image)
-                        .font(.caption)
-                        .foregroundStyle(.background)
+                        .font(MonsTypography.caption)
+                        .foregroundStyle(MonsColor.textPrimary)
                         .frame(width: 30, height: 30)
-                        .background(.primary, in: .circle)
+                        .background(MonsColor.action, in: .circle)
                     Rectangle()
-                        .fill(.primary)
+                        .fill(MonsColor.action)
                         .frame(height: 1)
                 }
                 Image(systemName: "checkmark")
-                    .font(.caption)
+                    .font(MonsTypography.caption)
                     .frame(width: 30, height: 30)
-                    .background(.secondary.opacity(0.15), in: .circle)
+                    .background(MonsColor.surfaceRaised, in: .circle)
             }
 
             Text("Program")
-                .font(.headline)
+                .font(MonsTypography.headline)
 
             Text("Mons will begin with a \(estimate.calorieTargetKcal) kcal daily \(goal == .lose ? "ceiling" : "target") and adapt as your logged intake and weight provide better evidence.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .font(MonsTypography.subheadline)
+                .foregroundStyle(MonsColor.textSecondary)
 
             Text("This adult planning estimate is not medical advice and is not designed for pregnancy or breastfeeding.")
-                .font(.footnote)
-                .foregroundStyle(.tertiary)
+                .font(MonsTypography.caption)
+                .foregroundStyle(MonsColor.textMuted)
         }
     }
 }

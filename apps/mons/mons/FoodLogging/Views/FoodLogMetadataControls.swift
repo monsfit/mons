@@ -25,6 +25,10 @@ struct FoodLogMetadataControls: View {
             .frame(minHeight: 48)
         }
         .padding(.horizontal, 14)
-        .background(.background, in: .rect(cornerRadius: 14))
+        .background(MonsColor.surface, in: .rect(cornerRadius: MonsRadius.medium))
+        .overlay {
+            RoundedRectangle(cornerRadius: MonsRadius.medium)
+                .stroke(MonsColor.border, lineWidth: 1)
+        }
     }
 }

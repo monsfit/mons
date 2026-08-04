@@ -65,7 +65,7 @@ struct CalorieTimingChart: View {
                         x: .value("Time", point.date),
                         y: .value("Calories", point.calories)
                     )
-                    .foregroundStyle(.tint)
+                    .foregroundStyle(MonsColor.action)
                     .interpolationMethod(.linear)
                     .lineStyle(
                         StrokeStyle(
@@ -81,7 +81,7 @@ struct CalorieTimingChart: View {
                         x: .value("Time", meal.loggedAt),
                         y: .value("Calories", meal.calories)
                     )
-                    .foregroundStyle(.tint)
+                    .foregroundStyle(MonsColor.action)
                     .symbolSize(24)
                 }
             }
@@ -90,7 +90,7 @@ struct CalorieTimingChart: View {
             .chartXAxis {
                 AxisMarks(values: axisValues) { value in
                     AxisGridLine()
-                        .foregroundStyle(.quaternary)
+                        .foregroundStyle(MonsColor.border)
                     AxisValueLabel(format: .dateTime.hour())
                 }
             }
@@ -98,9 +98,9 @@ struct CalorieTimingChart: View {
             .frame(height: 120)
 
             Text("Total \(meals.reduce(0) { $0 + $1.calories }.formatted()) kcal")
-                .font(.subheadline)
+                .font(MonsTypography.subheadline)
                 .bold()
-                .foregroundStyle(.tint)
+                .foregroundStyle(MonsColor.action)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Calories by time of day")

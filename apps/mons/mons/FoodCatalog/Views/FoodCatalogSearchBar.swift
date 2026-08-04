@@ -7,10 +7,11 @@ struct FoodCatalogSearchBar: View {
     var body: some View {
         HStack(spacing: 6) {
             Image(systemName: "magnifyingglass")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(MonsColor.textSecondary)
                 .accessibilityHidden(true)
 
             TextField("Search for a food", text: $searchText)
+                .font(MonsTypography.body)
                 .textFieldStyle(.plain)
 
             Button("Scan barcode", systemImage: "barcode.viewfinder", action: onScan)
@@ -23,6 +24,7 @@ struct FoodCatalogSearchBar: View {
         .padding(.trailing, 4)
         .frame(minHeight: 52)
         .glassEffect(.regular.interactive(), in: .capsule)
+        .tint(MonsColor.textWarm)
         .padding(.horizontal)
         .padding(.vertical, 8)
     }

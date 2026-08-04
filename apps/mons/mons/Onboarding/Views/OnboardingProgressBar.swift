@@ -8,7 +8,7 @@ struct OnboardingProgressBar: View {
         HStack(spacing: 4) {
             ForEach(0..<totalSteps, id: \.self) { step in
                 Capsule()
-                    .fill(step <= currentStep ? Color.primary : Color.secondary.opacity(0.18))
+                    .fill(step <= currentStep ? MonsColor.action : MonsColor.border)
                     .frame(height: 3)
             }
         }

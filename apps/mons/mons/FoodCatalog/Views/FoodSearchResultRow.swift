@@ -6,29 +6,29 @@ struct FoodSearchResultRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: food.datasetKind == .raw ? "fork.knife" : "shippingbox.fill")
-                .font(.body)
-                .foregroundStyle(food.datasetKind == .raw ? NutritionColor.calories : .secondary)
+                .font(MonsTypography.body)
+                .foregroundStyle(food.datasetKind == .raw ? NutritionColor.calories : MonsColor.performance)
                 .frame(width: 32, height: 32)
-                .background(.quaternary, in: .circle)
+                .background(MonsColor.surfaceRaised, in: .circle)
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(food.name)
-                    .font(.body.weight(.medium))
-                    .foregroundStyle(.primary)
+                    .font(MonsTypography.headline)
+                    .foregroundStyle(MonsColor.textPrimary)
                     .lineLimit(1)
 
                 Text(detailSummary)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(MonsTypography.caption)
+                    .foregroundStyle(MonsColor.textSecondary)
                     .lineLimit(1)
             }
 
             Spacer(minLength: 4)
 
             Image(systemName: "plus.circle")
-                .font(.body.weight(.medium))
-                .foregroundStyle(.primary)
+                .font(MonsTypography.sectionTitle)
+                .foregroundStyle(MonsColor.action)
                 .accessibilityHidden(true)
         }
         .padding(.vertical, 4)

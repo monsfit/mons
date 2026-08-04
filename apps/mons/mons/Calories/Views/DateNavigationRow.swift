@@ -27,7 +27,8 @@ struct DateNavigationRow: View {
             Spacer()
 
             Text(dateTitle)
-                .font(.headline)
+                .font(MonsTypography.headline)
+                .foregroundStyle(MonsColor.textWarm)
                 .lineLimit(1)
                 .minimumScaleFactor(0.75)
                 .accessibilityLabel("Selected day, \(dateTitle)")

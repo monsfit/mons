@@ -12,28 +12,28 @@ struct WorkoutSetRow: View {
     var body: some View {
         HStack(spacing: 10) {
             Rectangle()
-                .fill(.quaternary)
+                .fill(MonsColor.surfaceRaised)
                 .frame(width: 2)
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(set.title)
-                    .font(.body)
+                    .font(MonsTypography.body)
                     .bold()
 
                 Text(set.detail)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(MonsTypography.subheadline)
+                    .foregroundStyle(MonsColor.textSecondary)
             }
 
             Spacer()
 
             Text(set.value)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .font(MonsTypography.subheadline)
+                .foregroundStyle(MonsColor.textSecondary)
 
             Image(systemName: "line.3.horizontal")
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(MonsColor.textMuted)
                 .accessibilityHidden(true)
         }
         .padding(.leading, 28)
@@ -41,7 +41,7 @@ struct WorkoutSetRow: View {
         .padding(.vertical, 8)
         .frame(minHeight: 52)
         .background(
-            isDropTargeted ? Color.accentColor.opacity(0.10) : Color.clear,
+            isDropTargeted ? MonsColor.performance.opacity(0.14) : Color.clear,
             in: RoundedRectangle(cornerRadius: 10)
         )
         .contentShape(.rect)

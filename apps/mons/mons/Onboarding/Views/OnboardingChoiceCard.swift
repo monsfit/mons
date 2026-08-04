@@ -11,33 +11,34 @@ struct OnboardingChoiceCard: View {
         Button(action: action) {
             HStack(spacing: 16) {
                 Image(systemName: systemImage)
+                    .foregroundStyle(isSelected ? MonsColor.action : MonsColor.textSecondary)
                     .frame(width: 24)
                     .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
-                        .font(.body.weight(.medium))
+                        .font(MonsTypography.headline)
                     if let detail {
                         Text(detail)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .font(MonsTypography.caption)
+                            .foregroundStyle(MonsColor.textSecondary)
                     }
                 }
 
                 Spacer(minLength: 8)
 
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .foregroundStyle(isSelected ? Color.primary : Color.secondary)
+                    .foregroundStyle(isSelected ? MonsColor.action : MonsColor.textMuted)
                     .accessibilityHidden(true)
             }
-            .foregroundStyle(.primary)
+            .foregroundStyle(MonsColor.textPrimary)
             .multilineTextAlignment(.leading)
             .padding(16)
             .frame(maxWidth: .infinity, minHeight: 72, alignment: .leading)
-            .background(.background, in: .rect(cornerRadius: 10))
+            .background(isSelected ? MonsPalette.ember900.opacity(0.42) : MonsColor.surface, in: .rect(cornerRadius: MonsRadius.medium))
             .overlay {
-                RoundedRectangle(cornerRadius: 10)
-                    .stroke(isSelected ? Color.primary : Color.secondary.opacity(0.2), lineWidth: isSelected ? 2 : 1)
+                RoundedRectangle(cornerRadius: MonsRadius.medium)
+                    .stroke(isSelected ? MonsColor.action : MonsColor.border, lineWidth: isSelected ? 2 : 1)
             }
         }
         .buttonStyle(.plain)

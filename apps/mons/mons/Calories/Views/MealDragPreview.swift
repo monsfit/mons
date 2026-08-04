@@ -5,7 +5,7 @@ struct MealDragPreview: View {
 
     var body: some View {
         Label(meal.title, systemImage: meal.category.systemImage)
-            .font(.headline)
+            .font(MonsTypography.headline)
             .padding()
             .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
     }

@@ -31,12 +31,12 @@ struct CalorieProgressRing: View {
     var body: some View {
         ZStack {
             Circle()
-                .stroke(.quaternary, lineWidth: lineWidth)
+                .stroke(MonsColor.border, lineWidth: lineWidth)
 
             Circle()
                 .trim(from: 0, to: progress)
                 .stroke(
-                    day.remainingCalories >= 0 ? NutritionColor.calories : Color.orange,
+                    day.remainingCalories >= 0 ? NutritionColor.calories : MonsColor.error,
                     style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)
                 )
                 .rotationEffect(.degrees(-90))
@@ -46,12 +46,12 @@ struct CalorieProgressRing: View {
 
             VStack {
                 Text(day.consumedCalories, format: .number)
-                    .font(.title)
+                    .font(MonsTypography.metric)
                     .bold()
 
                 Text(compactStatus)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .font(MonsTypography.subheadline)
+                .foregroundStyle(MonsColor.textSecondary)
             }
         }
         .aspectRatio(1, contentMode: .fit)

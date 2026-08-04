@@ -7,7 +7,7 @@ struct AppErrorBanner: View {
     var body: some View {
         HStack {
             Label(message, systemImage: "exclamationmark.triangle.fill")
-                .foregroundStyle(.primary)
+                .foregroundStyle(MonsColor.error)
 
             Spacer()
 

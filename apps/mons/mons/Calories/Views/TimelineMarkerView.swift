@@ -6,12 +6,12 @@ struct TimelineMarkerView: View {
     var body: some View {
         VStack(spacing: 4) {
             Image(systemName: "circle.fill")
-                .font(.caption)
-                .foregroundStyle(.tint)
+                .font(MonsTypography.caption)
+                .foregroundStyle(MonsColor.action)
 
             if !isLast {
                 Rectangle()
-                    .fill(.quaternary)
+                    .fill(MonsColor.border)
                     .frame(width: 2)
                     .frame(maxHeight: .infinity)
             }

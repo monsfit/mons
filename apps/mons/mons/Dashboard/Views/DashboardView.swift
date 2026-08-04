@@ -36,15 +36,16 @@ struct DashboardView: View {
 
         NavigationStack {
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 20) {
+                LazyVStack(alignment: .leading, spacing: MonsSpacing.xLarge) {
                     DashboardHeader(date: referenceDate)
                     DashboardNutritionCard(day: snapshot.day, onShowCalories: onShowCalories)
                     DashboardWorkoutCard(snapshot: snapshot, onShowWorkouts: onShowWorkouts)
                     DashboardWeightCard(snapshot: snapshot, system: weightSystem)
                 }
-                .padding()
+                .padding(MonsSpacing.large)
             }
-            .background(Color.secondary.opacity(0.06))
+            .background(MonsColor.background)
+            .foregroundStyle(MonsColor.textPrimary)
             .refreshable {
                 await refresh()
             }

@@ -36,10 +36,10 @@ struct OnboardingFlowView: View {
                 VStack(alignment: .leading, spacing: 24) {
                     VStack(alignment: .leading, spacing: 8) {
                         Text(title)
-                            .font(.title2.weight(.semibold))
+                            .font(MonsTypography.title)
                         Text(subtitle)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .font(MonsTypography.subheadline)
+                            .foregroundStyle(MonsColor.textSecondary)
                     }
 
                     stepContent
@@ -53,7 +53,8 @@ struct OnboardingFlowView: View {
             navigationControls
                 .padding()
         }
-        .background(Color.secondary.opacity(0.04))
+        .background(MonsColor.background)
+        .foregroundStyle(MonsColor.textPrimary)
         .animation(.snappy, value: step)
     }
 
@@ -98,7 +99,8 @@ struct OnboardingFlowView: View {
             Button("Back", systemImage: "chevron.left", action: goBack)
                 .labelStyle(.iconOnly)
                 .frame(width: 48, height: 48)
-                .background(.secondary.opacity(0.1), in: .circle)
+                .foregroundStyle(MonsColor.textWarm)
+                .background(MonsColor.surfaceRaised, in: .circle)
                 .disabled(step == .metabolism || isSaving)
 
             Spacer()
@@ -110,13 +112,10 @@ struct OnboardingFlowView: View {
                 } else {
                     Label(nextTitle, systemImage: "chevron.right")
                         .labelStyle(.titleAndIcon)
-                        .foregroundStyle(.background)
                 }
             }
-            .buttonStyle(.borderedProminent)
-            .buttonBorderShape(.capsule)
-            .controlSize(.large)
-            .tint(.primary)
+            .buttonStyle(MonsPrimaryButtonStyle())
+            .frame(maxWidth: 220)
             .disabled(!canContinue || isSaving)
         }
     }

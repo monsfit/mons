@@ -6,32 +6,32 @@ struct WorkoutSessionRow: View {
     var body: some View {
         HStack {
             Image(systemName: session.metric.kind.systemImage)
-                .font(.title2)
-                .foregroundStyle(session.metric.kind == .strength ? .indigo : .orange)
+                .font(MonsTypography.title)
+                .foregroundStyle(session.metric.kind == .strength ? MonsColor.performance : MonsColor.action)
                 .frame(minWidth: 32)
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading) {
                 Text(session.title)
-                    .font(.headline)
+                    .font(MonsTypography.headline)
 
                 Text(session.completedAt, format: .dateTime.weekday(.abbreviated).month(.abbreviated).day().hour().minute())
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(MonsTypography.subheadline)
+                    .foregroundStyle(MonsColor.textSecondary)
 
                 Text(session.metric.summary)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(MonsTypography.subheadline)
+                    .foregroundStyle(MonsColor.textSecondary)
             }
 
             Spacer()
 
             VStack(alignment: .trailing) {
                 Text(session.durationMinutes, format: .number)
-                    .font(.headline)
+                    .font(MonsTypography.headline)
                 Text("min")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(MonsTypography.subheadline)
+                    .foregroundStyle(MonsColor.textSecondary)
             }
         }
         .accessibilityElement(children: .ignore)
