@@ -22,22 +22,14 @@ struct MealTimelineCard: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .layoutPriority(1)
 
-            Spacer(minLength: 4)
-
-            Image(systemName: "line.3.horizontal.decrease")
-                .foregroundStyle(MonsColor.textSecondary)
-                .accessibilityHidden(true)
         }
-        .padding(.horizontal, 12)
+        .padding(.leading, 12)
         .padding(.vertical, 10)
         .frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
-        .background(MonsColor.surface, in: .rect(cornerRadius: MonsRadius.medium))
-        .overlay {
-            RoundedRectangle(cornerRadius: MonsRadius.medium)
-                .stroke(MonsColor.border, lineWidth: 1)
-        }
-        .contentShape(.dragPreview, .rect(cornerRadius: 12))
+        .contentShape(.rect)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(meal.category.title), \(meal.title), \(meal.loggedAt.formatted(date: .omitted, time: .shortened))")
         .accessibilityValue("\(meal.calories) kilocalories. Protein \(meal.macros.protein) grams, carbohydrates \(meal.macros.carbohydrates) grams, fat \(meal.macros.fat) grams")

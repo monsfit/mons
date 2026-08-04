@@ -20,6 +20,8 @@ struct TimelineHourLane: View {
             HStack(spacing: 4) {
                 Text(scheduledAt, format: .dateTime.hour())
                     .font(MonsTypography.subheadline)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
                     .padding(.horizontal, 12)
                     .frame(minHeight: 32)
                     .background(MonsColor.surfaceRaised, in: .capsule)
@@ -54,13 +56,25 @@ struct TimelineHourLane: View {
                         }
                     }
                     .padding(.vertical, meals.isEmpty ? 0 : 6)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
-            .frame(maxWidth: .infinity, minHeight: meals.isEmpty ? 30 : 72)
-            .contentShape(.rect)
-            .dropDestination(for: String.self, action: dropMeals, isTargeted: updateDropTarget)
-            .animation(.easeInOut(duration: 0.15), value: isDropTargeted)
+            .frame(maxWidth: .infinity, minHeight: meals.isEmpty ? 44 : 72)
         }
+        .padding(.vertical, MonsSpacing.xSmall)
+        .background(
+            isDropTargeted ? MonsColor.action.opacity(0.12) : Color.clear,
+            in: .rect(cornerRadius: MonsRadius.medium)
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: MonsRadius.medium)
+                .stroke(
+                    isDropTargeted ? MonsColor.action : Color.clear,
+                    style: StrokeStyle(lineWidth: 1.5, dash: [6, 4])
+                )
+        }
+        .contentShape(.rect)
+        .dropDestination(for: String.self, action: dropMeals, isTargeted: updateDropTarget)
     }
 
     private func addMeal() {

@@ -3,6 +3,10 @@ import Testing
 @testable import mons
 
 struct CalorieTimelineBuilderTests {
+    @Test func exposesEveryHourInStableOrder() {
+        #expect(CalorieTimelineBuilder.hours == Array(0..<24))
+    }
+
     @Test func sortsMealsAndInsertsCurrentTime() throws {
         let calendar = testCalendar()
         let day = try #require(calendar.date(from: DateComponents(year: 2026, month: 8, day: 5)))

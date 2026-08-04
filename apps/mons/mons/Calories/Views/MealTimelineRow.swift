@@ -1,31 +1,27 @@
 import SwiftUI
 
 struct MealTimelineRow: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     let meal: MealEvent
     let onMove: (MealEvent, Int) -> Void
 
     var body: some View {
-        HStack(alignment: .center, spacing: 8) {
-            Text(meal.loggedAt, format: .dateTime.hour().minute())
-                .font(MonsTypography.subheadline)
-                .foregroundStyle(MonsColor.textSecondary)
-                .monospacedDigit()
-                .frame(width: 52)
-                .background(MonsColor.background)
-
-            NavigationLink(value: DetailDestination(meal: meal)) {
-                MealTimelineCard(meal: meal)
-            }
-            .buttonStyle(.plain)
-            .draggable(meal.id) {
-                MealDragPreview(meal: meal)
-            }
-            .accessibilityAction(named: "Move one hour earlier") {
-                onMove(meal, -1)
-            }
-            .accessibilityAction(named: "Move one hour later") {
-                onMove(meal, 1)
+        Group {
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: MonsSpacing.small) {
+                    MealTimelineTimeLabel(date: meal.loggedAt)
+                    MealTimelineCardControl(meal: meal, onMove: onMove)
+                }
+            } else {
+                HStack(alignment: .center, spacing: MonsSpacing.medium) {
+                    MealTimelineTimeLabel(date: meal.loggedAt)
+                        .frame(width: 76, alignment: .trailing)
+                    MealTimelineCardControl(meal: meal, onMove: onMove)
+                        .layoutPriority(1)
+                }
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }

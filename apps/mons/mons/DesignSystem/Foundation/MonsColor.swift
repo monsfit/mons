@@ -15,7 +15,8 @@ enum MonsColor {
     static let brand = MonsPalette.olive700
     static let brandBright = MonsPalette.olive300
     static let performance = MonsPalette.teal500
-    static let action = MonsPalette.ember500
+    static let action = MonsPalette.plum300
+    static let actionSurface = MonsPalette.plum700
     static let recovery = MonsPalette.plum500
     static let success = MonsPalette.success500
     static let error = MonsPalette.error500

@@ -1,6 +1,8 @@
 import Foundation
 
 enum CalorieTimelineBuilder {
+    static let hours = Array(0..<24)
+
     static func items(
         for day: CalorieDayData,
         referenceDate: Date,

@@ -48,9 +48,10 @@ choices. The source tokens live in `mons/DesignSystem/Foundation`:
 - ink and black olive form the app background and chrome;
 - surface and raised surface define cards, lists, and controls;
 - ivory and white carry the primary type hierarchy, with mist and muted for supporting text;
-- ember is reserved for primary actions and calorie energy;
+- plum carries primary actions, selection, and interactive feedback;
+- ember is reserved for calorie energy and the warm edge of the wordmark;
 - teal communicates performance and progress;
-- olive anchors the brand, while plum is reserved for recovery-oriented data;
+- olive anchors the brand, while teal and plum separate performance from interaction;
 - success and error have dedicated, non-accent semantic roles.
 
 Spacing, corner radii, button styles, cards, and the wordmark are shared components under

@@ -8,17 +8,6 @@ struct CalorieTimelineList: View {
     let onAddMeal: (Date) -> Void
     let onMoveMeal: (String, Date) -> Bool
 
-    private var hours: ClosedRange<Int> {
-        guard
-            let firstHour = meals.map({ calendar.component(.hour, from: $0.loggedAt) }).min(),
-            let lastHour = meals.map({ calendar.component(.hour, from: $0.loggedAt) }).max()
-        else {
-            return 7...20
-        }
-
-        return max(0, firstHour - 1)...min(23, lastHour + 1)
-    }
-
     var body: some View {
         LazyVStack(alignment: .leading, spacing: 0) {
             Text("Timeline")
@@ -26,7 +15,7 @@ struct CalorieTimelineList: View {
                 .bold()
                 .padding(.bottom, 12)
 
-            ForEach(hours, id: \.self) { hour in
+            ForEach(CalorieTimelineBuilder.hours, id: \.self) { hour in
                 TimelineHourLane(
                     hour: hour,
                     day: day,
