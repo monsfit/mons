@@ -11,6 +11,7 @@ struct ContentView: View {
     @Environment(AppStore.self) private var store
 
     @State private var addMealRequest: AddMealRequest?
+    @State private var isShowingQuickActions = false
     @State private var selection = AppTab.dashboard
 
     var body: some View {
@@ -29,25 +30,38 @@ struct ContentView: View {
             } else {
                 TabView(selection: $selection) {
                     Tab("Dashboard", systemImage: "square.grid.2x2", value: .dashboard) {
-                        PrimaryTabContent {
-                            DashboardView(
-                                onShowCalories: showCalories,
-                                onShowWorkouts: showWorkouts
-                            )
-                        }
+                        DashboardView(
+                            onShowCalories: showCalories,
+                            onShowWorkouts: showWorkouts
+                        )
                     }
 
                     Tab("Calories", systemImage: "fork.knife", value: .calories) {
-                        PrimaryTabContent {
-                            CalorieListView()
-                        }
+                        CalorieListView()
                     }
 
                     Tab("Workouts", systemImage: "figure.run", value: .workouts) {
-                        PrimaryTabContent {
-                            WorkoutListView()
-                        }
+                        WorkoutListView()
                     }
+
+                    Tab(
+                        "Add food",
+                        systemImage: "plus",
+                        value: .quickAdd,
+                        role: .search
+                    ) {
+                        Color.clear
+                    }
+                }
+                #if os(iOS)
+                .tabViewBottomAccessory {
+                    FoodSearchAccessory(onSearch: showFoodSearch)
+                }
+                #endif
+                .onChange(of: selection, handleTabSelection)
+                .confirmationDialog("Add food", isPresented: $isShowingQuickActions) {
+                    Button("Search foods", systemImage: "magnifyingglass", action: showFoodSearch)
+                    Button("Scan barcode", systemImage: "barcode.viewfinder", action: scanFood)
                 }
             }
         }
@@ -57,14 +71,6 @@ struct ContentView: View {
             VStack(spacing: MonsSpacing.small) {
                 if let error = store.lastError {
                     AppErrorBanner(message: error, onDismiss: store.clearError)
-                }
-
-                if store.hasLoadedNutritionPlan, store.nutritionPlan != nil {
-                    MonsAppDock(
-                        selection: $selection,
-                        onScan: scanFood,
-                        onSearch: showFoodSearch
-                    )
                 }
             }
         }
@@ -90,6 +96,12 @@ struct ContentView: View {
 
     private func showFoodSearch() {
         addMealRequest = AddMealRequest(scheduledAt: .now)
+    }
+
+    private func handleTabSelection(oldValue: AppTab, newValue: AppTab) {
+        guard newValue == .quickAdd else { return }
+        selection = oldValue == .quickAdd ? .dashboard : oldValue
+        isShowingQuickActions = true
     }
 }
 
