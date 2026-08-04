@@ -308,6 +308,167 @@
         ]
       }
     },
+    "/v1/profiles/{profileId}/weight-log": {
+      "get": {
+        "operationId": "listWeightLog",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeightLogResponse"
+                }
+              }
+            },
+            "description": "Weight entries in the requested time range"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid profile or time range"
+          }
+        },
+        "tags": [
+          "weight-log"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "profileId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "required": true
+          }
+        ]
+      },
+      "post": {
+        "operationId": "saveWeightLogEntry",
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeightLogEntry"
+                }
+              }
+            },
+            "description": "Created or updated weight entry"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid weight entry"
+          }
+        },
+        "tags": [
+          "weight-log"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "profileId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWeightLogEntry"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/profiles/{profileId}/weight-log/{entryId}": {
+      "delete": {
+        "operationId": "deleteWeightLogEntry",
+        "responses": {
+          "204": {
+            "description": "Weight entry deleted"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid identifiers"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Weight entry not found"
+          }
+        },
+        "tags": [
+          "weight-log"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entryId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "profileId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ]
+      }
+    },
     "/v1/profiles/{profileId}/workouts": {
       "get": {
         "operationId": "listWorkouts",
@@ -1031,6 +1192,64 @@
           "loggedAt",
           "mealCategory",
           "quantityGrams"
+        ]
+      },
+      "WeightLogEntry": {
+        "type": "object",
+        "properties": {
+          "entryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "measuredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "weightKg": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "entryId",
+          "measuredAt",
+          "weightKg"
+        ]
+      },
+      "WeightLogResponse": {
+        "type": "object",
+        "properties": {
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WeightLogEntry"
+            }
+          }
+        },
+        "required": [
+          "entries"
+        ]
+      },
+      "CreateWeightLogEntry": {
+        "type": "object",
+        "properties": {
+          "entryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "measuredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "weightKg": {
+            "type": "number",
+            "minimum": 30,
+            "maximum": 350
+          }
+        },
+        "required": [
+          "entryId",
+          "measuredAt",
+          "weightKg"
         ]
       },
       "WorkoutSet": {

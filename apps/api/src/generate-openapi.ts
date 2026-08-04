@@ -21,13 +21,18 @@ const unusedCatalog: CatalogReader = {
 
 const unusedApplication: ApplicationRepository = {
   deleteFoodLogEntry: async () => false,
+  deleteWeightLogEntry: async () => false,
   deleteWorkout: async () => false,
   ensureProfile: async () => undefined,
   getNutritionPlan: async () => undefined,
   listFoodLog: async () => [],
   listWorkouts: async () => [],
+  listWeightLog: async () => [],
   saveFoodLogEntry: async () => undefined,
   saveNutritionPlan: async () => {
+    throw new Error('OpenAPI generation does not execute handlers')
+  },
+  saveWeightLogEntry: async () => {
     throw new Error('OpenAPI generation does not execute handlers')
   },
   saveWorkout: async () => {

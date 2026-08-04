@@ -33,7 +33,7 @@ struct CalorieListView: View {
             }
             let meals = store.foodLog
                 .filter { calendar.isDate($0.loggedAt, inSameDayAs: date) }
-                .map(Self.mealEvent)
+                .map(\.mealEvent)
             return CalorieDayData(date: date, calorieGoal: store.calorieGoal, meals: meals)
         }
     }
@@ -149,21 +149,6 @@ struct CalorieListView: View {
         return true
     }
 
-    private static func mealEvent(_ entry: FoodLogEntry) -> MealEvent {
-        MealEvent(
-            id: entry.entryId.uuidString,
-            title: entry.name,
-            category: entry.mealCategory,
-            loggedAt: entry.loggedAt,
-            itemCount: 1,
-            calories: Int((entry.calories ?? 0).rounded()),
-            macros: MacroTotals(
-                protein: Int((entry.protein ?? 0).rounded()),
-                carbohydrates: Int((entry.carbohydrates ?? 0).rounded()),
-                fat: Int((entry.fat ?? 0).rounded())
-            )
-        )
-    }
 }
 
 #Preview("Calories") {

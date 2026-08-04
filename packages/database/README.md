@@ -12,6 +12,7 @@ The repository supports:
 - idempotent profile and food-log persistence with nutrient snapshots;
 - one server-calculated nutrition plan per profile, including its source inputs and calculation
   timestamp;
+- idempotent canonical-kilogram weight entries ordered by measurement time and UUID;
 - atomic workout and ordered-set persistence.
 
 Application tables are intentionally separate from the `regolith` catalog schema. Titan can

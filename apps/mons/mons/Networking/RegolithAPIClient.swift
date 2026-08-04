@@ -90,6 +90,32 @@ actor RegolithAPIClient {
         )
     }
 
+    func weightLog(profileId: UUID, from: Date, to: Date) async throws -> [WeightLogEntry] {
+        let response: WeightLogResponse = try await request(
+            path: ["v1", "profiles", profileId.uuidString, "weight-log"],
+            query: timeRange(from: from, to: to)
+        )
+        return response.entries
+    }
+
+    func saveWeight(
+        profileId: UUID,
+        entry: SaveWeightLogEntryRequest
+    ) async throws -> WeightLogEntry {
+        try await request(
+            path: ["v1", "profiles", profileId.uuidString, "weight-log"],
+            method: "POST",
+            body: try encoder.encode(entry)
+        )
+    }
+
+    func deleteWeightLogEntry(profileId: UUID, entryId: UUID) async throws {
+        try await requestWithoutContent(
+            path: ["v1", "profiles", profileId.uuidString, "weight-log", entryId.uuidString],
+            method: "DELETE"
+        )
+    }
+
     func workouts(profileId: UUID, from: Date, to: Date) async throws -> [RemoteWorkout] {
         let response: WorkoutResponse = try await request(
             path: ["v1", "profiles", profileId.uuidString, "workouts"],

@@ -7,6 +7,7 @@ import type {
   FoodLogEntryTable,
   MealCategory,
   NutritionPlanTable,
+  WeightLogEntryTable,
   WorkoutKind,
   WorkoutSessionTable,
   WorkoutSetTable,
@@ -14,6 +15,7 @@ import type {
 
 export type FoodLogEntryRecord = Selectable<FoodLogEntryTable>
 export type NutritionPlanRecord = Selectable<NutritionPlanTable>
+export type WeightLogEntryRecord = Selectable<WeightLogEntryTable>
 export type WorkoutSessionRow = Selectable<WorkoutSessionTable>
 export type WorkoutSetRow = Selectable<WorkoutSetTable>
 
@@ -24,6 +26,12 @@ export interface CreateFoodLogEntryInput {
   loggedAt: Date
   mealCategory: MealCategory
   quantityGrams: number
+}
+
+export interface SaveWeightLogEntryInput {
+  entryId: string
+  measuredAt: Date
+  weightKg: number
 }
 
 export interface WorkoutSetInput {
@@ -52,16 +60,22 @@ export interface WorkoutRecord {
 export interface ApplicationRepository {
   deleteFoodLogEntry(profileId: string, entryId: string): Promise<boolean>
   deleteWorkout(profileId: string, sessionId: string): Promise<boolean>
+  deleteWeightLogEntry(profileId: string, entryId: string): Promise<boolean>
   ensureProfile(profileId: string): Promise<void>
   getNutritionPlan(profileId: string): Promise<NutritionPlanRecord | undefined>
   listFoodLog(profileId: string, from: Date, to: Date): Promise<FoodLogEntryRecord[]>
   listWorkouts(profileId: string, from: Date, to: Date): Promise<WorkoutRecord[]>
+  listWeightLog(profileId: string, from: Date, to: Date): Promise<WeightLogEntryRecord[]>
   saveFoodLogEntry(
     profileId: string,
     input: CreateFoodLogEntryInput,
   ): Promise<FoodLogEntryRecord | undefined>
   saveNutritionPlan(profileId: string, input: NutritionPlanInput): Promise<NutritionPlanRecord>
   saveWorkout(profileId: string, input: SaveWorkoutInput): Promise<WorkoutRecord>
+  saveWeightLogEntry(
+    profileId: string,
+    input: SaveWeightLogEntryInput,
+  ): Promise<WeightLogEntryRecord>
 }
 
 export class KyselyApplicationRepository implements ApplicationRepository {
@@ -224,6 +238,56 @@ export class KyselyApplicationRepository implements ApplicationRepository {
     const result = await this.database
       .withSchema(this.appSchema)
       .deleteFrom('food_log_entries')
+      .where('profile_id', '=', profileId)
+      .where('entry_id', '=', entryId)
+      .executeTakeFirst()
+    return result.numDeletedRows > 0n
+  }
+
+  async listWeightLog(profileId: string, from: Date, to: Date): Promise<WeightLogEntryRecord[]> {
+    return this.database
+      .withSchema(this.appSchema)
+      .selectFrom('weight_log_entries')
+      .selectAll()
+      .where('profile_id', '=', profileId)
+      .where('measured_at', '>=', from)
+      .where('measured_at', '<', to)
+      .orderBy('measured_at', 'asc')
+      .orderBy('entry_id', 'asc')
+      .execute()
+  }
+
+  async saveWeightLogEntry(
+    profileId: string,
+    input: SaveWeightLogEntryInput,
+  ): Promise<WeightLogEntryRecord> {
+    return this.database.transaction().execute(async (transaction) => {
+      await this.ensureProfileWith(transaction, profileId)
+      return transaction
+        .withSchema(this.appSchema)
+        .insertInto('weight_log_entries')
+        .values({
+          entry_id: input.entryId,
+          measured_at: input.measuredAt,
+          profile_id: profileId,
+          weight_kg: input.weightKg,
+        })
+        .onConflict((conflict) =>
+          conflict.column('entry_id').doUpdateSet({
+            measured_at: input.measuredAt,
+            updated_at: this.now(),
+            weight_kg: input.weightKg,
+          }),
+        )
+        .returningAll()
+        .executeTakeFirstOrThrow()
+    })
+  }
+
+  async deleteWeightLogEntry(profileId: string, entryId: string): Promise<boolean> {
+    const result = await this.database
+      .withSchema(this.appSchema)
+      .deleteFrom('weight_log_entries')
       .where('profile_id', '=', profileId)
       .where('entry_id', '=', entryId)
       .executeTakeFirst()

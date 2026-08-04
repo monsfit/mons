@@ -4,7 +4,9 @@ export type {
   CreateFoodLogEntryInput,
   FoodLogEntryRecord,
   NutritionPlanRecord,
+  SaveWeightLogEntryInput,
   SaveWorkoutInput,
+  WeightLogEntryRecord,
   WorkoutRecord,
   WorkoutSetInput,
 } from './application-repository.js'
@@ -37,6 +39,7 @@ export type {
   NutritionPlanTable,
   ProfileTable,
   WeightGoal,
+  WeightLogEntryTable,
   WorkoutKind,
   WorkoutSessionTable,
   WorkoutSetTable,

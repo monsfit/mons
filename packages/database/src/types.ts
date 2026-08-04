@@ -47,6 +47,15 @@ export interface NutritionPlanTable {
   weight_goal: WeightGoal
 }
 
+export interface WeightLogEntryTable {
+  created_at: ColumnType<Date, Date | string | undefined, never>
+  entry_id: string
+  measured_at: ColumnType<Date, Date | string, Date | string>
+  profile_id: string
+  updated_at: ColumnType<Date, Date | string | undefined, Date | string>
+  weight_kg: number
+}
+
 export type MealCategory = 'breakfast' | 'lunch' | 'dinner' | 'snack'
 
 export interface FoodLogEntryTable {
@@ -118,4 +127,5 @@ export interface CatalogDatabase {
   raw_foods: FoodTable
   workout_sessions: WorkoutSessionTable
   workout_sets: WorkoutSetTable
+  weight_log_entries: WeightLogEntryTable
 }

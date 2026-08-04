@@ -83,6 +83,18 @@ export async function migrateApplicationDatabase(
       CREATE INDEX IF NOT EXISTS food_log_entries_profile_time_idx
         ON ${qualified('food_log_entries')} (profile_id, logged_at DESC, entry_id);
 
+      CREATE TABLE IF NOT EXISTS ${qualified('weight_log_entries')} (
+        entry_id uuid PRIMARY KEY,
+        profile_id uuid NOT NULL REFERENCES ${qualified('profiles')}(profile_id) ON DELETE CASCADE,
+        measured_at timestamptz NOT NULL,
+        weight_kg double precision NOT NULL CHECK (weight_kg BETWEEN 30 AND 350),
+        created_at timestamptz NOT NULL DEFAULT now(),
+        updated_at timestamptz NOT NULL DEFAULT now()
+      );
+
+      CREATE INDEX IF NOT EXISTS weight_log_entries_profile_time_idx
+        ON ${qualified('weight_log_entries')} (profile_id, measured_at DESC, entry_id);
+
       CREATE TABLE IF NOT EXISTS ${qualified('workout_sessions')} (
         session_id uuid PRIMARY KEY,
         profile_id uuid NOT NULL REFERENCES ${qualified('profiles')}(profile_id) ON DELETE CASCADE,
@@ -117,6 +129,10 @@ export async function migrateApplicationDatabase(
 
       INSERT INTO ${qualified('app_migrations')} (version)
       VALUES ('002_nutrition_plans')
+      ON CONFLICT (version) DO NOTHING;
+
+      INSERT INTO ${qualified('app_migrations')} (version)
+      VALUES ('003_weight_log')
       ON CONFLICT (version) DO NOTHING;
     `)
       .execute(transaction)

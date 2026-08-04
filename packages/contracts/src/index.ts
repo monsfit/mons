@@ -108,6 +108,11 @@ export const workoutPathSchema = v.object({
   sessionId: uuidSchema,
 })
 
+export const weightLogEntryPathSchema = v.object({
+  entryId: uuidSchema,
+  profileId: uuidSchema,
+})
+
 export const timeRangeQuerySchema = v.pipe(
   v.object({ from: isoTimestampSchema, to: isoTimestampSchema }),
   v.check((range) => Date.parse(range.from) < Date.parse(range.to), 'from must be before to'),
@@ -204,6 +209,29 @@ export const foodLogResponseSchema = v.pipe(
   v.metadata({ ref: 'FoodLogResponse' }),
 )
 
+export const createWeightLogEntrySchema = v.pipe(
+  v.object({
+    entryId: uuidSchema,
+    measuredAt: isoTimestampSchema,
+    weightKg: v.pipe(v.number(), v.finite(), v.minValue(30), v.maxValue(350)),
+  }),
+  v.metadata({ ref: 'CreateWeightLogEntry' }),
+)
+
+export const weightLogEntrySchema = v.pipe(
+  v.object({
+    entryId: uuidSchema,
+    measuredAt: isoTimestampSchema,
+    weightKg: v.number(),
+  }),
+  v.metadata({ ref: 'WeightLogEntry' }),
+)
+
+export const weightLogResponseSchema = v.pipe(
+  v.object({ entries: v.array(weightLogEntrySchema) }),
+  v.metadata({ ref: 'WeightLogResponse' }),
+)
+
 export const workoutSetSchema = v.pipe(
   v.object({
     detail: v.pipe(v.string(), v.maxLength(500)),
@@ -275,3 +303,4 @@ export type Workout = v.InferOutput<typeof workoutSchema>
 export type WorkoutKind = v.InferOutput<typeof workoutKindSchema>
 export type ExerciseFrequency = v.InferOutput<typeof exerciseFrequencySchema>
 export type WeightGoal = v.InferOutput<typeof weightGoalSchema>
+export type WeightLogEntry = v.InferOutput<typeof weightLogEntrySchema>

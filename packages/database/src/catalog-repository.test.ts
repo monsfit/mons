@@ -189,6 +189,30 @@ integration('KyselyCatalogReader with PostgreSQL', () => {
     })
   })
 
+  test('persists and orders canonical weight entries', async () => {
+    const profileId = '00000000-0000-4000-8000-000000000001'
+    await application.saveWeightLogEntry(profileId, {
+      entryId: '00000000-0000-4000-8000-000000000031',
+      measuredAt: new Date('2026-08-03T11:00:00Z'),
+      weightKg: 56.9,
+    })
+    await application.saveWeightLogEntry(profileId, {
+      entryId: '00000000-0000-4000-8000-000000000030',
+      measuredAt: new Date('2026-08-04T11:00:00Z'),
+      weightKg: 56.7,
+    })
+
+    const entries = await application.listWeightLog(
+      profileId,
+      new Date('2026-08-01T00:00:00Z'),
+      new Date('2026-09-01T00:00:00Z'),
+    )
+    expect(entries.map((entry) => entry.weight_kg)).toEqual([56.9, 56.7])
+    await expect(
+      application.deleteWeightLogEntry(profileId, '00000000-0000-4000-8000-000000000031'),
+    ).resolves.toBe(true)
+  })
+
   test('persists workouts and replaces their ordered sets atomically', async () => {
     const profileId = '00000000-0000-4000-8000-000000000001'
     const sessionId = '00000000-0000-4000-8000-000000000010'

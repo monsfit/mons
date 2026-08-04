@@ -1,5 +1,10 @@
-import type { FoodLogEntry, NutritionPlan, Workout } from '@regolith/contracts'
-import type { FoodLogEntryRecord, NutritionPlanRecord, WorkoutRecord } from '@regolith/database'
+import type { FoodLogEntry, NutritionPlan, WeightLogEntry, Workout } from '@regolith/contracts'
+import type {
+  FoodLogEntryRecord,
+  NutritionPlanRecord,
+  WeightLogEntryRecord,
+  WorkoutRecord,
+} from '@regolith/database'
 
 function scaled(value: number | null, quantityGrams: number): number | null {
   if (value === null) {
@@ -43,6 +48,14 @@ export function toNutritionPlan(plan: NutritionPlanRecord): NutritionPlan {
     targetWeightKg: plan.target_weight_kg,
     weeklyWeightChangePercent: plan.weekly_weight_change_percent,
     weightGoal: plan.weight_goal,
+  }
+}
+
+export function toWeightLogEntry(entry: WeightLogEntryRecord): WeightLogEntry {
+  return {
+    entryId: entry.entry_id,
+    measuredAt: entry.measured_at.toISOString(),
+    weightKg: entry.weight_kg,
   }
 }
 

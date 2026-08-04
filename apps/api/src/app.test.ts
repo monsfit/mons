@@ -4,6 +4,7 @@ import type {
   FoodLogEntryRecord,
   FoodRecord,
   NutritionPlanRecord,
+  WeightLogEntryRecord,
   WorkoutRecord,
 } from '@regolith/database'
 import { describe, expect, test } from 'vitest'
@@ -88,6 +89,15 @@ const sampleNutritionPlan: NutritionPlanRecord = {
   weight_goal: 'lose',
 }
 
+const sampleWeightEntry: WeightLogEntryRecord = {
+  created_at: new Date('2026-08-04T11:00:00Z'),
+  entry_id: '00000000-0000-4000-8000-000000000030',
+  measured_at: new Date('2026-08-04T11:00:00Z'),
+  profile_id: sampleFoodLogEntry.profile_id,
+  updated_at: new Date('2026-08-04T11:00:00Z'),
+  weight_kg: 56.7,
+}
+
 const catalog: CatalogReader = {
   findByGtin: async (gtin) => (gtin === sampleFood.gtin ? sampleFood : undefined),
   getStatus: async () => ({
@@ -103,13 +113,16 @@ const catalog: CatalogReader = {
 
 const application: ApplicationRepository = {
   deleteFoodLogEntry: async () => true,
+  deleteWeightLogEntry: async () => true,
   deleteWorkout: async () => true,
   ensureProfile: async () => undefined,
   getNutritionPlan: async () => sampleNutritionPlan,
   listFoodLog: async () => [sampleFoodLogEntry],
   listWorkouts: async () => [sampleWorkout],
+  listWeightLog: async () => [sampleWeightEntry],
   saveFoodLogEntry: async () => sampleFoodLogEntry,
   saveNutritionPlan: async () => sampleNutritionPlan,
+  saveWeightLogEntry: async () => sampleWeightEntry,
   saveWorkout: async () => sampleWorkout,
 }
 
@@ -213,6 +226,35 @@ describe('Regolith API', () => {
       sessionId: sampleWorkout.session.session_id,
       sets: [{ title: 'Bench Press' }],
     })
+  })
+
+  test('loads and saves canonical weight entries', async () => {
+    const path = `/v1/profiles/${sampleFoodLogEntry.profile_id}/weight-log`
+    const loaded = await app.request(
+      `${path}?from=2026-08-01T00%3A00%3A00.000Z&to=2026-09-01T00%3A00%3A00.000Z`,
+    )
+    expect(loaded.status).toBe(200)
+    await expect(loaded.json()).resolves.toEqual({
+      entries: [
+        {
+          entryId: sampleWeightEntry.entry_id,
+          measuredAt: sampleWeightEntry.measured_at.toISOString(),
+          weightKg: 56.7,
+        },
+      ],
+    })
+
+    const saved = await app.request(path, {
+      body: JSON.stringify({
+        entryId: sampleWeightEntry.entry_id,
+        measuredAt: sampleWeightEntry.measured_at.toISOString(),
+        weightKg: 56.7,
+      }),
+      headers: { 'content-type': 'application/json' },
+      method: 'POST',
+    })
+    expect(saved.status).toBe(201)
+    await expect(saved.json()).resolves.toMatchObject({ weightKg: 56.7 })
   })
 
   test('publishes an OpenAPI document', async () => {

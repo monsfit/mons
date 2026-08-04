@@ -16,4 +16,20 @@ nonisolated struct FoodLogEntry: Codable, Identifiable, Sendable {
     let quantityGrams: Double
 
     var id: UUID { entryId }
+
+    var mealEvent: MealEvent {
+        MealEvent(
+            id: entryId.uuidString,
+            title: name,
+            category: mealCategory,
+            loggedAt: loggedAt,
+            itemCount: 1,
+            calories: Int((calories ?? 0).rounded()),
+            macros: MacroTotals(
+                protein: Int((protein ?? 0).rounded()),
+                carbohydrates: Int((carbohydrates ?? 0).rounded()),
+                fat: Int((fat ?? 0).rounded())
+            )
+        )
+    }
 }

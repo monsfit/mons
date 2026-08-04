@@ -5,10 +5,12 @@ Mons is the SwiftUI client application.
 It connects to the Regolith API for:
 
 - adult onboarding that estimates TDEE and a weight-goal calorie target;
+- a dashboard for today's nutrition, weekly workouts, and weight trend;
 - separate Common and Branded food search sections with compact nutrition summaries;
 - camera barcode scanning with normalized UPC/EAN/GTIN lookup;
 - quantity-scaled food details, daily-target impact, logging, and day summaries;
 - persistent strength/cardio workouts and ordered sets.
+- canonical weight tracking with pound and kilogram entry.
 
 Open `mons.xcodeproj` in Xcode, or build and test it from the repository root:
 

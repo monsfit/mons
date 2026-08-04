@@ -8,9 +8,11 @@ final class AppStore {
     private(set) var hasLoadedNutritionPlan = false
     private(set) var isLoadingFoodLog = false
     private(set) var isLoadingWorkouts = false
+    private(set) var isLoadingWeightLog = false
     private(set) var lastError: String?
     private(set) var nutritionPlan: NutritionPlan?
     private(set) var workouts: [WorkoutSession] = []
+    private(set) var weightLog: [WeightLogEntry] = []
 
     let profileId: UUID
 
@@ -37,6 +39,20 @@ final class AppStore {
             networkEnabled: false
         )
         store.nutritionPlan = .preview
+        store.weightLog = [
+            WeightLogEntry(
+                entryId: UUID(uuidString: "00000000-0000-4000-8000-000000000040")
+                    ?? UUID(),
+                measuredAt: Date(timeIntervalSince1970: 1_774_886_400),
+                weightKg: 68.8
+            ),
+            WeightLogEntry(
+                entryId: UUID(uuidString: "00000000-0000-4000-8000-000000000041")
+                    ?? UUID(),
+                measuredAt: Date(timeIntervalSince1970: 1_775_491_200),
+                weightKg: 68.1
+            ),
+        ]
         store.hasLoadedNutritionPlan = true
         return store
     }
@@ -54,6 +70,7 @@ final class AppStore {
             nutritionPlan = try await api.nutritionPlan(profileId: profileId)
             await loadFoodLog(around: referenceDate)
             await loadWorkouts(referenceDate: referenceDate)
+            await loadWeightLog(referenceDate: referenceDate)
         } catch {
             report(error)
         }
@@ -193,6 +210,58 @@ final class AppStore {
         do {
             let remote = try await api.workouts(profileId: profileId, from: from, to: to)
             workouts = remote.map(Self.workoutSession)
+            lastError = nil
+        } catch {
+            report(error)
+        }
+    }
+
+    func loadWeightLog(referenceDate: Date = .now) async {
+        guard networkEnabled else { return }
+        isLoadingWeightLog = true
+        defer { isLoadingWeightLog = false }
+        let to = calendar.date(byAdding: .day, value: 1, to: referenceDate) ?? referenceDate
+        let from = calendar.date(byAdding: .year, value: -1, to: referenceDate) ?? referenceDate
+        do {
+            weightLog = try await api.weightLog(profileId: profileId, from: from, to: to).sorted()
+            lastError = nil
+        } catch {
+            report(error)
+        }
+    }
+
+    @discardableResult
+    func logWeight(
+        weightKg: Double,
+        measuredAt: Date,
+        entryId: UUID = UUID()
+    ) async -> Bool {
+        guard networkEnabled else { return false }
+        do {
+            let entry = try await api.saveWeight(
+                profileId: profileId,
+                entry: SaveWeightLogEntryRequest(
+                    entryId: entryId,
+                    measuredAt: measuredAt,
+                    weightKg: weightKg
+                )
+            )
+            weightLog.removeAll { $0.entryId == entry.entryId }
+            weightLog.append(entry)
+            weightLog.sort()
+            lastError = nil
+            return true
+        } catch {
+            report(error)
+            return false
+        }
+    }
+
+    func deleteWeightLogEntry(_ entryId: UUID) async {
+        guard networkEnabled else { return }
+        do {
+            try await api.deleteWeightLogEntry(profileId: profileId, entryId: entryId)
+            weightLog.removeAll { $0.entryId == entryId }
             lastError = nil
         } catch {
             report(error)

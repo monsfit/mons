@@ -10,7 +10,7 @@ import SwiftUI
 struct ContentView: View {
     @Environment(AppStore.self) private var store
 
-    @State private var selection = AppTab.calories
+    @State private var selection = AppTab.dashboard
 
     var body: some View {
         Group {
@@ -22,6 +22,13 @@ struct ContentView: View {
                 }
             } else {
                 TabView(selection: $selection) {
+                    Tab("Dashboard", systemImage: "square.grid.2x2", value: .dashboard) {
+                        DashboardView(
+                            onShowCalories: showCalories,
+                            onShowWorkouts: showWorkouts
+                        )
+                    }
+
                     Tab("Calories", systemImage: "fork.knife", value: .calories) {
                         CalorieListView()
                     }
@@ -37,6 +44,14 @@ struct ContentView: View {
                 AppErrorBanner(message: error, onDismiss: store.clearError)
             }
         }
+    }
+
+    private func showCalories() {
+        selection = .calories
+    }
+
+    private func showWorkouts() {
+        selection = .workouts
     }
 }
 

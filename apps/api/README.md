@@ -36,6 +36,9 @@ The service uses these environment variables:
 | `GET`    | `/v1/profiles/:profileId/food-log`            | List food entries in an ISO timestamp range     |
 | `POST`   | `/v1/profiles/:profileId/food-log`            | Idempotently log a catalog food                 |
 | `DELETE` | `/v1/profiles/:profileId/food-log/:entryId`   | Delete a food entry                             |
+| `GET`    | `/v1/profiles/:profileId/weight-log`          | List canonical weight entries                   |
+| `POST`   | `/v1/profiles/:profileId/weight-log`          | Idempotently log a weight measurement           |
+| `DELETE` | `/v1/profiles/:profileId/weight-log/:entryId` | Delete a weight entry                           |
 | `GET`    | `/v1/profiles/:profileId/workouts`            | List workouts in an ISO timestamp range         |
 | `PUT`    | `/v1/profiles/:profileId/workouts/:sessionId` | Idempotently save a workout and ordered sets    |
 | `DELETE` | `/v1/profiles/:profileId/workouts/:sessionId` | Delete a workout                                |
@@ -43,7 +46,8 @@ The service uses these environment variables:
 | `GET`    | `/docs`                                       | Interactive Scalar API reference                |
 
 Search accepts `q`, optional `kind=raw|branded`, and optional `limit=1..100`. Time-range
-routes require an inclusive `from` and exclusive `to` ISO timestamp.
+routes require an inclusive `from` and exclusive `to` ISO timestamp. Weight is persisted in
+kilograms; clients may convert it for localized display.
 
 The server applies stable application migrations before listening. Catalog ingestion remains
 owned by Titan; `db:migrate` upgrades an older local catalog with the full-text search vector

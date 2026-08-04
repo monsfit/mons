@@ -1,5 +1,6 @@
 import {
   createFoodLogEntrySchema,
+  createWeightLogEntrySchema,
   errorSchema,
   foodLogEntryPathSchema,
   foodLogEntrySchema,
@@ -11,6 +12,9 @@ import {
   saveWorkoutSchema,
   saveNutritionPlanSchema,
   timeRangeQuerySchema,
+  weightLogEntryPathSchema,
+  weightLogEntrySchema,
+  weightLogResponseSchema,
   workoutPathSchema,
   workoutResponseSchema,
   workoutSchema,
@@ -19,7 +23,12 @@ import type { ApplicationRepository } from '@regolith/database'
 import { Hono } from 'hono'
 import { describeRoute, resolver, validator } from 'hono-openapi'
 
-import { toFoodLogEntry, toNutritionPlan, toWorkout } from './application-mappers.js'
+import {
+  toFoodLogEntry,
+  toNutritionPlan,
+  toWeightLogEntry,
+  toWorkout,
+} from './application-mappers.js'
 
 const validationError = { code: 'validation_error', message: 'Invalid request' } as const
 
@@ -212,6 +221,102 @@ export function createApplicationRoutes(application: ApplicationRepository): Hon
       const { entryId, profileId } = context.req.valid('param')
       if (!(await application.deleteFoodLogEntry(profileId, entryId))) {
         return context.json({ code: 'entry_not_found', message: 'Food log entry not found' }, 404)
+      }
+      return context.body(null, 204)
+    },
+  )
+
+  routes.get(
+    '/v1/profiles/:profileId/weight-log',
+    describeRoute({
+      operationId: 'listWeightLog',
+      responses: {
+        200: {
+          content: { 'application/json': { schema: resolver(weightLogResponseSchema) } },
+          description: 'Weight entries in the requested time range',
+        },
+        400: {
+          content: { 'application/json': { schema: resolver(errorSchema) } },
+          description: 'Invalid profile or time range',
+        },
+      },
+      tags: ['weight-log'],
+    }),
+    validator('param', profilePathSchema, (result, context) => {
+      if (!result.success) return context.json(validationError, 400)
+    }),
+    validator('query', timeRangeQuerySchema, (result, context) => {
+      if (!result.success) return context.json(validationError, 400)
+    }),
+    async (context) => {
+      const { profileId } = context.req.valid('param')
+      const range = context.req.valid('query')
+      const entries = await application.listWeightLog(
+        profileId,
+        new Date(range.from),
+        new Date(range.to),
+      )
+      return context.json({ entries: entries.map(toWeightLogEntry) })
+    },
+  )
+
+  routes.post(
+    '/v1/profiles/:profileId/weight-log',
+    describeRoute({
+      operationId: 'saveWeightLogEntry',
+      responses: {
+        201: {
+          content: { 'application/json': { schema: resolver(weightLogEntrySchema) } },
+          description: 'Created or updated weight entry',
+        },
+        400: {
+          content: { 'application/json': { schema: resolver(errorSchema) } },
+          description: 'Invalid weight entry',
+        },
+      },
+      tags: ['weight-log'],
+    }),
+    validator('param', profilePathSchema, (result, context) => {
+      if (!result.success) return context.json(validationError, 400)
+    }),
+    validator('json', createWeightLogEntrySchema, (result, context) => {
+      if (!result.success) return context.json(validationError, 400)
+    }),
+    async (context) => {
+      const { profileId } = context.req.valid('param')
+      const input = context.req.valid('json')
+      const entry = await application.saveWeightLogEntry(profileId, {
+        ...input,
+        measuredAt: new Date(input.measuredAt),
+      })
+      return context.json(toWeightLogEntry(entry), 201)
+    },
+  )
+
+  routes.delete(
+    '/v1/profiles/:profileId/weight-log/:entryId',
+    describeRoute({
+      operationId: 'deleteWeightLogEntry',
+      responses: {
+        204: { description: 'Weight entry deleted' },
+        400: {
+          content: { 'application/json': { schema: resolver(errorSchema) } },
+          description: 'Invalid identifiers',
+        },
+        404: {
+          content: { 'application/json': { schema: resolver(errorSchema) } },
+          description: 'Weight entry not found',
+        },
+      },
+      tags: ['weight-log'],
+    }),
+    validator('param', weightLogEntryPathSchema, (result, context) => {
+      if (!result.success) return context.json(validationError, 400)
+    }),
+    async (context) => {
+      const { entryId, profileId } = context.req.valid('param')
+      if (!(await application.deleteWeightLogEntry(profileId, entryId))) {
+        return context.json({ code: 'weight_not_found', message: 'Weight entry not found' }, 404)
       }
       return context.body(null, 204)
     },
