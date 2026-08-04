@@ -13,7 +13,8 @@ struct FoodQuickActionMenu: View {
                 .labelStyle(.iconOnly)
                 .font(MonsTypography.headline)
                 .foregroundStyle(MonsColor.textPrimary)
-                .frame(minWidth: 52, minHeight: 52)
+                .frame(width: 52, height: 52)
+                .contentShape(.circle)
         }
         .buttonStyle(.plain)
         .glassEffect(.regular.interactive(), in: .circle)

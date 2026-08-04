@@ -11,8 +11,6 @@ struct ContentView: View {
     @Environment(AppStore.self) private var store
 
     @State private var addMealRequest: AddMealRequest?
-    @State private var isSearchPresented = false
-    @State private var searchText = ""
     @State private var selection = AppTab.dashboard
 
     var body: some View {
@@ -31,7 +29,7 @@ struct ContentView: View {
             } else {
                 TabView(selection: $selection) {
                     Tab("Dashboard", systemImage: "square.grid.2x2", value: .dashboard) {
-                        PrimaryTabContent(onScan: scanFood, onSearch: showFoodSearch) {
+                        PrimaryTabContent {
                             DashboardView(
                                 onShowCalories: showCalories,
                                 onShowWorkouts: showWorkouts
@@ -40,36 +38,17 @@ struct ContentView: View {
                     }
 
                     Tab("Calories", systemImage: "fork.knife", value: .calories) {
-                        PrimaryTabContent(onScan: scanFood, onSearch: showFoodSearch) {
+                        PrimaryTabContent {
                             CalorieListView()
                         }
                     }
 
                     Tab("Workouts", systemImage: "figure.run", value: .workouts) {
-                        PrimaryTabContent(onScan: scanFood, onSearch: showFoodSearch) {
+                        PrimaryTabContent {
                             WorkoutListView()
                         }
                     }
-
-                    Tab(value: .search, role: .search) {
-                        PrimaryTabContent(onScan: scanFood, onSearch: showFoodSearch) {
-                            FoodSearchBrowser(
-                                searchText: $searchText,
-                                loggedAt: .now,
-                                showsModalChrome: false,
-                                onLogged: showCalories
-                            )
-                        }
-                    }
                 }
-                .searchable(
-                    text: $searchText,
-                    isPresented: $isSearchPresented,
-                    prompt: "Search for a food"
-                )
-                #if os(iOS)
-                .tabBarMinimizeBehavior(.onScrollDown)
-                #endif
             }
         }
         .foregroundStyle(MonsColor.textPrimary)
@@ -78,6 +57,14 @@ struct ContentView: View {
             VStack(spacing: MonsSpacing.small) {
                 if let error = store.lastError {
                     AppErrorBanner(message: error, onDismiss: store.clearError)
+                }
+
+                if store.hasLoadedNutritionPlan, store.nutritionPlan != nil {
+                    MonsAppDock(
+                        selection: $selection,
+                        onScan: scanFood,
+                        onSearch: showFoodSearch
+                    )
                 }
             }
         }
@@ -102,8 +89,7 @@ struct ContentView: View {
     }
 
     private func showFoodSearch() {
-        selection = .search
-        isSearchPresented = true
+        addMealRequest = AddMealRequest(scheduledAt: .now)
     }
 }
 
