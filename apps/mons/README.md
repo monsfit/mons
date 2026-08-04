@@ -6,8 +6,8 @@ It connects to the Regolith API for:
 
 - adult onboarding that estimates TDEE and a weight-goal calorie target;
 - a dashboard for today's nutrition, weekly workouts, and weight trend;
-- a native search-role tab that morphs into the bottom search field, with an adjacent glass
-  barcode action;
+- a native search-role tab that morphs into the bottom search field;
+- a standalone Liquid Glass quick-action button on every primary tab for food search and scanning;
 - separate Common, Branded, and Recently Added food sections with compact nutrition summaries;
 - camera barcode scanning with normalized UPC/EAN/GTIN lookup;
 - quantity-scaled full nutrient details, daily-target progress, logging, and day summaries;

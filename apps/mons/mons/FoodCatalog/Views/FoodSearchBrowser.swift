@@ -121,17 +121,6 @@ struct FoodSearchBrowser: View {
                     }
                 }
 
-                #if os(iOS)
-                if !showsModalChrome {
-                    ToolbarSpacer(.flexible, placement: .bottomBar)
-
-                    ToolbarItem(placement: .bottomBar) {
-                        Button("Scan barcode", systemImage: "barcode.viewfinder", action: showScanner)
-                            .buttonStyle(.glassProminent)
-                            .tint(MonsColor.action)
-                    }
-                }
-                #endif
             }
         }
     }
