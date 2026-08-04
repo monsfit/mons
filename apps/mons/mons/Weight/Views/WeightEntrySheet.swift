@@ -44,7 +44,7 @@ struct WeightEntrySheet: View {
                 }
             }
             .scrollContentBackground(.hidden)
-            .background(MonsColor.background)
+            .background(.clear)
             .foregroundStyle(MonsColor.textPrimary)
             .navigationTitle("Log Weight")
             #if os(iOS)
@@ -64,6 +64,7 @@ struct WeightEntrySheet: View {
         }
         .tint(MonsColor.action)
         .presentationDetents([.medium])
+        .monsSheetPresentation()
     }
 
     private var weightKg: Double {

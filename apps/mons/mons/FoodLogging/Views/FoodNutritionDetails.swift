@@ -2,38 +2,29 @@ import SwiftUI
 
 struct FoodNutritionDetails: View {
     let food: CatalogFood
+    let quantityGrams: Double
+    let targets: NutrientReferenceTargets
 
     var body: some View {
-        VStack(spacing: 0) {
-            FoodNutritionDetailRow(
-                title: "Calories",
-                value: food.calories ?? 0,
-                unit: "kcal",
-                color: NutritionColor.calories
-            )
-            FoodNutritionDetailRow(
-                title: "Protein",
-                value: food.protein ?? 0,
-                unit: "g",
-                color: NutritionColor.protein
-            )
-            FoodNutritionDetailRow(
-                title: "Fat",
-                value: food.totalFat ?? 0,
-                unit: "g",
-                color: NutritionColor.fat
-            )
-            FoodNutritionDetailRow(
-                title: "Carbohydrates",
-                value: food.carbohydrates ?? 0,
-                unit: "g",
-                color: NutritionColor.carbohydrates
-            )
+        VStack(alignment: .leading, spacing: MonsSpacing.xLarge) {
+            ForEach(FoodNutrientGroup.allCases) { group in
+                let nutrients = scaledNutrients.filter { $0.group == group }
+                if !nutrients.isEmpty {
+                    FoodNutritionSection(group: group, nutrients: nutrients, targets: targets)
+                }
+            }
         }
-        .background(MonsColor.surface, in: .rect(cornerRadius: MonsRadius.medium))
-        .overlay {
-            RoundedRectangle(cornerRadius: MonsRadius.medium)
-                .stroke(MonsColor.border, lineWidth: 1)
+    }
+
+    private var scaledNutrients: [FoodNutrient] {
+        let scale = max(quantityGrams, 0) / 100
+        return food.availableNutrients.map { nutrient in
+            FoodNutrient(
+                amount: nutrient.amount * scale,
+                field: nutrient.field,
+                name: nutrient.name,
+                unit: nutrient.unit
+            )
         }
     }
 }

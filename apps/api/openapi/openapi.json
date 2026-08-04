@@ -1502,6 +1502,37 @@
         ],
         "description": "Active catalog snapshot status"
       },
+      "FoodNutrient": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "minimum": 0
+          },
+          "field": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "unit": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        },
+        "required": [
+          "amount",
+          "field",
+          "name",
+          "unit"
+        ],
+        "description": "Available normalized nutrient value per 100 grams"
+      },
       "FoodPortion": {
         "type": "object",
         "properties": {
@@ -1585,6 +1616,12 @@
           "name": {
             "type": "string"
           },
+          "nutrients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FoodNutrient"
+            }
+          },
           "portions": {
             "type": "array",
             "items": {
@@ -1626,6 +1663,7 @@
           "foodId",
           "gtin",
           "name",
+          "nutrients",
           "portions",
           "protein",
           "source",

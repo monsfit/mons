@@ -101,9 +101,6 @@ struct CalorieListView: View {
                     calendar: calendar
                 )
             }
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                FoodQuickAddBar(onSearch: addFood, onScan: scanFood)
-            }
 #if os(iOS)
             .toolbar(.hidden, for: .navigationBar)
 #endif
@@ -122,25 +119,6 @@ struct CalorieListView: View {
 
     private func requestMealEntry(at date: Date) {
         addMealRequest = AddMealRequest(scheduledAt: date)
-    }
-
-    private func addFood() {
-        addMealRequest = AddMealRequest(scheduledAt: defaultMealTime)
-    }
-
-    private func scanFood() {
-        addMealRequest = AddMealRequest(scheduledAt: defaultMealTime, mode: .scanner)
-    }
-
-    private var defaultMealTime: Date {
-        let scheduledAt: Date
-        if calendar.isDate(selectedDate, inSameDayAs: referenceDate) {
-            scheduledAt = referenceDate
-        } else {
-            scheduledAt = calendar.date(bySettingHour: 12, minute: 0, second: 0, of: selectedDate)
-                ?? selectedDate
-        }
-        return scheduledAt
     }
 
     private func moveMeal(_ identifier: String, to destination: Date) -> Bool {

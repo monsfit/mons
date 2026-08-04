@@ -39,6 +39,38 @@ final class AppStore {
             networkEnabled: false
         )
         store.nutritionPlan = .preview
+        store.foodLog = [
+            FoodLogEntry(
+                brand: nil,
+                calories: 95,
+                carbohydrates: 25,
+                datasetKind: .raw,
+                entryId: UUID(uuidString: "00000000-0000-4000-8000-000000000050") ?? UUID(),
+                fat: 0.3,
+                foodId: "171688",
+                gtin: nil,
+                loggedAt: Date(timeIntervalSince1970: 1_775_304_000),
+                mealCategory: .breakfast,
+                name: "Banana",
+                protein: 1.2,
+                quantityGrams: 100
+            ),
+            FoodLogEntry(
+                brand: "Example Farms",
+                calories: 90,
+                carbohydrates: 0.4,
+                datasetKind: .branded,
+                entryId: UUID(uuidString: "00000000-0000-4000-8000-000000000051") ?? UUID(),
+                fat: 6.8,
+                foodId: "747447",
+                gtin: "00000000000005",
+                loggedAt: Date(timeIntervalSince1970: 1_775_307_600),
+                mealCategory: .breakfast,
+                name: "Egg Fried",
+                protein: 6.3,
+                quantityGrams: 100
+            ),
+        ]
         store.weightLog = [
             WeightLogEntry(
                 entryId: UUID(uuidString: "00000000-0000-4000-8000-000000000040")

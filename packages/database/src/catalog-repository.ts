@@ -8,7 +8,17 @@ export interface FoodPortionRecord {
   unit: 'g' | 'ml'
 }
 
-export type FoodRecord = Selectable<FoodTable> & { portions: FoodPortionRecord[] }
+export interface FoodNutrientRecord {
+  amount: number
+  field: string
+  name: string
+  unit: string
+}
+
+export type FoodRecord = Selectable<FoodTable> & {
+  nutrients: FoodNutrientRecord[]
+  portions: FoodPortionRecord[]
+}
 
 export interface CatalogSnapshotRecord {
   active: boolean
@@ -74,6 +84,7 @@ export class KyselyCatalogReader implements CatalogReader {
         'gtin',
         'ingestion_run_id',
         'name',
+        this.nutrients('branded_foods'),
         'protein',
         this.portions('branded_foods'),
         'source',
@@ -128,6 +139,7 @@ export class KyselyCatalogReader implements CatalogReader {
         'gtin',
         'ingestion_run_id',
         'name',
+        this.nutrients('foods'),
         'protein',
         this.portions('foods'),
         'source',
@@ -179,5 +191,24 @@ export class KyselyCatalogReader implements CatalogReader {
       ),
       '[]'::json
     )`.as('portions')
+  }
+
+  private nutrients(table: 'branded_foods' | 'foods') {
+    return sql<FoodNutrientRecord[]>`coalesce(
+      (
+        SELECT json_agg(
+          json_build_object(
+            'amount', (to_jsonb(${sql.raw(table)}) ->> nutrient.field_name)::double precision,
+            'field', nutrient.field_name,
+            'name', regexp_replace(nutrient.description, ' per 100 g$', ''),
+            'unit', nutrient.unit
+          )
+          ORDER BY nutrient.field_name
+        )
+        FROM ${sql.table(`${this.schema}.nutrient_definitions`)} AS nutrient
+        WHERE to_jsonb(${sql.raw(table)}) ->> nutrient.field_name IS NOT NULL
+      ),
+      '[]'::json
+    )`.as('nutrients')
   }
 }

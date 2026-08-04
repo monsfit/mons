@@ -30,6 +30,13 @@ export interface PortionTable {
   unit: 'g' | 'ml'
 }
 
+export interface NutrientDefinitionTable {
+  description: string
+  field_name: string
+  unit: string
+  value_kind: 'direct' | 'derived'
+}
+
 export interface ProfileTable {
   created_at: ColumnType<Date, Date | string | undefined, never>
   profile_id: string
@@ -131,6 +138,7 @@ export interface CatalogDatabase {
   food_log_entries: FoodLogEntryTable
   foods: FoodTable
   ingestion_runs: IngestionRunTable
+  nutrient_definitions: NutrientDefinitionTable
   nutrition_plans: NutritionPlanTable
   portions: PortionTable
   profiles: ProfileTable

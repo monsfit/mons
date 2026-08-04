@@ -37,6 +37,7 @@ struct BarcodeScannerSheet: View {
                 }
             }
         }
+        .monsSheetPresentation()
     }
 }
 #endif

@@ -11,6 +11,11 @@ struct CatalogFoodNutritionTests {
             foodId: "1",
             gtin: "00000000000001",
             name: "Egg Fried",
+            nutrients: [
+                FoodNutrient(amount: 90, field: "calories", name: "Food energy", unit: "kcal"),
+                FoodNutrient(amount: 6.3, field: "protein", name: "Protein", unit: "g"),
+                FoodNutrient(amount: 95.2, field: "sodium", name: "Sodium", unit: "mg"),
+            ],
             portions: [
                 FoodPortion(amount: 50, name: "1 large egg", unit: .grams),
                 FoodPortion(amount: 45, name: "3 tbsp", unit: .milliliters)
@@ -28,5 +33,6 @@ struct CatalogFoodNutritionTests {
         #expect(food.gramPortions.map(\.name) == ["1 large egg"])
         #expect(food.quantityGrams(amount: 2, portion: food.gramPortions.first) == 100)
         #expect(food.quantityGrams(amount: 75, portion: nil) == 75)
+        #expect(food.nutrients.map(\.group) == [.other, .protein, .minerals])
     }
 }

@@ -89,6 +89,8 @@ schema versions and SHA-256 hashes before loading them.
 - Branded snapshots require valid product identity and complete, bounded core nutrition per 100 g.
 - Catalog names and brands use weighted PostgreSQL full-text search with trigram fallback and
   a defensive quality predicate.
+- Catalog search and barcode responses include every available normalized nutrient and household
+  gram portion, while preserving raw and branded provenance.
 - Profiles, food logs, weight history, and workouts live in `regolith_app`, outside replaceable
   catalog snapshots.
 - Adult onboarding inputs and the resulting nutrition plan live in `regolith_app`; the API

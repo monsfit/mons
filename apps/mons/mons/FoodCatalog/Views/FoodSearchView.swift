@@ -22,6 +22,10 @@ struct FoodSearchView: View {
         searchText.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    private var recentFoods: [CatalogFood] {
+        RecentFoodBuilder.foods(pendingItems: pendingItems, entries: store.foodLog)
+    }
+
     init(
         loggedAt: Date,
         startsWithScanner: Bool = false,
@@ -42,17 +46,23 @@ struct FoodSearchView: View {
                     searchText: searchText,
                     commonResults: commonResults,
                     brandedResults: brandedResults,
+                    recentFoods: recentFoods,
                     onSelect: selectFood
                 )
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
-            .background(MonsColor.background)
+            .background(.clear)
             .foregroundStyle(MonsColor.textPrimary)
             .navigationTitle("Add Food")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
+            .searchable(
+                text: $searchText,
+                placement: .toolbar,
+                prompt: "Search for a food"
+            )
             .navigationDestination(for: CatalogFood.self) { food in
                 FoodLogEditorView(
                     food: food,
@@ -60,15 +70,6 @@ struct FoodSearchView: View {
                     pendingItemCount: pendingItems.count,
                     onAdd: addToPending,
                     onLog: logIncluding
-                )
-            }
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                FoodCatalogSearchBar(
-                    searchText: $searchText,
-                    isLogging: isLogging,
-                    pendingItemCount: pendingItems.count,
-                    onLog: logPending,
-                    onScan: showScanner
                 )
             }
             .task(id: searchText) {
@@ -86,8 +87,36 @@ struct FoodSearchView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close", action: dismiss.callAsFunction)
                 }
+
+                #if os(iOS)
+                DefaultToolbarItem(kind: .search, placement: .bottomBar)
+
+                ToolbarSpacer(.flexible, placement: .bottomBar)
+
+                ToolbarItem(placement: .bottomBar) {
+                    Button("Scan barcode", systemImage: "barcode.viewfinder", action: showScanner)
+                        .buttonStyle(.glassProminent)
+                        .tint(MonsColor.action)
+                }
+
+                if !pendingItems.isEmpty {
+                    ToolbarItem(placement: .bottomBar) {
+                        Button(action: logPending) {
+                            if isLogging {
+                                ProgressView()
+                            } else {
+                                Label("Log Foods", systemImage: "checkmark")
+                            }
+                        }
+                        .buttonStyle(.glass)
+                        .disabled(isLogging)
+                        .accessibilityLabel("Log \(pendingItems.count) foods")
+                    }
+                }
+                #endif
             }
         }
+        .monsSheetPresentation()
     }
 
     private func search() async {

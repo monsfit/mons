@@ -20,6 +20,10 @@ const sampleFood: FoodRecord = {
   gtin: '00012345678905',
   ingestion_run_id: '00000000-0000-0000-0000-000000000001',
   name: 'Example Food',
+  nutrients: [
+    { amount: 3.2, field: 'fiber', name: 'Dietary fibre', unit: 'g' },
+    { amount: 120, field: 'sodium', name: 'Sodium', unit: 'mg' },
+  ],
   portions: [{ amount: 30, name: '1 bar', unit: 'g' }],
   protein: 5,
   source: 'test',

@@ -17,13 +17,15 @@ struct FoodPortionMenu: View {
             }
         } label: {
             HStack(spacing: MonsSpacing.xSmall) {
-                Text(selectedPortion?.name ?? "g")
+                Text(selectedPortion?.menuTitle ?? "Grams")
                     .lineLimit(1)
+                    .minimumScaleFactor(0.8)
 
                 Image(systemName: "chevron.up.chevron.down")
                     .font(MonsTypography.caption)
             }
             .frame(minHeight: 44)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, MonsSpacing.medium)
         }
         .buttonStyle(.glass)

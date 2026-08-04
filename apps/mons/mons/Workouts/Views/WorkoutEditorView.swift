@@ -50,7 +50,7 @@ struct WorkoutEditorView: View {
                 }
             }
             .scrollContentBackground(.hidden)
-            .background(MonsColor.background)
+            .background(.clear)
             .foregroundStyle(MonsColor.textPrimary)
             .navigationTitle("Log workout")
             .toolbar {
@@ -65,6 +65,7 @@ struct WorkoutEditorView: View {
             }
         }
         .tint(MonsColor.action)
+        .monsSheetPresentation()
     }
 
     private var trimmedTitle: String {

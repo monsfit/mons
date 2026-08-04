@@ -5,6 +5,7 @@ struct FoodSearchResultsContent: View {
     let searchText: String
     let commonResults: [CatalogFood]
     let brandedResults: [CatalogFood]
+    let recentFoods: [CatalogFood]
     let onSelect: (CatalogFood) -> Void
 
     private var hasMinimumQueryLength: Bool {
@@ -12,7 +13,9 @@ struct FoodSearchResultsContent: View {
     }
 
     var body: some View {
-        if isSearching {
+        if !hasMinimumQueryLength, !recentFoods.isEmpty {
+            FoodSearchSection(title: "Recently Added", foods: recentFoods, onSelect: onSelect)
+        } else if isSearching {
             HStack {
                 Spacer()
                 ProgressView("Searching")
@@ -40,4 +43,3 @@ struct FoodSearchResultsContent: View {
         }
     }
 }
-

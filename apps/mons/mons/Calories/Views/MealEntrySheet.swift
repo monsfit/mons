@@ -49,6 +49,7 @@ struct MealEntrySheet: View {
                 }
             }
         }
+        .monsSheetPresentation()
     }
 
     private func save() {

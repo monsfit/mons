@@ -62,16 +62,24 @@ struct FoodLogEditorView: View {
                 Divider()
 
                 VStack(alignment: .leading, spacing: 14) {
-                    Text("Nutrition per 100 g")
+                    Text("Full nutrition")
                         .font(MonsTypography.sectionTitle)
 
-                    FoodNutritionDetails(food: food)
+                    Text("For the selected amount · FDA Daily Values where available")
+                        .font(MonsTypography.caption)
+                        .foregroundStyle(MonsColor.textSecondary)
+
+                    FoodNutritionDetails(
+                        food: food,
+                        quantityGrams: quantityGrams,
+                        targets: NutrientReferenceTargets(nutritionTargets: targets)
+                    )
                 }
             }
             .padding()
             .padding(.bottom, 12)
         }
-        .background(MonsColor.background)
+        .background(.clear)
         .foregroundStyle(MonsColor.textPrimary)
         .navigationTitle(food.name)
         #if os(iOS)

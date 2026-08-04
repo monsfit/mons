@@ -11,52 +11,45 @@ struct FoodLogControls: View {
     let onLog: () -> Void
 
     var body: some View {
-        HStack(spacing: 10) {
-            TextField("Amount", value: $amount, format: .number)
-                .textFieldStyle(.plain)
-                .multilineTextAlignment(.trailing)
-                #if os(iOS)
-                .keyboardType(.decimalPad)
-                #endif
-
-            if portions.isEmpty {
-                Text("g")
-                    .foregroundStyle(MonsColor.textSecondary)
-                    .frame(minHeight: 44)
-            } else {
-                FoodPortionMenu(
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: MonsSpacing.small) {
+                FoodLogQuantityControls(
                     amount: $amount,
                     selectedPortion: $selectedPortion,
                     portions: portions
                 )
+                .frame(maxWidth: 160)
+
+                FoodLogActionControls(
+                    amount: amount,
+                    expands: false,
+                    isSaving: isSaving,
+                    pendingItemCount: pendingItemCount,
+                    onAdd: onAdd,
+                    onLog: onLog
+                )
             }
 
-            Button(action: onLog) {
-                if isSaving {
-                    ProgressView()
-                        .frame(minWidth: 78)
-                } else {
-                    Text(pendingItemCount == 0 ? "Log Food" : "Log Foods")
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-                        .frame(minWidth: 78)
-                }
-            }
-            .buttonStyle(.glass)
-            .buttonBorderShape(.capsule)
-            .layoutPriority(1)
-            .disabled(amount <= 0 || isSaving)
+            VStack(spacing: MonsSpacing.small) {
+                FoodLogQuantityControls(
+                    amount: $amount,
+                    selectedPortion: $selectedPortion,
+                    portions: portions
+                )
 
-            Button("Add", action: onAdd)
-                .buttonStyle(.glassProminent)
-                .buttonBorderShape(.capsule)
-                .tint(MonsColor.action)
-                .layoutPriority(1)
-                .disabled(amount <= 0 || isSaving)
+                FoodLogActionControls(
+                    amount: amount,
+                    expands: true,
+                    isSaving: isSaving,
+                    pendingItemCount: pendingItemCount,
+                    onAdd: onAdd,
+                    onLog: onLog
+                )
+            }
         }
-        .padding(8)
-        .glassEffect(.regular, in: .rect(cornerRadius: 18))
+        .padding(MonsSpacing.small)
+        .glassEffect(.regular, in: .rect(cornerRadius: MonsRadius.medium))
         .padding(.horizontal)
-        .padding(.vertical, 8)
+        .padding(.vertical, MonsSpacing.small)
     }
 }

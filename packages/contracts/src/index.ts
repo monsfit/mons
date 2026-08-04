@@ -54,6 +54,17 @@ export const foodPortionSchema = v.pipe(
   v.metadata({ ref: 'FoodPortion' }),
 )
 
+export const foodNutrientSchema = v.pipe(
+  v.object({
+    amount: v.pipe(v.number(), v.finite(), v.minValue(0)),
+    field: nonBlankTextSchema,
+    name: nonBlankTextSchema,
+    unit: nonBlankTextSchema,
+  }),
+  v.description('Available normalized nutrient value per 100 grams'),
+  v.metadata({ ref: 'FoodNutrient' }),
+)
+
 export const foodSummarySchema = v.pipe(
   v.object({
     brand: v.nullable(v.string()),
@@ -63,6 +74,7 @@ export const foodSummarySchema = v.pipe(
     foodId: v.string(),
     gtin: v.nullable(v.string()),
     name: v.string(),
+    nutrients: v.array(foodNutrientSchema),
     portions: v.array(foodPortionSchema),
     protein: v.nullable(v.number()),
     source: v.string(),
@@ -302,6 +314,7 @@ export type CatalogStatus = v.InferOutput<typeof catalogStatusSchema>
 export type DailyActivity = v.InferOutput<typeof dailyActivitySchema>
 export type DatasetKind = v.InferOutput<typeof datasetKindSchema>
 export type FoodLogEntry = v.InferOutput<typeof foodLogEntrySchema>
+export type FoodNutrient = v.InferOutput<typeof foodNutrientSchema>
 export type FoodPortion = v.InferOutput<typeof foodPortionSchema>
 export type FoodSearchQuery = v.InferOutput<typeof foodSearchQuerySchema>
 export type FoodSummary = v.InferOutput<typeof foodSummarySchema>

@@ -48,12 +48,14 @@ integration('KyselyCatalogReader with PostgreSQL', () => {
         carbohydrates_total double precision,
         dataset_kind text NOT NULL,
         food_id bigint PRIMARY KEY,
+        fiber double precision,
         gtin char(14),
         ingestion_run_id uuid NOT NULL,
         name text NOT NULL,
         protein double precision,
         source text NOT NULL,
         source_id text NOT NULL,
+        sodium double precision,
         total_fat double precision
         ,search_document tsvector GENERATED ALWAYS AS (
           setweight(to_tsvector('simple', coalesce(name, '')), 'A') ||
@@ -71,6 +73,12 @@ integration('KyselyCatalogReader with PostgreSQL', () => {
         ordinal integer NOT NULL,
         unit text NOT NULL,
         PRIMARY KEY (dataset_kind, food_id, ordinal)
+      );
+      CREATE TABLE ${schema}.nutrient_definitions (
+        field_name text PRIMARY KEY,
+        unit text NOT NULL,
+        description text NOT NULL,
+        value_kind text NOT NULL
       );
     `)
     await pool.query(
@@ -99,6 +107,14 @@ integration('KyselyCatalogReader with PostgreSQL', () => {
        '00000000-0000-0000-0000-000000000001', 'Cardamom Seed', 10.8, 'australian_food_composition', 'au-1', 6.7)
     `)
     await pool.query(`UPDATE ${schema}.foods SET carbohydrates_available = 40 WHERE food_id = 7`)
+    await pool.query(`UPDATE ${schema}.foods SET fiber = 2.4, sodium = 1 WHERE food_id = 1`)
+    await pool.query(`INSERT INTO ${schema}.nutrient_definitions
+      (field_name, unit, description, value_kind)
+      VALUES
+      ('calories', 'kcal', 'Food energy per 100 g', 'direct'),
+      ('fiber', 'g', 'Dietary fibre per 100 g', 'direct'),
+      ('sodium', 'mg', 'Sodium per 100 g', 'direct')
+    `)
     await pool.query(`INSERT INTO ${schema}.portions
       (amount, dataset_kind, food_id, name, ordinal, unit)
       VALUES
@@ -130,6 +146,11 @@ integration('KyselyCatalogReader with PostgreSQL', () => {
     await expect(catalog.findByGtin('00000000000001')).resolves.toMatchObject({
       food_id: '1',
       name: 'Apple',
+      nutrients: [
+        { amount: 52, field: 'calories', name: 'Food energy', unit: 'kcal' },
+        { amount: 2.4, field: 'fiber', name: 'Dietary fibre', unit: 'g' },
+        { amount: 1, field: 'sodium', name: 'Sodium', unit: 'mg' },
+      ],
       portions: [
         { amount: 182, name: '1 medium apple', unit: 'g' },
         { amount: 30, name: '1 cup, sliced', unit: 'g' },
