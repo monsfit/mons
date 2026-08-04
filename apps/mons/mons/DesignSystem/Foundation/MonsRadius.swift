@@ -1,7 +1,7 @@
 import Foundation
 
-enum MonsRadius {
-    static let small: CGFloat = 10
-    static let medium: CGFloat = 16
-    static let large: CGFloat = 22
+public enum MonsRadius {
+    public static let small: CGFloat = 10
+    public static let medium: CGFloat = 16
+    public static let large: CGFloat = 22
 }

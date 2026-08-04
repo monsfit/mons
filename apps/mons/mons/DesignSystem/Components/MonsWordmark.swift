@@ -1,7 +1,9 @@
 import SwiftUI
 
-struct MonsWordmark: View {
-    var body: some View {
+public struct MonsWordmark: View {
+    public init() {}
+
+    public var body: some View {
         ZStack {
             Text("mons")
                 .foregroundStyle(MonsColor.action.opacity(0.45))

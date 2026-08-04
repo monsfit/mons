@@ -1,5 +1,7 @@
 export interface ApiConfig {
   appSchema: string
+  clerkPublishableKey: string
+  clerkSecretKey: string
   databaseUrl: string
   port: number
   schema: string
@@ -22,8 +24,19 @@ export function loadConfig(environment: NodeJS.ProcessEnv = process.env): ApiCon
     throw new Error('REGOLITH_APP_SCHEMA must be a safe lowercase PostgreSQL identifier')
   }
 
+  const clerkPublishableKey = environment.CLERK_PUBLISHABLE_KEY
+  if (clerkPublishableKey === undefined || clerkPublishableKey.length === 0) {
+    throw new Error('CLERK_PUBLISHABLE_KEY is required')
+  }
+  const clerkSecretKey = environment.CLERK_SECRET_KEY
+  if (clerkSecretKey === undefined || clerkSecretKey.length === 0) {
+    throw new Error('CLERK_SECRET_KEY is required')
+  }
+
   return {
     appSchema,
+    clerkPublishableKey,
+    clerkSecretKey,
     databaseUrl:
       environment.DATABASE_URL ?? 'postgresql://regolith:regolith_local@localhost:5432/regolith',
     port,

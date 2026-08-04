@@ -182,6 +182,21 @@ integration('KyselyCatalogReader with PostgreSQL', () => {
     expect(foods.map((food) => food.food_id)).toEqual(['5', '6'])
   })
 
+  test('maps each Clerk user to one stable internal profile', async () => {
+    const first = await application.ensureProfileForClerkUser('user_database_test')
+    const repeated = await application.ensureProfileForClerkUser('user_database_test')
+    const second = await application.ensureProfileForClerkUser('user_database_test_two')
+
+    expect(repeated).toBe(first)
+    expect(second).not.toBe(first)
+    await expect(application.profileBelongsToClerkUser(first, 'user_database_test')).resolves.toBe(
+      true,
+    )
+    await expect(
+      application.profileBelongsToClerkUser(first, 'user_database_test_two'),
+    ).resolves.toBe(false)
+  })
+
   test('snapshots food nutrition into a persistent food log', async () => {
     const profileId = '00000000-0000-4000-8000-000000000001'
     const entry = await application.saveFoodLogEntry(profileId, {

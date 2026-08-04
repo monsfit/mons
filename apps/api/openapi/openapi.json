@@ -5,796 +5,14 @@
     "description": "Regolith food catalog API",
     "version": "0.1.0"
   },
-  "paths": {
-    "/v1/profiles/{profileId}": {
-      "put": {
-        "operationId": "ensureProfile",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Profile"
-                }
-              }
-            },
-            "description": "Profile is ready"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Invalid profile identifier"
-          }
-        },
-        "tags": [
-          "profiles"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "profileId",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "required": true
-          }
-        ]
-      }
-    },
-    "/v1/profiles/{profileId}/nutrition-plan": {
-      "get": {
-        "operationId": "getNutritionPlan",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NutritionPlanResponse"
-                }
-              }
-            },
-            "description": "Saved nutrition plan, or null before onboarding is complete"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Invalid profile identifier"
-          }
-        },
-        "tags": [
-          "profiles"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "profileId",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "required": true
-          }
-        ]
-      },
-      "put": {
-        "operationId": "saveNutritionPlan",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NutritionPlan"
-                }
-              }
-            },
-            "description": "Calculated and saved nutrition plan"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Invalid or unsupported nutrition plan"
-          }
-        },
-        "tags": [
-          "profiles"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "profileId",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "required": true
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SaveNutritionPlan"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/profiles/{profileId}/food-log": {
-      "get": {
-        "operationId": "listFoodLog",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/FoodLogResponse"
-                }
-              }
-            },
-            "description": "Food log entries in the requested time range"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Invalid profile or time range"
-          }
-        },
-        "tags": [
-          "food-log"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "profileId",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "required": true
-          },
-          {
-            "in": "query",
-            "name": "from",
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            },
-            "required": true
-          },
-          {
-            "in": "query",
-            "name": "to",
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            },
-            "required": true
-          }
-        ]
-      },
-      "post": {
-        "operationId": "createFoodLogEntry",
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/FoodLogEntry"
-                }
-              }
-            },
-            "description": "Created or updated food log entry"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Invalid food log entry"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Catalog food not found"
-          }
-        },
-        "tags": [
-          "food-log"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "profileId",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "required": true
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateFoodLogEntry"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/profiles/{profileId}/food-log/{entryId}": {
-      "delete": {
-        "operationId": "deleteFoodLogEntry",
-        "responses": {
-          "204": {
-            "description": "Food log entry deleted"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Invalid identifiers"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Food log entry not found"
-          }
-        },
-        "tags": [
-          "food-log"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "entryId",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "required": true
-          },
-          {
-            "in": "path",
-            "name": "profileId",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "required": true
-          }
-        ]
-      }
-    },
-    "/v1/profiles/{profileId}/weight-log": {
-      "get": {
-        "operationId": "listWeightLog",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WeightLogResponse"
-                }
-              }
-            },
-            "description": "Weight entries in the requested time range"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Invalid profile or time range"
-          }
-        },
-        "tags": [
-          "weight-log"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "profileId",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "required": true
-          },
-          {
-            "in": "query",
-            "name": "from",
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            },
-            "required": true
-          },
-          {
-            "in": "query",
-            "name": "to",
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            },
-            "required": true
-          }
-        ]
-      },
-      "post": {
-        "operationId": "saveWeightLogEntry",
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WeightLogEntry"
-                }
-              }
-            },
-            "description": "Created or updated weight entry"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Invalid weight entry"
-          }
-        },
-        "tags": [
-          "weight-log"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "profileId",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "required": true
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateWeightLogEntry"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/profiles/{profileId}/weight-log/{entryId}": {
-      "delete": {
-        "operationId": "deleteWeightLogEntry",
-        "responses": {
-          "204": {
-            "description": "Weight entry deleted"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Invalid identifiers"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Weight entry not found"
-          }
-        },
-        "tags": [
-          "weight-log"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "entryId",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "required": true
-          },
-          {
-            "in": "path",
-            "name": "profileId",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "required": true
-          }
-        ]
-      }
-    },
-    "/v1/profiles/{profileId}/workouts": {
-      "get": {
-        "operationId": "listWorkouts",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WorkoutResponse"
-                }
-              }
-            },
-            "description": "Workout sessions in the requested time range"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Invalid profile or time range"
-          }
-        },
-        "tags": [
-          "workouts"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "profileId",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "required": true
-          },
-          {
-            "in": "query",
-            "name": "from",
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            },
-            "required": true
-          },
-          {
-            "in": "query",
-            "name": "to",
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            },
-            "required": true
-          }
-        ]
-      }
-    },
-    "/v1/profiles/{profileId}/workouts/{sessionId}": {
-      "put": {
-        "operationId": "saveWorkout",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Workout"
-                }
-              }
-            },
-            "description": "Saved workout session"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Invalid workout"
-          }
-        },
-        "tags": [
-          "workouts"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "profileId",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "required": true
-          },
-          {
-            "in": "path",
-            "name": "sessionId",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "required": true
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SaveWorkout"
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "operationId": "deleteWorkout",
-        "responses": {
-          "204": {
-            "description": "Workout deleted"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Invalid identifiers"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Workout not found"
-          }
-        },
-        "tags": [
-          "workouts"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "profileId",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "required": true
-          },
-          {
-            "in": "path",
-            "name": "sessionId",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "required": true
-          }
-        ]
-      }
-    },
-    "/health": {
-      "get": {
-        "operationId": "getHealth",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Health"
-                }
-              }
-            },
-            "description": "API is healthy"
-          }
-        },
-        "tags": [
-          "system"
-        ]
-      }
-    },
-    "/v1/catalog": {
-      "get": {
-        "operationId": "getCatalogStatus",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CatalogStatus"
-                }
-              }
-            },
-            "description": "Active catalog snapshot"
-          }
-        },
-        "tags": [
-          "catalog"
-        ]
-      }
-    },
-    "/v1/foods/by-gtin/{gtin}": {
-      "get": {
-        "operationId": "getFoodByGtin",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/FoodSummary"
-                }
-              }
-            },
-            "description": "Food matching the GTIN"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Invalid GTIN"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Food not found"
-          }
-        },
-        "tags": [
-          "foods"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "gtin",
-            "schema": {
-              "type": "string",
-              "pattern": "^\\d{14}$"
-            },
-            "required": true
-          }
-        ]
-      }
-    },
-    "/v1/foods/search": {
-      "get": {
-        "operationId": "searchFoods",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/FoodSearchResponse"
-                }
-              }
-            },
-            "description": "Ranked food search results"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Invalid search query"
-          }
-        },
-        "tags": [
-          "foods"
-        ],
-        "parameters": [
-          {
-            "in": "query",
-            "name": "kind",
-            "schema": {
-              "enum": [
-                "raw",
-                "branded"
-              ],
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "limit",
-            "schema": {
-              "type": "integer",
-              "pattern": "^\\d+$",
-              "minimum": 1,
-              "maximum": 100
-            }
-          },
-          {
-            "in": "query",
-            "name": "q",
-            "schema": {
-              "type": "string",
-              "minLength": 2,
-              "maxLength": 200
-            },
-            "required": true
-          }
-        ]
-      }
-    }
-  },
   "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "bearerFormat": "JWT",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    },
     "schemas": {
       "Profile": {
         "type": "object",
@@ -806,21 +24,6 @@
         },
         "required": [
           "profileId"
-        ]
-      },
-      "Error": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "message": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "code",
-          "message"
         ]
       },
       "NutritionPlan": {
@@ -947,6 +150,21 @@
         },
         "required": [
           "plan"
+        ]
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
         ]
       },
       "SaveNutritionPlan": {
@@ -1684,6 +902,780 @@
         },
         "required": [
           "foods"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/v1/profile": {
+      "put": {
+        "operationId": "ensureCurrentProfile",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            },
+            "description": "Authenticated user profile is ready"
+          }
+        },
+        "tags": [
+          "profiles"
+        ]
+      }
+    },
+    "/v1/profiles/{profileId}/nutrition-plan": {
+      "get": {
+        "operationId": "getNutritionPlan",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NutritionPlanResponse"
+                }
+              }
+            },
+            "description": "Saved nutrition plan, or null before onboarding is complete"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid profile identifier"
+          }
+        },
+        "tags": [
+          "profiles"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "profileId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ]
+      },
+      "put": {
+        "operationId": "saveNutritionPlan",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NutritionPlan"
+                }
+              }
+            },
+            "description": "Calculated and saved nutrition plan"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid or unsupported nutrition plan"
+          }
+        },
+        "tags": [
+          "profiles"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "profileId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveNutritionPlan"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/profiles/{profileId}/food-log": {
+      "get": {
+        "operationId": "listFoodLog",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FoodLogResponse"
+                }
+              }
+            },
+            "description": "Food log entries in the requested time range"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid profile or time range"
+          }
+        },
+        "tags": [
+          "food-log"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "profileId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "required": true
+          }
+        ]
+      },
+      "post": {
+        "operationId": "createFoodLogEntry",
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FoodLogEntry"
+                }
+              }
+            },
+            "description": "Created or updated food log entry"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid food log entry"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Catalog food not found"
+          }
+        },
+        "tags": [
+          "food-log"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "profileId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFoodLogEntry"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/profiles/{profileId}/food-log/{entryId}": {
+      "delete": {
+        "operationId": "deleteFoodLogEntry",
+        "responses": {
+          "204": {
+            "description": "Food log entry deleted"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid identifiers"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Food log entry not found"
+          }
+        },
+        "tags": [
+          "food-log"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entryId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "profileId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ]
+      }
+    },
+    "/v1/profiles/{profileId}/weight-log": {
+      "get": {
+        "operationId": "listWeightLog",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeightLogResponse"
+                }
+              }
+            },
+            "description": "Weight entries in the requested time range"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid profile or time range"
+          }
+        },
+        "tags": [
+          "weight-log"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "profileId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "required": true
+          }
+        ]
+      },
+      "post": {
+        "operationId": "saveWeightLogEntry",
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeightLogEntry"
+                }
+              }
+            },
+            "description": "Created or updated weight entry"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid weight entry"
+          }
+        },
+        "tags": [
+          "weight-log"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "profileId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWeightLogEntry"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/profiles/{profileId}/weight-log/{entryId}": {
+      "delete": {
+        "operationId": "deleteWeightLogEntry",
+        "responses": {
+          "204": {
+            "description": "Weight entry deleted"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid identifiers"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Weight entry not found"
+          }
+        },
+        "tags": [
+          "weight-log"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entryId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "profileId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ]
+      }
+    },
+    "/v1/profiles/{profileId}/workouts": {
+      "get": {
+        "operationId": "listWorkouts",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkoutResponse"
+                }
+              }
+            },
+            "description": "Workout sessions in the requested time range"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid profile or time range"
+          }
+        },
+        "tags": [
+          "workouts"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "profileId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "required": true
+          }
+        ]
+      }
+    },
+    "/v1/profiles/{profileId}/workouts/{sessionId}": {
+      "put": {
+        "operationId": "saveWorkout",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Workout"
+                }
+              }
+            },
+            "description": "Saved workout session"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid workout"
+          }
+        },
+        "tags": [
+          "workouts"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "profileId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "sessionId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveWorkout"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteWorkout",
+        "responses": {
+          "204": {
+            "description": "Workout deleted"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid identifiers"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Workout not found"
+          }
+        },
+        "tags": [
+          "workouts"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "profileId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "sessionId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "getHealth",
+        "security": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            },
+            "description": "API is healthy"
+          }
+        },
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    "/v1/catalog": {
+      "get": {
+        "operationId": "getCatalogStatus",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogStatus"
+                }
+              }
+            },
+            "description": "Active catalog snapshot"
+          }
+        },
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/v1/foods/by-gtin/{gtin}": {
+      "get": {
+        "operationId": "getFoodByGtin",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FoodSummary"
+                }
+              }
+            },
+            "description": "Food matching the GTIN"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid GTIN"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Food not found"
+          }
+        },
+        "tags": [
+          "foods"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "gtin",
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{14}$"
+            },
+            "required": true
+          }
+        ]
+      }
+    },
+    "/v1/foods/search": {
+      "get": {
+        "operationId": "searchFoods",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FoodSearchResponse"
+                }
+              }
+            },
+            "description": "Ranked food search results"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid search query"
+          }
+        },
+        "tags": [
+          "foods"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "kind",
+            "schema": {
+              "enum": [
+                "raw",
+                "branded"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "pattern": "^\\d+$",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 200
+            },
+            "required": true
+          }
         ]
       }
     }

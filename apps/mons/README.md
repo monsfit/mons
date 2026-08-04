@@ -2,6 +2,14 @@
 
 Mons is the SwiftUI client application.
 
+Authentication uses ClerkKit and ClerkKitUI's prebuilt `AuthView` and `UserButton`. Clerk is
+configured with the development publishable key, while the API secret remains only in the ignored
+root `.env`. API requests obtain the current Clerk session token and send it as a bearer token.
+Sign-out clears account-scoped in-memory state before another profile can load.
+The linked Clerk instance exposes Apple and Google as its sign-in strategies, so both appear in the
+prebuilt native authentication view. Sign in with Apple is declared in the app entitlements;
+Google is handled through Clerk's OAuth callback flow.
+
 It connects to the Regolith API for:
 
 - adult onboarding that estimates TDEE and a weight-goal calorie target;
@@ -20,10 +28,35 @@ Open `mons.xcodeproj` in Xcode, or build and test it from the repository root:
 npx pnpm@11.20.0 mons:check
 ```
 
-`mons:check` treats Swift warnings as errors, enables complete strict-concurrency checking,
-builds the iOS Simulator target, and runs the deterministic test suite. Project-local iOS review
-skills are checked into `.agents/skills`; their pinned provenance and update policy are documented
-in `.agents/skills/README.md`.
+`mons:check` first builds and tests the local Swift packages, then treats app warnings as errors,
+enables complete strict-concurrency checking, builds the iOS Simulator target, and runs the app's
+deterministic test suite. Project-local iOS review skills are checked into `.agents/skills`; their
+pinned provenance and update policy are documented in `.agents/skills/README.md`.
+
+## Feature modules and previews
+
+UI features live in local Swift packages declared by `Package.swift`. A feature package owns its
+presentation state, views, deterministic fixtures, previews, and focused tests. The application
+target remains a thin composition layer: it translates domain models into presentation values and
+injects account controls, navigation callbacks, persistence, and networking.
+
+The dashboard is the first extracted vertical slice:
+
+- `MonsDesignSystem` owns shared tokens, components, and bundled Space Grotesk resources;
+- `MonsDashboardFeature` owns the dashboard presentation UI and has no Clerk, API, or `AppStore`
+  dependency;
+- `DashboardView` in the app is the live-state adapter;
+- package previews cover populated and empty states with fixed dates and values.
+
+For fast UI work, open `mons.xcodeproj`, select the `MonsDashboardFeature` scheme, then open
+`Packages/MonsDashboardFeature/DashboardScreenPreviews.swift`. Xcode compiles the small
+presentation dependency graph instead of launching the full authenticated app. Follow this same
+boundary for new feature work: keep domain-to-presentation mapping in the app and keep previewable
+UI state value-based and deterministic.
+
+Before running OAuth on a physical device, finish Clerk's Native API configuration for bundle ID
+`com.jeremyscott.mons` using the Apple App ID Prefix from the Apple Developer portal. The prefix is
+not assumed to equal the development team ID.
 
 The project, application target, test target, scheme, Swift module, and bundle identifiers
 all use the `mons` name. Local Xcode user state and Derived Data are intentionally ignored.

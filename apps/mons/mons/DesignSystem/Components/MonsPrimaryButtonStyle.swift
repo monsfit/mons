@@ -1,10 +1,15 @@
 import SwiftUI
 
-struct MonsPrimaryButtonStyle: ButtonStyle {
-    var tint = MonsColor.actionSurface
-    var foreground = MonsColor.actionForeground
+public struct MonsPrimaryButtonStyle: ButtonStyle {
+    public var tint = MonsColor.actionSurface
+    public var foreground = MonsColor.actionForeground
 
-    func makeBody(configuration: Configuration) -> some View {
+    public init(tint: Color = MonsColor.actionSurface, foreground: Color = MonsColor.actionForeground) {
+        self.tint = tint
+        self.foreground = foreground
+    }
+
+    public func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(MonsTypography.headline)
             .foregroundStyle(foreground)

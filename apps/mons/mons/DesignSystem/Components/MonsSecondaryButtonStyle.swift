@@ -1,7 +1,9 @@
 import SwiftUI
 
-struct MonsSecondaryButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
+public struct MonsSecondaryButtonStyle: ButtonStyle {
+    public init() {}
+
+    public func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(MonsTypography.headline)
             .foregroundStyle(MonsColor.textPrimary)

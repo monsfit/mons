@@ -1,19 +1,16 @@
+import MonsDesignSystem
 import SwiftUI
 
-struct DashboardHeader: View {
+struct DashboardPresentationHeader<AccountMenu: View>: View {
     let date: Date
+    let accountMenu: AccountMenu
 
     var body: some View {
         VStack(alignment: .leading, spacing: MonsSpacing.large) {
             HStack {
                 MonsWordmark()
                 Spacer()
-                Image(systemName: "bell")
-                    .font(MonsTypography.sectionTitle)
-                    .foregroundStyle(MonsColor.textPrimary)
-                    .frame(width: 44, height: 44)
-                    .background(MonsColor.surface, in: .circle)
-                    .accessibilityHidden(true)
+                accountMenu.frame(width: 44, height: 44)
             }
 
             Text(date, format: .dateTime.weekday(.wide).day().month(.wide))
@@ -22,14 +19,12 @@ struct DashboardHeader: View {
                 .textCase(.uppercase)
 
             VStack(alignment: .leading, spacing: MonsSpacing.xSmall) {
-                Text("Today")
-                    .font(MonsTypography.display)
+                Text("Today").font(MonsTypography.display)
                 Text("Ready to build.")
                     .font(MonsTypography.body)
                     .foregroundStyle(MonsColor.textSecondary)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityElement(children: .combine)
     }
 }

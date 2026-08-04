@@ -14,7 +14,7 @@ final class AppStore {
     private(set) var workouts: [WorkoutSession] = []
     private(set) var weightLog: [WeightLogEntry] = []
 
-    let profileId: UUID
+    private(set) var profileId: UUID
 
     @ObservationIgnored private let api: RegolithAPIClient
     @ObservationIgnored private let calendar: Calendar
@@ -98,7 +98,7 @@ final class AppStore {
         }
         defer { hasLoadedNutritionPlan = true }
         do {
-            try await api.ensureProfile(profileId)
+            profileId = try await api.ensureProfile()
             nutritionPlan = try await api.nutritionPlan(profileId: profileId)
             await loadFoodLog(around: referenceDate)
             await loadWorkouts(referenceDate: referenceDate)
@@ -338,6 +338,18 @@ final class AppStore {
 
     func clearError() {
         lastError = nil
+    }
+
+    func resetForAuthenticationChange() {
+        foodLog = []
+        hasLoadedNutritionPlan = false
+        isLoadingFoodLog = false
+        isLoadingWorkouts = false
+        isLoadingWeightLog = false
+        lastError = nil
+        nutritionPlan = nil
+        workouts = []
+        weightLog = []
     }
 
     private func upsert(_ entry: FoodLogEntry) {

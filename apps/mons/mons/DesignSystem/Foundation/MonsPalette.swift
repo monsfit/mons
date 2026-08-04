@@ -1,6 +1,6 @@
 import SwiftUI
 
-enum MonsPalette {
+public enum MonsPalette {
     static let plum1000 = Color(monsHex: 0x120F13)
     static let plum950 = Color(monsHex: 0x1A161B)
     static let plum900 = Color(monsHex: 0x251F26)

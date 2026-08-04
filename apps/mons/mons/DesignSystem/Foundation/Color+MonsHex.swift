@@ -1,7 +1,7 @@
 import SwiftUI
 
 extension Color {
-    init(monsHex value: UInt32) {
+    public init(monsHex value: UInt32) {
         self.init(
             .sRGB,
             red: Double((value >> 16) & 0xFF) / 255,

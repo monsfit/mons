@@ -49,6 +49,7 @@ Run commands from the repository root:
 ```bash
 npx pnpm@11.20.0 install
 uv sync --project services/titan --all-extras
+npx clerk@latest env pull --app app_2ydgnHRPQ7JmVCswcMHsCCx0PMZ --instance dev --file .env
 npx pnpm@11.20.0 db:up
 npx pnpm@11.20.0 db:migrate
 npx pnpm@11.20.0 db:status
@@ -58,8 +59,9 @@ npx pnpm@11.20.0 dev
 The API starts at <http://localhost:3000>. OpenAPI JSON is served at `/openapi.json`, and
 interactive API documentation is served at `/docs`.
 
-Copy `.env.example` to `.env` only when overriding the local defaults. PostgreSQL data is
-kept in the `regolith-postgres` Docker volume between container restarts.
+The Clerk CLI command writes the development publishable and secret keys to the ignored `.env`
+file. Never commit that file. PostgreSQL data is kept in the `regolith-postgres` Docker volume
+between container restarts.
 
 ## Common commands
 
@@ -93,6 +95,8 @@ schema versions and SHA-256 hashes before loading them.
   gram portion, while preserving raw and branded provenance.
 - Profiles, food logs, weight history, and workouts live in `regolith_app`, outside replaceable
   catalog snapshots.
+- Clerk session tokens authenticate every `/v1` request. A unique `clerk_user_id` maps each Clerk
+  account to a database-generated internal profile UUID, and profile routes verify ownership.
 - Adult onboarding inputs and the resulting nutrition plan live in `regolith_app`; the API
   calculates RMR, TDEE, goal velocity, and the daily calorie target on the server.
 - Food logs snapshot nutrients per 100 g so historical totals survive catalog refreshes.

@@ -62,10 +62,12 @@ export interface ApplicationRepository {
   deleteWorkout(profileId: string, sessionId: string): Promise<boolean>
   deleteWeightLogEntry(profileId: string, entryId: string): Promise<boolean>
   ensureProfile(profileId: string): Promise<void>
+  ensureProfileForClerkUser(clerkUserId: string): Promise<string>
   getNutritionPlan(profileId: string): Promise<NutritionPlanRecord | undefined>
   listFoodLog(profileId: string, from: Date, to: Date): Promise<FoodLogEntryRecord[]>
   listWorkouts(profileId: string, from: Date, to: Date): Promise<WorkoutRecord[]>
   listWeightLog(profileId: string, from: Date, to: Date): Promise<WeightLogEntryRecord[]>
+  profileBelongsToClerkUser(profileId: string, clerkUserId: string): Promise<boolean>
   saveFoodLogEntry(
     profileId: string,
     input: CreateFoodLogEntryInput,
@@ -96,6 +98,30 @@ export class KyselyApplicationRepository implements ApplicationRepository {
 
   async ensureProfile(profileId: string): Promise<void> {
     await this.ensureProfileWith(this.database, profileId)
+  }
+
+  async ensureProfileForClerkUser(clerkUserId: string): Promise<string> {
+    const profile = await this.database
+      .withSchema(this.appSchema)
+      .insertInto('profiles')
+      .values({ clerk_user_id: clerkUserId })
+      .onConflict((conflict) =>
+        conflict.column('clerk_user_id').doUpdateSet({ updated_at: this.now() }),
+      )
+      .returning('profile_id')
+      .executeTakeFirstOrThrow()
+    return profile.profile_id
+  }
+
+  async profileBelongsToClerkUser(profileId: string, clerkUserId: string): Promise<boolean> {
+    const profile = await this.database
+      .withSchema(this.appSchema)
+      .selectFrom('profiles')
+      .select('profile_id')
+      .where('profile_id', '=', profileId)
+      .where('clerk_user_id', '=', clerkUserId)
+      .executeTakeFirst()
+    return profile !== undefined
   }
 
   async getNutritionPlan(profileId: string): Promise<NutritionPlanRecord | undefined> {
@@ -394,7 +420,7 @@ export class KyselyApplicationRepository implements ApplicationRepository {
     await database
       .withSchema(this.appSchema)
       .insertInto('profiles')
-      .values({ profile_id: profileId })
+      .values({ clerk_user_id: null, profile_id: profileId })
       .onConflict((conflict) =>
         conflict.column('profile_id').doUpdateSet({ updated_at: this.now() }),
       )

@@ -15,12 +15,14 @@ npx pnpm@11.20.0 dev
 
 The service uses these environment variables:
 
-| Variable              | Default                                                        |
-| --------------------- | -------------------------------------------------------------- |
-| `DATABASE_URL`        | `postgresql://regolith:regolith_local@localhost:5432/regolith` |
-| `REGOLITH_SCHEMA`     | `regolith`                                                     |
-| `REGOLITH_APP_SCHEMA` | `regolith_app`                                                 |
-| `API_PORT`            | `3000`                                                         |
+| Variable                | Default                                                        |
+| ----------------------- | -------------------------------------------------------------- |
+| `DATABASE_URL`          | `postgresql://regolith:regolith_local@localhost:5432/regolith` |
+| `CLERK_PUBLISHABLE_KEY` | required; pull with the Clerk CLI                              |
+| `CLERK_SECRET_KEY`      | required; pull with the Clerk CLI                              |
+| `REGOLITH_SCHEMA`       | `regolith`                                                     |
+| `REGOLITH_APP_SCHEMA`   | `regolith_app`                                                 |
+| `API_PORT`              | `3000`                                                         |
 
 ## Routes
 
@@ -30,7 +32,7 @@ The service uses these environment variables:
 | `GET`    | `/v1/catalog`                                 | Active snapshot metadata and row counts         |
 | `GET`    | `/v1/foods/by-gtin/:gtin`                     | Branded-food lookup by normalized 14-digit GTIN |
 | `GET`    | `/v1/foods/search`                            | Weighted full-text and typo-tolerant search     |
-| `PUT`    | `/v1/profiles/:profileId`                     | Create or touch an app profile                  |
+| `PUT`    | `/v1/profile`                                 | Resolve the authenticated account's profile     |
 | `GET`    | `/v1/profiles/:profileId/nutrition-plan`      | Read the saved onboarding result                |
 | `PUT`    | `/v1/profiles/:profileId/nutrition-plan`      | Calculate and save a nutrition plan             |
 | `GET`    | `/v1/profiles/:profileId/food-log`            | List food entries in an ISO timestamp range     |
@@ -53,8 +55,14 @@ The server applies stable application migrations before listening. Catalog inges
 owned by Titan; `db:migrate` upgrades an older local catalog with the full-text search vector
 and GIN indexes.
 
-Profile UUIDs currently provide local data partitioning, not authentication. Keep this API on
-a trusted development network until an identity provider and authorization layer are added.
+All `/v1` routes require a Clerk session token in the `Authorization: Bearer <token>` header.
+`PUT /v1/profile` creates or returns the database profile mapped to the authenticated Clerk user.
+Profile-scoped routes verify that the requested internal UUID belongs to that same Clerk user.
+Health, OpenAPI JSON, and interactive documentation remain public.
+
+Application migrations use Kysely's ordered `Migrator` and schema builder. PostgreSQL expressions
+such as `now()`, `gen_random_uuid()`, and check predicates use scoped `sql` fragments; runtime
+application reads and writes use Kysely's typed query builder.
 
 Nutrition-plan writes accept measured inputs rather than client-calculated calorie totals. The
 API deterministically applies the Mifflin–St Jeor resting-energy equation, a bounded activity

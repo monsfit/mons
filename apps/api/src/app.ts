@@ -4,6 +4,7 @@ import { Hono } from 'hono'
 import { openAPIRouteHandler } from 'hono-openapi'
 
 import { createRoutes } from './routes.js'
+import type { RequestAuthenticator } from './auth.js'
 
 const documentation = {
   documentation: {
@@ -12,12 +13,22 @@ const documentation = {
       title: 'Regolith API',
       version: '0.1.0',
     },
+    components: {
+      securitySchemes: {
+        bearerAuth: { bearerFormat: 'JWT', scheme: 'bearer', type: 'http' as const },
+      },
+    },
     openapi: '3.1.0' as const,
+    security: [{ bearerAuth: [] }],
   },
 }
 
-export function createApp(catalog: CatalogReader, application: ApplicationRepository): Hono {
-  const routes = createRoutes(catalog, application)
+export function createApp(
+  catalog: CatalogReader,
+  application: ApplicationRepository,
+  authenticator: RequestAuthenticator,
+): Hono {
+  const routes = createRoutes(catalog, application, authenticator)
   const app = new Hono()
 
   app.route('/', routes)

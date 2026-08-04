@@ -10,6 +10,10 @@ import type {
 import { describe, expect, test } from 'vitest'
 
 import { createApp } from './app.js'
+import type { RequestAuthenticator } from './auth.js'
+
+const testUserId = 'user_regolith_test'
+const testProfileId = '00000000-0000-4000-8000-000000000001'
 
 const sampleFood: FoodRecord = {
   brand: 'Example Brand',
@@ -44,7 +48,7 @@ const sampleFoodLogEntry: FoodLogEntryRecord = {
   logged_at: new Date('2026-08-04T12:00:00Z'),
   meal_category: 'lunch',
   name: sampleFood.name,
-  profile_id: '00000000-0000-4000-8000-000000000001',
+  profile_id: testProfileId,
   protein_per_100g: sampleFood.protein,
   quantity_grams: 150,
 }
@@ -121,18 +125,25 @@ const application: ApplicationRepository = {
   deleteWeightLogEntry: async () => true,
   deleteWorkout: async () => true,
   ensureProfile: async () => undefined,
+  ensureProfileForClerkUser: async () => testProfileId,
   getNutritionPlan: async () => sampleNutritionPlan,
   listFoodLog: async () => [sampleFoodLogEntry],
   listWorkouts: async () => [sampleWorkout],
   listWeightLog: async () => [sampleWeightEntry],
+  profileBelongsToClerkUser: async (profileId, clerkUserId) =>
+    profileId === testProfileId && clerkUserId === testUserId,
   saveFoodLogEntry: async () => sampleFoodLogEntry,
   saveNutritionPlan: async () => sampleNutritionPlan,
   saveWeightLogEntry: async () => sampleWeightEntry,
   saveWorkout: async () => sampleWorkout,
 }
 
+const authenticator: RequestAuthenticator = {
+  authenticate: async () => ({ userId: testUserId }),
+}
+
 describe('Regolith API', () => {
-  const app = createApp(catalog, application)
+  const app = createApp(catalog, application, authenticator)
 
   test('returns health status', async () => {
     const response = await app.request('/health')
@@ -141,6 +152,38 @@ describe('Regolith API', () => {
       service: 'api',
       status: 'ok',
       version: '0.1.0',
+    })
+  })
+
+  test('rejects unauthenticated API requests', async () => {
+    const unauthenticated = createApp(catalog, application, {
+      authenticate: async () => undefined,
+    })
+    const response = await unauthenticated.request('/v1/foods/search?q=egg')
+
+    expect(response.status).toBe(401)
+    await expect(response.json()).resolves.toEqual({
+      code: 'unauthorized',
+      message: 'Authentication required',
+    })
+  })
+
+  test('creates the stable profile assigned to the authenticated user', async () => {
+    const response = await app.request('/v1/profile', { method: 'PUT' })
+
+    expect(response.status).toBe(200)
+    await expect(response.json()).resolves.toEqual({ profileId: testProfileId })
+  })
+
+  test('prevents access to another profile identifier', async () => {
+    const response = await app.request(
+      '/v1/profiles/00000000-0000-4000-8000-000000000099/nutrition-plan',
+    )
+
+    expect(response.status).toBe(403)
+    await expect(response.json()).resolves.toEqual({
+      code: 'forbidden',
+      message: 'Profile access denied',
     })
   })
 
@@ -270,6 +313,7 @@ describe('Regolith API', () => {
     const response = await app.request('/openapi.json')
     const document = (await response.json()) as { openapi: string; paths: Record<string, unknown> }
     expect(document.openapi).toBe('3.1.0')
+    expect(document.paths).toHaveProperty('/v1/profile')
     expect(document.paths).toHaveProperty('/v1/foods/search')
     expect(document.paths).toHaveProperty('/v1/profiles/{profileId}/food-log')
     expect(document.paths).toHaveProperty('/v1/profiles/{profileId}/nutrition-plan')

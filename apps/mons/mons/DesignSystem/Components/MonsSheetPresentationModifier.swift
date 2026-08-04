@@ -1,7 +1,9 @@
 import SwiftUI
 
-struct MonsSheetPresentationModifier: ViewModifier {
-    func body(content: Content) -> some View {
+public struct MonsSheetPresentationModifier: ViewModifier {
+    public init() {}
+
+    public func body(content: Content) -> some View {
         content
             .presentationBackground(.thinMaterial)
             .presentationCornerRadius(MonsRadius.large)
@@ -9,7 +11,7 @@ struct MonsSheetPresentationModifier: ViewModifier {
 }
 
 extension View {
-    func monsSheetPresentation() -> some View {
+    public func monsSheetPresentation() -> some View {
         modifier(MonsSheetPresentationModifier())
     }
 }

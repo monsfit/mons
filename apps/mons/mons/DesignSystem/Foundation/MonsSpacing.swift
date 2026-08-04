@@ -1,11 +1,11 @@
 import Foundation
 
-enum MonsSpacing {
-    static let xSmall: CGFloat = 4
-    static let small: CGFloat = 8
-    static let medium: CGFloat = 12
-    static let large: CGFloat = 16
-    static let xLarge: CGFloat = 24
-    static let xxLarge: CGFloat = 32
-    static let xxxLarge: CGFloat = 40
+public enum MonsSpacing {
+    public static let xSmall: CGFloat = 4
+    public static let small: CGFloat = 8
+    public static let medium: CGFloat = 12
+    public static let large: CGFloat = 16
+    public static let xLarge: CGFloat = 24
+    public static let xxLarge: CGFloat = 32
+    public static let xxxLarge: CGFloat = 40
 }

@@ -7,6 +7,7 @@ import {
 } from '@regolith/database'
 
 import { createApp } from './app.js'
+import { createClerkRequestAuthenticator } from './auth.js'
 import { loadConfig } from './config.js'
 
 const config = loadConfig()
@@ -17,7 +18,11 @@ const application = new KyselyApplicationRepository(database, {
   appSchema: config.appSchema,
   catalogSchema: config.schema,
 })
-const app = createApp(catalog, application)
+const authenticator = createClerkRequestAuthenticator({
+  publishableKey: config.clerkPublishableKey,
+  secretKey: config.clerkSecretKey,
+})
+const app = createApp(catalog, application, authenticator)
 
 const server = serve({ fetch: app.fetch, port: config.port }, (info) => {
   console.log(`Regolith API listening on http://localhost:${info.port}`)

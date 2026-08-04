@@ -1,14 +1,20 @@
 import Foundation
 
 actor RegolithAPIClient {
-    private let baseURL: URL
+    private let authorizationTokenProvider: any AuthorizationTokenProviding
     private let decoder: JSONDecoder
     private let encoder: JSONEncoder
+    private let requestBuilder: AuthenticatedRequestBuilder
     private let session: URLSession
 
-    init(configuration: APIConfiguration, session: URLSession = .shared) {
-        baseURL = configuration.baseURL
+    init(
+        configuration: APIConfiguration,
+        session: URLSession = .shared,
+        authorizationTokenProvider: any AuthorizationTokenProviding = ClerkAuthorizationTokenProvider()
+    ) {
+        requestBuilder = AuthenticatedRequestBuilder(baseURL: configuration.baseURL)
         self.session = session
+        self.authorizationTokenProvider = authorizationTokenProvider
 
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
@@ -19,11 +25,12 @@ actor RegolithAPIClient {
         self.encoder = encoder
     }
 
-    func ensureProfile(_ profileId: UUID) async throws {
-        let _: ProfileResponse = try await request(
-            path: ["v1", "profiles", profileId.uuidString],
+    func ensureProfile() async throws -> UUID {
+        let response: ProfileResponse = try await request(
+            path: ["v1", "profile"],
             method: "PUT"
         )
+        return response.profileId
     }
 
     func nutritionPlan(profileId: UUID) async throws -> NutritionPlan? {
@@ -147,7 +154,7 @@ actor RegolithAPIClient {
         query: [URLQueryItem] = [],
         body: Data? = nil
     ) async throws -> Response {
-        let (data, response) = try await session.data(for: urlRequest(
+        let (data, response) = try await session.data(for: try await urlRequest(
             path: path,
             method: method,
             query: query,
@@ -161,7 +168,7 @@ actor RegolithAPIClient {
         path: [String],
         method: String
     ) async throws {
-        let (data, response) = try await session.data(for: urlRequest(
+        let (data, response) = try await session.data(for: try await urlRequest(
             path: path,
             method: method
         ))
@@ -173,30 +180,15 @@ actor RegolithAPIClient {
         method: String,
         query: [URLQueryItem] = [],
         body: Data? = nil
-    ) throws -> URLRequest {
-        var url = baseURL
-        for component in path {
-            url.append(path: component)
-        }
-        if !query.isEmpty {
-            guard var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
-                throw APIClientError.invalidResponse
-            }
-            components.queryItems = query
-            guard let queryURL = components.url else {
-                throw APIClientError.invalidResponse
-            }
-            url = queryURL
-        }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = method
-        request.httpBody = body
-        request.setValue("application/json", forHTTPHeaderField: "accept")
-        if body != nil {
-            request.setValue("application/json", forHTTPHeaderField: "content-type")
-        }
-        return request
+    ) async throws -> URLRequest {
+        let token = try await authorizationTokenProvider.token()
+        return try requestBuilder.request(
+            path: path,
+            method: method,
+            query: query,
+            body: body,
+            token: token
+        )
     }
 
     private func validate(response: URLResponse, data: Data) throws {

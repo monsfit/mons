@@ -13,16 +13,29 @@ import { describeRoute, resolver, validator } from 'hono-openapi'
 
 import { toFoodSummary } from './mappers.js'
 import { createApplicationRoutes } from './application-routes.js'
+import {
+  createAuthenticationMiddleware,
+  createProfileAuthorizationMiddleware,
+  type RequestAuthenticator,
+} from './auth.js'
 
-export function createRoutes(catalog: CatalogReader, application: ApplicationRepository): Hono {
+export function createRoutes(
+  catalog: CatalogReader,
+  application: ApplicationRepository,
+  authenticator: RequestAuthenticator,
+): Hono {
   const routes = new Hono()
 
+  routes.use('/v1/*', createAuthenticationMiddleware(authenticator))
+  routes.use('/v1/profiles/:profileId', createProfileAuthorizationMiddleware(application))
+  routes.use('/v1/profiles/:profileId/*', createProfileAuthorizationMiddleware(application))
   routes.route('/', createApplicationRoutes(application))
 
   routes.get(
     '/health',
     describeRoute({
       operationId: 'getHealth',
+      security: [],
       responses: {
         200: {
           content: { 'application/json': { schema: resolver(healthSchema) } },

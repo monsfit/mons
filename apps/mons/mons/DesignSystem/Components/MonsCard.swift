@@ -1,15 +1,15 @@
 import SwiftUI
 
-struct MonsCard<Content: View>: View {
+public struct MonsCard<Content: View>: View {
     let isRaised: Bool
     let content: Content
 
-    init(isRaised: Bool = false, @ViewBuilder content: () -> Content) {
+    public init(isRaised: Bool = false, @ViewBuilder content: () -> Content) {
         self.isRaised = isRaised
         self.content = content()
     }
 
-    var body: some View {
+    public var body: some View {
         content
             .padding(MonsSpacing.large)
             .frame(maxWidth: .infinity, alignment: .leading)

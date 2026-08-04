@@ -38,8 +38,9 @@ export interface NutrientDefinitionTable {
 }
 
 export interface ProfileTable {
+  clerk_user_id: string | null
   created_at: ColumnType<Date, Date | string | undefined, never>
-  profile_id: string
+  profile_id: Generated<string>
   updated_at: ColumnType<Date, Date | string | undefined, Date | string>
 }
 
@@ -130,10 +131,6 @@ export interface IngestionRunTable {
 }
 
 export interface CatalogDatabase {
-  app_migrations: {
-    applied_at: ColumnType<Date, Date | string | undefined, never>
-    version: string
-  }
   branded_foods: FoodTable
   food_log_entries: FoodLogEntryTable
   foods: FoodTable

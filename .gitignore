@@ -28,6 +28,7 @@ coverage/
 # Xcode user and build state
 **/xcuserdata/
 **/*.xcuserstate
+**/.build/
 DerivedData/
 
 # OS/editor artifacts

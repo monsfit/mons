@@ -3,6 +3,7 @@ packages:
   - packages/*
 
 catalog:
+  '@clerk/backend': 3.15.0
   '@hono/node-server': 2.0.12
   '@hono/standard-validator': 0.2.3
   '@oxc-node/cli': 0.1.0

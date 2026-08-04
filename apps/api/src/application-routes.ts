@@ -23,6 +23,8 @@ import type { ApplicationRepository } from '@regolith/database'
 import { Hono } from 'hono'
 import { describeRoute, resolver, validator } from 'hono-openapi'
 
+import type { AuthVariables } from './auth.js'
+
 import {
   toFoodLogEntry,
   toNutritionPlan,
@@ -32,31 +34,25 @@ import {
 
 const validationError = { code: 'validation_error', message: 'Invalid request' } as const
 
-export function createApplicationRoutes(application: ApplicationRepository): Hono {
-  const routes = new Hono()
+export function createApplicationRoutes(
+  application: ApplicationRepository,
+): Hono<{ Variables: AuthVariables }> {
+  const routes = new Hono<{ Variables: AuthVariables }>()
 
   routes.put(
-    '/v1/profiles/:profileId',
+    '/v1/profile',
     describeRoute({
-      operationId: 'ensureProfile',
+      operationId: 'ensureCurrentProfile',
       responses: {
         200: {
           content: { 'application/json': { schema: resolver(profileSchema) } },
-          description: 'Profile is ready',
-        },
-        400: {
-          content: { 'application/json': { schema: resolver(errorSchema) } },
-          description: 'Invalid profile identifier',
+          description: 'Authenticated user profile is ready',
         },
       },
       tags: ['profiles'],
     }),
-    validator('param', profilePathSchema, (result, context) => {
-      if (!result.success) return context.json(validationError, 400)
-    }),
     async (context) => {
-      const { profileId } = context.req.valid('param')
-      await application.ensureProfile(profileId)
+      const profileId = await application.ensureProfileForClerkUser(context.get('auth').userId)
       return context.json({ profileId })
     },
   )
