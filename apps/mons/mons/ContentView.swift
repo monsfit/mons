@@ -10,8 +10,8 @@ import SwiftUI
 struct ContentView: View {
     @Environment(AppStore.self) private var store
 
-    @State private var addMealRequest: AddMealRequest?
-    @State private var isShowingQuickActions = false
+    @State private var isSearchPresented = false
+    @State private var searchText = ""
     @State private var selection = AppTab.dashboard
 
     var body: some View {
@@ -44,25 +44,20 @@ struct ContentView: View {
                         WorkoutListView()
                     }
 
-                    Tab(
-                        "Add food",
-                        systemImage: "plus",
-                        value: .quickAdd,
-                        role: .search
-                    ) {
-                        Color.clear
+                    Tab(value: .search, role: .search) {
+                        FoodSearchBrowser(
+                            searchText: $searchText,
+                            loggedAt: .now,
+                            showsModalChrome: false,
+                            onLogged: showCalories
+                        )
                     }
                 }
-                #if os(iOS)
-                .tabViewBottomAccessory {
-                    FoodSearchAccessory(onSearch: showFoodSearch)
-                }
-                #endif
-                .onChange(of: selection, handleTabSelection)
-                .confirmationDialog("Add food", isPresented: $isShowingQuickActions) {
-                    Button("Search foods", systemImage: "magnifyingglass", action: showFoodSearch)
-                    Button("Scan barcode", systemImage: "barcode.viewfinder", action: scanFood)
-                }
+                .searchable(
+                    text: $searchText,
+                    isPresented: $isSearchPresented,
+                    prompt: "Search for a food"
+                )
             }
         }
         .foregroundStyle(MonsColor.textPrimary)
@@ -74,12 +69,6 @@ struct ContentView: View {
                 }
             }
         }
-        .sheet(item: $addMealRequest) { request in
-            FoodSearchView(
-                loggedAt: request.scheduledAt,
-                startsWithScanner: request.mode == .scanner
-            ) { }
-        }
     }
 
     private func showCalories() {
@@ -90,19 +79,6 @@ struct ContentView: View {
         selection = .workouts
     }
 
-    private func scanFood() {
-        addMealRequest = AddMealRequest(scheduledAt: .now, mode: .scanner)
-    }
-
-    private func showFoodSearch() {
-        addMealRequest = AddMealRequest(scheduledAt: .now)
-    }
-
-    private func handleTabSelection(oldValue: AppTab, newValue: AppTab) {
-        guard newValue == .quickAdd else { return }
-        selection = oldValue == .quickAdd ? .dashboard : oldValue
-        isShowingQuickActions = true
-    }
 }
 
 #Preview {
