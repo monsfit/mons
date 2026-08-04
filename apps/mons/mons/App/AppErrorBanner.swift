@@ -16,6 +16,7 @@ struct AppErrorBanner: View {
                 .accessibilityLabel("Dismiss error")
         }
         .padding()
-        .background(.regularMaterial)
+        .glassEffect(.regular.interactive(), in: .rect(cornerRadius: MonsRadius.medium))
+        .padding(.horizontal)
     }
 }

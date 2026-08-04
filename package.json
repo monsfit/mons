@@ -27,9 +27,10 @@
     "titan:test": "uv run --project services/titan python -m unittest discover -s services/titan/tests -v",
     "titan:test:postgres": "REGOLITH_TEST_DATABASE_URL=${DATABASE_URL:-postgresql://regolith:regolith_local@localhost:5432/regolith} uv run --project services/titan python -m unittest services/titan/tests/test_postgres_integration.py -v",
     "titan:typecheck": "uv run --project services/titan mypy --config-file services/titan/pyproject.toml services/titan/titan",
-    "verify": "pnpm check && pnpm test:database && pnpm titan:check && pnpm generated:check && pnpm mons:build:ios && pnpm mons:test",
-    "mons:build:ios": "xcodebuild build -quiet -project apps/mons/mons.xcodeproj -scheme mons -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO",
-    "mons:test": "xcodebuild test -project apps/mons/mons.xcodeproj -scheme mons -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO"
+    "verify": "pnpm check && pnpm test:database && pnpm titan:check && pnpm generated:check && pnpm mons:check",
+    "mons:build:ios": "xcodebuild build -quiet -project apps/mons/mons.xcodeproj -scheme mons -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO SWIFT_STRICT_CONCURRENCY=complete SWIFT_TREAT_WARNINGS_AS_ERRORS=YES",
+    "mons:check": "pnpm mons:build:ios && pnpm mons:test",
+    "mons:test": "xcodebuild test -project apps/mons/mons.xcodeproj -scheme mons -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO SWIFT_STRICT_CONCURRENCY=complete SWIFT_TREAT_WARNINGS_AS_ERRORS=YES"
   },
   "devDependencies": {
     "oxfmt": "catalog:",

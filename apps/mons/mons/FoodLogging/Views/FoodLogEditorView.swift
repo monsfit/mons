@@ -1,11 +1,11 @@
 import SwiftUI
 
 struct FoodLogEditorView: View {
-    let food: CatalogFood
-    let onLogged: () -> Void
-
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
+
+    let food: CatalogFood
+    let onLogged: () -> Void
 
     @State private var category = MealCategory.snack
     @State private var isSaving = false
@@ -27,7 +27,7 @@ struct FoodLogEditorView: View {
             LazyVStack(alignment: .leading, spacing: MonsSpacing.xLarge) {
                 FoodNutritionSummary(food: food, quantityGrams: quantityGrams)
 
-                sourceSummary
+                FoodSourceSummary(food: food)
 
                 FoodLogMetadataControls(
                     category: $category,
@@ -71,31 +71,6 @@ struct FoodLogEditorView: View {
                 isSaving: isSaving,
                 onAdd: save
             )
-        }
-    }
-
-    private var sourceSummary: some View {
-        HStack(spacing: 8) {
-            Image(systemName: food.datasetKind == .raw ? "fork.knife" : "shippingbox.fill")
-                .accessibilityHidden(true)
-
-            VStack(alignment: .leading, spacing: 2) {
-                if let brand = food.brand, !brand.isEmpty {
-                    Text(brand)
-                        .font(MonsTypography.headline)
-                }
-                Text(food.datasetKind.title)
-                    .font(MonsTypography.caption)
-                    .foregroundStyle(MonsColor.textSecondary)
-            }
-
-            Spacer()
-        }
-        .padding(12)
-        .background(MonsColor.surface, in: .rect(cornerRadius: MonsRadius.medium))
-        .overlay {
-            RoundedRectangle(cornerRadius: MonsRadius.medium)
-                .stroke(MonsColor.border, lineWidth: 1)
         }
     }
 

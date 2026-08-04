@@ -118,6 +118,10 @@ final class AppStore {
             let foods = try await api.searchFoods(query: query, kind: kind)
             lastError = nil
             return foods
+        } catch is CancellationError {
+            return []
+        } catch let error as URLError where error.code == .cancelled {
+            return []
         } catch {
             report(error)
             return []

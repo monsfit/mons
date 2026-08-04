@@ -30,7 +30,7 @@ struct FoodLogControls: View {
             .disabled(quantityGrams <= 0 || isSaving)
         }
         .padding(8)
-        .glassEffect(.regular, in: .rect(cornerRadius: 18))
+        .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 18))
         .padding(.horizontal)
         .padding(.vertical, 8)
     }

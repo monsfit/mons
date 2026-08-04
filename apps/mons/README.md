@@ -15,8 +15,13 @@ It connects to the Regolith API for:
 Open `mons.xcodeproj` in Xcode, or build and test it from the repository root:
 
 ```bash
-npx pnpm@11.20.0 mons:test
+npx pnpm@11.20.0 mons:check
 ```
+
+`mons:check` treats Swift warnings as errors, enables complete strict-concurrency checking,
+builds the iOS Simulator target, and runs the deterministic test suite. Project-local iOS review
+skills are checked into `.agents/skills`; their pinned provenance and update policy are documented
+in `.agents/skills/README.md`.
 
 The project, application target, test target, scheme, Swift module, and bundle identifiers
 all use the `mons` name. Local Xcode user state and Derived Data are intentionally ignored.

@@ -19,7 +19,7 @@ struct FoodNutritionMetric: View {
                 .foregroundStyle(MonsColor.textSecondary)
 
             Text(unit)
-                .font(MonsTypography.smallCaption)
+                .font(MonsTypography.caption)
                 .foregroundStyle(MonsColor.textMuted)
         }
         .accessibilityElement(children: .combine)

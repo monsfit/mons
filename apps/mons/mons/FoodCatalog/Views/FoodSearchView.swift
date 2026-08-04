@@ -1,11 +1,11 @@
 import SwiftUI
 
 struct FoodSearchView: View {
-    let loggedAt: Date
-    let onLogged: () -> Void
-
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
+
+    let loggedAt: Date
+    let onLogged: () -> Void
 
     @State private var brandedResults: [CatalogFood] = []
     @State private var commonResults: [CatalogFood] = []
@@ -15,6 +15,10 @@ struct FoodSearchView: View {
     #if os(iOS)
     @State private var isShowingScanner: Bool
     #endif
+
+    private var normalizedSearchText: String {
+        searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
 
     init(
         loggedAt: Date,
@@ -31,7 +35,13 @@ struct FoodSearchView: View {
     var body: some View {
         NavigationStack(path: $navigationPath) {
             List {
-                resultsContent
+                FoodSearchResultsContent(
+                    isSearching: isSearching,
+                    searchText: searchText,
+                    commonResults: commonResults,
+                    brandedResults: brandedResults,
+                    onSelect: selectFood
+                )
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
@@ -71,54 +81,8 @@ struct FoodSearchView: View {
         }
     }
 
-    @ViewBuilder
-    private var resultsContent: some View {
-        if isSearching {
-            HStack {
-                Spacer()
-                ProgressView("Searching")
-                Spacer()
-            }
-            .listRowSeparator(.hidden)
-        } else if commonResults.isEmpty, brandedResults.isEmpty {
-            ContentUnavailableView(
-                searchText.trimmingCharacters(in: .whitespacesAndNewlines).count >= 2
-                    ? "No valid foods found"
-                    : "Find a food",
-                systemImage: "fork.knife",
-                description: Text(
-                    searchText.count >= 2
-                        ? "Try a different food or brand name."
-                        : "Search common and branded foods, or scan a barcode."
-                )
-            )
-            .listRowSeparator(.hidden)
-        } else {
-            foodSection("Common", foods: commonResults)
-            foodSection("Branded", foods: brandedResults)
-        }
-    }
-
-    @ViewBuilder
-    private func foodSection(_ title: String, foods: [CatalogFood]) -> some View {
-        if !foods.isEmpty {
-            Section(title) {
-                ForEach(foods) { food in
-                    Button {
-                        navigationPath.append(food)
-                    } label: {
-                        FoodSearchResultRow(food: food)
-                    }
-                    .buttonStyle(.plain)
-                    .listRowBackground(MonsColor.surface)
-                    .listRowSeparatorTint(MonsColor.border)
-                }
-            }
-        }
-    }
-
     private func search() async {
-        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let query = normalizedSearchText
         guard query.count >= 2 else {
             commonResults = []
             brandedResults = []
@@ -128,18 +92,30 @@ struct FoodSearchView: View {
 
         do {
             try await Task.sleep(for: .milliseconds(250))
+        } catch is CancellationError {
+            return
         } catch {
             return
         }
 
+        guard !Task.isCancelled else { return }
         isSearching = true
+        defer {
+            if normalizedSearchText == query {
+                isSearching = false
+            }
+        }
+
         async let common = store.searchFoods(query, kind: .raw)
         async let branded = store.searchFoods(query, kind: .branded)
         let results = await (common, branded)
-        guard !Task.isCancelled else { return }
+        guard !Task.isCancelled, normalizedSearchText == query else { return }
         commonResults = results.0
         brandedResults = results.1
-        isSearching = false
+    }
+
+    private func selectFood(_ food: CatalogFood) {
+        navigationPath.append(food)
     }
 
     private func lookupBarcode(_ barcode: String) {

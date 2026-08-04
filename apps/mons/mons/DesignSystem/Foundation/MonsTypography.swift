@@ -9,5 +9,4 @@ enum MonsTypography {
     static let body = Font.custom("SpaceGrotesk-Regular", size: 17, relativeTo: .body)
     static let subheadline = Font.custom("SpaceGrotesk-Regular", size: 15, relativeTo: .subheadline)
     static let caption = Font.custom("SpaceGrotesk-Medium", size: 13, relativeTo: .caption)
-    static let smallCaption = Font.custom("SpaceGrotesk-Regular", size: 11, relativeTo: .caption2)
 }
