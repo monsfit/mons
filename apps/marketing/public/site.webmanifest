@@ -1,0 +1,15 @@
+{
+  "name": "Mons",
+  "short_name": "Mons",
+  "description": "Nutrition and training, in rhythm.",
+  "display": "standalone",
+  "background_color": "#120f13",
+  "theme_color": "#120f13",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

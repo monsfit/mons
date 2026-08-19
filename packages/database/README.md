@@ -1,0 +1,45 @@
+# Database
+
+This package contains Effect SQL PostgreSQL layers, ordered migrations, schema-decoded catalog
+queries, and application repositories used by the API. Titan owns replaceable catalog ingestion.
+This package owns the stable `regolith_app` schema.
+
+The repository supports:
+
+- active snapshot status and dataset counts;
+- exact branded-food lookup by normalized GTIN, guarded by the catalog quality contract;
+- weighted full-text food and brand search with trigram fallback and USDA-first branded ties;
+- idempotent profile and food-log persistence with nutrient snapshots;
+- one server-calculated nutrition plan per profile, including its source inputs and calculation
+  timestamp;
+- idempotent canonical-kilogram weight entries ordered by measurement time and UUID;
+- atomic reusable workout-template hierarchy persistence;
+- atomic completed-workout and ordered-set persistence.
+- profile-owned custom foods with optional GTINs, household portions, and compressed image data;
+- measured-yield recipes with ordered catalog/custom ingredients, freeform ingredients, deterministic
+  per-100-gram nutrition, and explicit pending-estimate states;
+- GIN full-text indexes for custom-food and recipe names alongside the catalog indexes.
+- auditable meal estimates with model/prompt provenance and ordered, catalog-constrained food
+  matches; calculated calories and macros are persisted separately from the model observations.
+
+Application tables are intentionally separate from the `regolith` catalog schema. Titan can
+atomically replace the catalog without deleting user history.
+
+The reader defensively excludes incomplete or out-of-range nutrition records even if an older
+snapshot is still loaded. Raw and branded searches can be requested separately so clients can
+present stable Common and Branded sections. When a raw composition source reports available
+carbohydrate but not total carbohydrate, the catalog reader exposes that source value as the
+API's generic carbohydrate summary without changing the normalized source field.
+
+Nutrition-plan calculation is a pure module with an injectable calculation date. PostgreSQL
+stores both the onboarding inputs and calculated RMR, TDEE, calorie target, estimated duration,
+and whether the 1,000 kcal/day minimum limited the requested rate. This makes later formula
+changes auditable without trusting values submitted by a client.
+
+Run its PostgreSQL integration tests from the repository root:
+
+```bash
+npx pnpm@11.20.0 db:up
+npx pnpm@11.20.0 db:migrate
+npx pnpm@11.20.0 test:database
+```

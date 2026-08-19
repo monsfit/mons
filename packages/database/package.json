@@ -1,0 +1,31 @@
+{
+  "name": "@regolith/database",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsgo -p tsconfig.build.json",
+    "lint": "oxlint src --deny-warnings",
+    "migrate": "node --env-file-if-exists=../../.env src/migrate.ts",
+    "test": "vitest run src",
+    "typecheck": "tsgo -p tsconfig.json"
+  },
+  "dependencies": {
+    "@effect/platform-node": "catalog:",
+    "@effect/sql-pg": "catalog:",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@effect/vitest": "catalog:",
+    "@types/node": "catalog:",
+    "@typescript/native-preview": "catalog:",
+    "oxlint": "catalog:",
+    "vitest": "catalog:"
+  }
+}

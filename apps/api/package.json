@@ -1,0 +1,35 @@
+{
+  "name": "@regolith/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "ai:smoke": "node --env-file-if-exists=../../.env src/ai-gateway-smoke.ts",
+    "build": "tsgo -p tsconfig.build.json",
+    "dev": "node --env-file-if-exists=../../.env --watch src/server.ts",
+    "lint": "oxlint src --deny-warnings",
+    "meal:smoke": "node --env-file-if-exists=../../.env src/meal-intelligence-smoke.ts",
+    "openapi": "node src/generate-openapi.ts",
+    "openapi:check": "node src/generate-openapi.ts --check",
+    "r2:smoke": "node --env-file-if-exists=../../.env src/r2-storage-smoke.ts",
+    "start": "node --env-file-if-exists=../../.env dist/server.js",
+    "test": "vitest run",
+    "typecheck": "tsgo -p tsconfig.json"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "catalog:",
+    "@clerk/backend": "catalog:",
+    "@effect/platform-node": "catalog:",
+    "@regolith/contracts": "workspace:*",
+    "@regolith/database": "workspace:*",
+    "ai": "catalog:",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@effect/vitest": "catalog:",
+    "@types/node": "catalog:",
+    "@typescript/native-preview": "catalog:",
+    "oxlint": "catalog:",
+    "vitest": "catalog:"
+  }
+}

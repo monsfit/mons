@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  typescript:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: regolith
+          POSTGRES_USER: regolith
+          POSTGRES_PASSWORD: regolith_local
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U regolith -d regolith"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      REGOLITH_TEST_DATABASE_URL: postgresql://regolith:regolith_local@localhost:5432/regolith
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.20.0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - run: pnpm openapi:check
+
+  python:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: regolith
+          POSTGRES_USER: regolith
+          POSTGRES_PASSWORD: regolith_local
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U regolith -d regolith"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      REGOLITH_TEST_DATABASE_URL: postgresql://regolith:regolith_local@localhost:5432/regolith
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --project services/titan --locked --all-extras
+      - run: uv run --project services/titan ruff check services/titan
+      - run: uv run --project services/titan mypy --config-file services/titan/pyproject.toml services/titan/titan
+      - run: uv run --project services/titan python -m unittest discover -s services/titan/tests -v
+      - run: uv run --project services/titan titan schema --check
+
+  mons:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - run: >-
+          xcodebuild build -quiet
+          -project apps/mons/mons.xcodeproj
+          -scheme mons
+          -destination 'generic/platform=iOS Simulator'
+          CODE_SIGNING_ALLOWED=NO
+      - run: >-
+          xcodebuild test
+          -project apps/mons/mons.xcodeproj
+          -scheme mons
+          -destination 'platform=macOS'
+          CODE_SIGNING_ALLOWED=NO

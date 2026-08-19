@@ -1,0 +1,730 @@
+{
+  "$id": "urn:regolith:schema:raw-food:2.0.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "added_sugars": {
+      "description": "Added sugars per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "g",
+      "x-regolith-value-kind": "direct"
+    },
+    "alcohol": {
+      "description": "Alcohol per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "g",
+      "x-regolith-value-kind": "direct"
+    },
+    "caffeine": {
+      "description": "Caffeine per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "mg",
+      "x-regolith-value-kind": "direct"
+    },
+    "calcium": {
+      "description": "Calcium per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "mg",
+      "x-regolith-value-kind": "direct"
+    },
+    "calories": {
+      "description": "Food energy per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "kcal",
+      "x-regolith-value-kind": "direct"
+    },
+    "carbohydrates_available": {
+      "description": "Source-reported available carbohydrate per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "g",
+      "x-regolith-value-kind": "direct"
+    },
+    "carbohydrates_net_calculated": {
+      "description": "Calculated total carbohydrate minus dietary fibre per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "g",
+      "x-regolith-value-kind": "derived"
+    },
+    "carbohydrates_total": {
+      "description": "Source-reported total carbohydrate per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "g",
+      "x-regolith-value-kind": "direct"
+    },
+    "choline": {
+      "description": "Choline per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "mg",
+      "x-regolith-value-kind": "direct"
+    },
+    "copper": {
+      "description": "Copper per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "mg",
+      "x-regolith-value-kind": "direct"
+    },
+    "cysteine": {
+      "description": "Cysteine per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "g",
+      "x-regolith-value-kind": "direct"
+    },
+    "dietary_cholesterol": {
+      "description": "Dietary cholesterol per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "mg",
+      "x-regolith-value-kind": "direct"
+    },
+    "fiber": {
+      "description": "Dietary fibre per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "g",
+      "x-regolith-value-kind": "direct"
+    },
+    "folate_dfe": {
+      "description": "Dietary folate equivalents per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "mcg",
+      "x-regolith-value-kind": "direct"
+    },
+    "folate_total": {
+      "description": "Total folate per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "mcg",
+      "x-regolith-value-kind": "direct"
+    },
+    "histidine": {
+      "description": "Histidine per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "g",
+      "x-regolith-value-kind": "direct"
+    },
+    "iron": {
+      "description": "Iron per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "mg",
+      "x-regolith-value-kind": "direct"
+    },
+    "isoleucine": {
+      "description": "Isoleucine per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "g",
+      "x-regolith-value-kind": "direct"
+    },
+    "leucine": {
+      "description": "Leucine per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "g",
+      "x-regolith-value-kind": "direct"
+    },
+    "lysine": {
+      "description": "Lysine per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "g",
+      "x-regolith-value-kind": "direct"
+    },
+    "magnesium": {
+      "description": "Magnesium per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "mg",
+      "x-regolith-value-kind": "direct"
+    },
+    "manganese": {
+      "description": "Manganese per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "mg",
+      "x-regolith-value-kind": "direct"
+    },
+    "methionine": {
+      "description": "Methionine per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "g",
+      "x-regolith-value-kind": "direct"
+    },
+    "monounsaturated_fat": {
+      "description": "Total monounsaturated fat per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "g",
+      "x-regolith-value-kind": "direct"
+    },
+    "name": {
+      "description": "Source food or product name",
+      "minLength": 1,
+      "type": "string",
+      "x-regolith-value-kind": "identity"
+    },
+    "omega_3_ala": {
+      "description": "Alpha-linolenic acid per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "g",
+      "x-regolith-value-kind": "direct"
+    },
+    "omega_3_ala_epa_dha_sum": {
+      "description": "ALA + EPA + DHA per 100 g, present only when all three components exist",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "g",
+      "x-regolith-value-kind": "derived"
+    },
+    "omega_3_dha": {
+      "description": "Docosahexaenoic acid per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "g",
+      "x-regolith-value-kind": "direct"
+    },
+    "omega_3_epa": {
+      "description": "Eicosapentaenoic acid per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "g",
+      "x-regolith-value-kind": "direct"
+    },
+    "omega_3_total_reported": {
+      "description": "Source-reported total omega-3 fat per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "g",
+      "x-regolith-value-kind": "direct"
+    },
+    "omega_6_linoleic_acid": {
+      "description": "Linoleic acid per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "g",
+      "x-regolith-value-kind": "direct"
+    },
+    "omega_6_total_reported": {
+      "description": "Source-reported total omega-6 fat per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "g",
+      "x-regolith-value-kind": "direct"
+    },
+    "phenylalanine": {
+      "description": "Phenylalanine per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "g",
+      "x-regolith-value-kind": "direct"
+    },
+    "phosphorus": {
+      "description": "Phosphorus per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "mg",
+      "x-regolith-value-kind": "direct"
+    },
+    "polyunsaturated_fat": {
+      "description": "Total polyunsaturated fat per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "g",
+      "x-regolith-value-kind": "direct"
+    },
+    "portions": {
+      "description": "Optional household portions",
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "amount": {
+            "exclusiveMinimum": 0,
+            "type": "number"
+          },
+          "name": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "unit": {
+            "enum": [
+              "g",
+              "ml"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "amount",
+          "unit"
+        ],
+        "type": "object"
+      },
+      "type": [
+        "array",
+        "null"
+      ],
+      "x-regolith-value-kind": "identity"
+    },
+    "potassium": {
+      "description": "Potassium per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "mg",
+      "x-regolith-value-kind": "direct"
+    },
+    "protein": {
+      "description": "Protein per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "g",
+      "x-regolith-value-kind": "direct"
+    },
+    "saturated_fat": {
+      "description": "Total saturated fat per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "g",
+      "x-regolith-value-kind": "direct"
+    },
+    "selenium": {
+      "description": "Selenium per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "mcg",
+      "x-regolith-value-kind": "direct"
+    },
+    "sodium": {
+      "description": "Sodium per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "mg",
+      "x-regolith-value-kind": "direct"
+    },
+    "source": {
+      "description": "Normalized source dataset identifier",
+      "minLength": 1,
+      "type": "string",
+      "x-regolith-value-kind": "identity"
+    },
+    "source_id": {
+      "description": "Stable identifier from the source dataset",
+      "minLength": 1,
+      "type": "string",
+      "x-regolith-value-kind": "identity"
+    },
+    "starch": {
+      "description": "Starch per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "g",
+      "x-regolith-value-kind": "direct"
+    },
+    "threonine": {
+      "description": "Threonine per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "g",
+      "x-regolith-value-kind": "direct"
+    },
+    "total_fat": {
+      "description": "Total fat per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "g",
+      "x-regolith-value-kind": "direct"
+    },
+    "total_sugars": {
+      "description": "Total sugars per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "g",
+      "x-regolith-value-kind": "direct"
+    },
+    "trans_fat": {
+      "description": "Total trans fat per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "g",
+      "x-regolith-value-kind": "direct"
+    },
+    "tryptophan": {
+      "description": "Tryptophan per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "g",
+      "x-regolith-value-kind": "direct"
+    },
+    "tyrosine": {
+      "description": "Tyrosine per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "g",
+      "x-regolith-value-kind": "direct"
+    },
+    "valine": {
+      "description": "Valine per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "g",
+      "x-regolith-value-kind": "direct"
+    },
+    "vitamin_a_retinol": {
+      "description": "Retinol per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "mcg",
+      "x-regolith-value-kind": "direct"
+    },
+    "vitamin_b12_cobalamin": {
+      "description": "Vitamin B12 per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "mcg",
+      "x-regolith-value-kind": "direct"
+    },
+    "vitamin_b1_thiamin": {
+      "description": "Thiamin per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "mg",
+      "x-regolith-value-kind": "direct"
+    },
+    "vitamin_b2_riboflavin": {
+      "description": "Riboflavin per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "mg",
+      "x-regolith-value-kind": "direct"
+    },
+    "vitamin_b3_niacin": {
+      "description": "Niacin per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "mg",
+      "x-regolith-value-kind": "direct"
+    },
+    "vitamin_b5_pantothenic_acid": {
+      "description": "Pantothenic acid per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "mg",
+      "x-regolith-value-kind": "direct"
+    },
+    "vitamin_b6": {
+      "description": "Vitamin B6 per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "mg",
+      "x-regolith-value-kind": "direct"
+    },
+    "vitamin_c_ascorbic_acid": {
+      "description": "Vitamin C per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "mg",
+      "x-regolith-value-kind": "direct"
+    },
+    "vitamin_d_calciferol": {
+      "description": "Vitamin D per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "mcg",
+      "x-regolith-value-kind": "direct"
+    },
+    "vitamin_e_tocopherol": {
+      "description": "Vitamin E as tocopherol per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "mg",
+      "x-regolith-value-kind": "direct"
+    },
+    "vitamin_k_phylloquinone": {
+      "description": "Phylloquinone per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "mcg",
+      "x-regolith-value-kind": "direct"
+    },
+    "water": {
+      "description": "Water per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "g",
+      "x-regolith-value-kind": "direct"
+    },
+    "zinc": {
+      "description": "Zinc per 100 g",
+      "minimum": 0,
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-regolith-unit": "mg",
+      "x-regolith-value-kind": "direct"
+    }
+  },
+  "required": [
+    "source_id",
+    "source",
+    "name",
+    "portions",
+    "calories",
+    "protein",
+    "total_fat",
+    "carbohydrates_total",
+    "carbohydrates_available",
+    "carbohydrates_net_calculated",
+    "fiber",
+    "starch",
+    "total_sugars",
+    "added_sugars",
+    "cysteine",
+    "histidine",
+    "isoleucine",
+    "leucine",
+    "lysine",
+    "methionine",
+    "phenylalanine",
+    "threonine",
+    "tryptophan",
+    "tyrosine",
+    "valine",
+    "monounsaturated_fat",
+    "polyunsaturated_fat",
+    "omega_3_total_reported",
+    "omega_3_ala_epa_dha_sum",
+    "omega_3_ala",
+    "omega_3_epa",
+    "omega_3_dha",
+    "omega_6_total_reported",
+    "omega_6_linoleic_acid",
+    "saturated_fat",
+    "trans_fat",
+    "vitamin_a_retinol",
+    "vitamin_b1_thiamin",
+    "vitamin_b2_riboflavin",
+    "vitamin_b3_niacin",
+    "vitamin_b5_pantothenic_acid",
+    "vitamin_b6",
+    "vitamin_b12_cobalamin",
+    "folate_total",
+    "folate_dfe",
+    "vitamin_c_ascorbic_acid",
+    "vitamin_d_calciferol",
+    "vitamin_e_tocopherol",
+    "vitamin_k_phylloquinone",
+    "calcium",
+    "copper",
+    "iron",
+    "manganese",
+    "magnesium",
+    "phosphorus",
+    "potassium",
+    "selenium",
+    "sodium",
+    "zinc",
+    "dietary_cholesterol",
+    "caffeine",
+    "alcohol",
+    "water",
+    "choline"
+  ],
+  "title": "Regolith normalized food schema 2.0.0",
+  "type": "object",
+  "x-regolith-nutrient-basis": {
+    "amount": 100.0,
+    "unit": "g"
+  }
+}
