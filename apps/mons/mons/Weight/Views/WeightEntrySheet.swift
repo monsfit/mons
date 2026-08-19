@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct WeightEntrySheet: View {
+    @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
 
     @State private var isSaving = false
@@ -43,8 +44,7 @@ struct WeightEntrySheet: View {
                     DatePicker("Measured", selection: $measuredAt, in: ...Date.now)
                 }
             }
-            .scrollContentBackground(.hidden)
-            .background(.clear)
+            .monsGroupedContent()
             .foregroundStyle(MonsColor.textPrimary)
             .navigationTitle("Log Weight")
             #if os(iOS)
@@ -57,14 +57,22 @@ struct WeightEntrySheet: View {
                         .tint(MonsColor.error)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save", action: save)
-                        .disabled(!isValid || isSaving)
+                    Button(action: save) {
+                        MonsAsyncActionLabel(
+                            title: "Save",
+                            loadingTitle: "Saving…",
+                            systemImage: "checkmark",
+                            isLoading: isSaving
+                        )
+                    }
+                    .disabled(!isValid || isSaving)
                 }
             }
         }
         .tint(MonsColor.action)
         .presentationDetents([.medium])
         .monsSheetPresentation()
+        .appToast(store.toast, onDismiss: store.dismissToast)
     }
 
     private var weightKg: Double {

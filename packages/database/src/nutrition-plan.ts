@@ -1,4 +1,4 @@
-import type { DailyActivity, ExerciseFrequency, MetabolicSex, WeightGoal } from './types.js'
+import type { DailyActivity, ExerciseFrequency, MetabolicSex, WeightGoal } from './types.ts'
 
 export interface NutritionPlanInput {
   birthDate: string

@@ -16,10 +16,18 @@ It connects to the Regolith API for:
 - a dashboard for today's nutrition, weekly workouts, and weight trend;
 - native labeled tabs with a dedicated Search role, bottom search field, and top add menu;
 - separate Common, Branded, and Recently Added food sections with compact nutrition summaries;
+- searchable My Foods and My Recipes libraries; custom foods support manual nutrition, optional
+  barcodes, food photos, and nutrition-label capture;
+- measured-yield recipe portions so a cooked batch or bowl weight scales nutrition deterministically,
+  plus freeform recipes that remain visibly pending until model estimation is configured;
 - camera barcode scanning with normalized UPC/EAN/GTIN lookup;
+- reviewed meal estimation from a photo, typed description, or voice recording; models identify the
+  meal, but only matched catalog records supply calories and macros;
+- written recipe ingredients can be matched through the same catalog resolver, then remain editable
+  as ordinary food ingredients and gram amounts before the recipe is saved;
 - quantity-scaled full nutrient details, daily-target progress, logging, and day summaries;
-- exercise search, starter templates, pre-workout set editing, active set logging, rest timing,
-  and persistent workouts;
+- exercise search, expandable exercise/set template editing, active set logging, rest timing,
+  persistent reusable templates, and completed workouts;
 - canonical weight tracking with pound and kilogram entry.
 
 Open `mons.xcodeproj` in Xcode, or build and test it from the repository root:
@@ -70,15 +78,29 @@ npx pnpm@11.20.0 db:migrate
 npx pnpm@11.20.0 dev
 ```
 
-For a physical iPhone, add the `REGOLITH_API_BASE_URL` environment variable to the Xcode
-scheme's Run action and set it to the Mac's LAN address, such as
-`http://192.168.1.10:3000`. Barcode scanning requires a physical device.
+For a physical iPhone, configure the ignored development Xcode setting and start the LAN-bound API:
+
+```bash
+npx pnpm@11.20.0 dev:phone
+```
+
+The configuration script uses the Mac's Bonjour `.local` hostname so DHCP address changes do not
+break the app. Rebuild or refresh the Xcode preview after running it. The iPhone and Mac must be on
+the same network, and macOS may ask you to allow incoming Node connections. To override discovery,
+run `npx pnpm@11.20.0 mons:configure:local -- 192.168.1.10`. The committed Debug configuration
+falls back to Simulator-safe `127.0.0.1`; the generated `Local.xcconfig` is intentionally ignored.
+Barcode scanning requires a physical device.
 
 On first launch, Mons presents a compact step-by-step onboarding flow for metabolic inputs,
 measurements, exercise frequency, normal daily activity, weight goal, and goal velocity. The
 app previews the estimate locally, then saves the inputs to the API and uses the authoritative
 returned calorie target throughout the calorie log. Dates and calculators accept injected clocks
 and calendars so fixtures remain deterministic.
+
+The workout builder saves a named exercise group as a reusable template. Exercise rows expand in
+place to edit ordered weight, repetition, and rest prescriptions. Selecting a saved template
+prepares it in the native iOS tab bottom accessory; starting it turns that accessory into a live
+timer that remains available while moving between tabs.
 
 ## Design system
 
@@ -100,10 +122,13 @@ force a color scheme. Primary, secondary, muted, action, and error foregrounds m
 
 Spacing, corner radii, button styles, cards, and the wordmark are shared components under
 `mons/DesignSystem`. Add new visual decisions there before adding one-off values to a feature.
-Liquid Glass is limited to navigation and floating actions. The native Search tab owns the bottom
-search field. A circular system `+` action stays in the top toolbar and exposes barcode scanning
-without competing with the native search control.
+Liquid Glass is limited to navigation, floating actions, and compact terminal-state toasts. The
+native Search tab owns the bottom search field. A circular system `+` action stays in the top
+toolbar and exposes barcode scanning without competing with the native search control.
 Sheet content uses system material backgrounds so controls remain legible in both appearances.
+Terminal action feedback uses compact Liquid Glass toasts: monochrome checks for success and Error
+Red warnings for failures. Loading remains attached to the initiating control or empty content so
+the app never presents an ambiguous global loading state.
 
 Food detail uses the profile's calculated calorie and macro goals. Other compatible nutrients use
 the FDA Daily Values for adults and children age four or older as deterministic nutrition-label

@@ -13,13 +13,12 @@ public struct MonsPrimaryButtonStyle: ButtonStyle {
         configuration.label
             .font(MonsTypography.headline)
             .foregroundStyle(foreground)
-            .frame(maxWidth: .infinity, minHeight: 52)
+            .frame(maxWidth: .infinity, minHeight: 44)
             .padding(.horizontal, MonsSpacing.large)
+            .contentShape(.capsule)
             .glassEffect(
                 .regular.tint(tint).interactive(),
-                in: .rect(cornerRadius: MonsRadius.medium)
+                in: .capsule
             )
-            .scaleEffect(configuration.isPressed ? 0.98 : 1)
-            .animation(.snappy(duration: 0.16), value: configuration.isPressed)
     }
 }

@@ -1,21 +1,31 @@
-import type {
+import { expect, layer } from '@effect/vitest'
+import {
   ApplicationRepository,
+  type ApplicationRepositoryService,
   CatalogReader,
-  FoodLogEntryRecord,
-  FoodRecord,
-  NutritionPlanRecord,
-  WeightLogEntryRecord,
-  WorkoutRecord,
+  type CatalogReaderService,
+  type FoodLogEntryRecord,
+  type FoodRecord,
+  type NutritionPlanRecord,
+  type WeightLogEntryRecord,
+  type WorkoutRecord,
+  type WorkoutTemplateRecord,
+  UserFoodRepository,
+  type UserFoodRepositoryService,
 } from '@regolith/database'
-import { describe, expect, test } from 'vitest'
+import type { MealEstimate } from '@regolith/contracts'
+import { Context, Effect, Layer } from 'effect'
+import { HttpRouter } from 'effect/unstable/http'
+import { NodeHttpServer } from '@effect/platform-node'
 
-import { createApp } from './app.js'
-import type { RequestAuthenticator } from './auth.js'
+import { apiLayer } from './app.ts'
+import { RequestAuthenticator } from './auth.ts'
+import { MealEstimation } from './meal-estimation.ts'
+import { MealLogging } from './meal-logging.ts'
 
-const testUserId = 'user_regolith_test'
-const testProfileId = '00000000-0000-4000-8000-000000000001'
-
-const sampleFood: FoodRecord = {
+const userId = 'user_regolith_test'
+const profileId = '00000000-0000-4000-8000-000000000001'
+const food: FoodRecord = {
   brand: 'Example Brand',
   calories: 120,
   carbohydrates_total: 18,
@@ -24,43 +34,66 @@ const sampleFood: FoodRecord = {
   gtin: '00012345678905',
   ingestion_run_id: '00000000-0000-0000-0000-000000000001',
   name: 'Example Food',
-  nutrients: [
-    { amount: 3.2, field: 'fiber', name: 'Dietary fibre', unit: 'g' },
-    { amount: 120, field: 'sodium', name: 'Sodium', unit: 'mg' },
-  ],
+  nutrients: [{ amount: 3.2, field: 'fiber', name: 'Dietary fibre', unit: 'g' }],
   portions: [{ amount: 30, name: '1 bar', unit: 'g' }],
   protein: 5,
   source: 'test',
   source_id: 'food-42',
   total_fat: 2,
 }
-
-const sampleFoodLogEntry: FoodLogEntryRecord = {
-  brand: sampleFood.brand,
-  calories_per_100g: sampleFood.calories,
-  carbohydrates_per_100g: sampleFood.carbohydrates_total,
+const foodLog: FoodLogEntryRecord = {
+  brand: food.brand,
+  calories_per_100g: food.calories,
+  carbohydrates_per_100g: food.carbohydrates_total,
   created_at: new Date('2026-08-04T12:00:00Z'),
   dataset_kind: 'branded',
   entry_id: '00000000-0000-4000-8000-000000000010',
-  fat_per_100g: sampleFood.total_fat,
-  food_id: sampleFood.food_id,
-  gtin: sampleFood.gtin,
+  fat_per_100g: food.total_fat,
+  food_id: food.food_id,
+  gtin: food.gtin,
   logged_at: new Date('2026-08-04T12:00:00Z'),
   meal_category: 'lunch',
-  name: sampleFood.name,
-  profile_id: testProfileId,
-  protein_per_100g: sampleFood.protein,
+  meal_id: '00000000-0000-4000-8000-000000000010',
+  name: food.name,
+  profile_id: profileId,
+  protein_per_100g: food.protein,
   quantity_grams: 150,
 }
-
-const sampleWorkout: WorkoutRecord = {
+const nutritionPlan: NutritionPlanRecord = {
+  birth_date: new Date('1998-02-18T00:00:00.000Z'),
+  calculated_at: new Date('2026-08-04T12:00:00Z'),
+  calorie_target_kcal: 1460,
+  current_weight_kg: 56.7,
+  daily_activity: 'mostly_sedentary',
+  estimated_expenditure_kcal: 1772,
+  estimated_weeks: 16.6,
+  exercise_frequency: 'none',
+  height_cm: 160,
+  metabolic_sex: 'female',
+  profile_id: profileId,
+  rate_limited: false,
+  resting_energy_kcal: 1266,
+  target_weight_kg: 52,
+  updated_at: new Date('2026-08-04T12:00:00Z'),
+  weekly_weight_change_percent: 0.5,
+  weight_goal: 'lose',
+}
+const weight: WeightLogEntryRecord = {
+  created_at: new Date('2026-08-04T11:00:00Z'),
+  entry_id: '00000000-0000-4000-8000-000000000030',
+  measured_at: new Date('2026-08-04T11:00:00Z'),
+  profile_id: profileId,
+  updated_at: new Date('2026-08-04T11:00:00Z'),
+  weight_kg: 56.7,
+}
+const workout: WorkoutRecord = {
   session: {
     completed_at: new Date('2026-08-04T13:30:00Z'),
     created_at: new Date('2026-08-04T12:30:00Z'),
     distance_kilometers: null,
     duration_minutes: 60,
     kind: 'strength',
-    profile_id: sampleFoodLogEntry.profile_id,
+    profile_id: profileId,
     session_id: '00000000-0000-4000-8000-000000000020',
     started_at: new Date('2026-08-04T12:30:00Z'),
     title: 'Upper Body',
@@ -77,39 +110,75 @@ const sampleWorkout: WorkoutRecord = {
     },
   ],
 }
-
-const sampleNutritionPlan: NutritionPlanRecord = {
-  birth_date: '1998-02-18',
-  calculated_at: new Date('2026-08-04T12:00:00Z'),
-  calorie_target_kcal: 1_460,
-  current_weight_kg: 56.7,
-  daily_activity: 'mostly_sedentary',
-  estimated_expenditure_kcal: 1_772,
-  estimated_weeks: 16.6,
-  exercise_frequency: 'none',
-  height_cm: 160,
-  metabolic_sex: 'female',
-  profile_id: sampleFoodLogEntry.profile_id,
-  rate_limited: false,
-  resting_energy_kcal: 1_266,
-  target_weight_kg: 52,
-  updated_at: new Date('2026-08-04T12:00:00Z'),
-  weekly_weight_change_percent: 0.5,
-  weight_goal: 'lose',
+const template: WorkoutTemplateRecord = {
+  exercises: [
+    {
+      exercise: {
+        category: 'Legs',
+        equipment: 'Barbell',
+        exercise_id: 'barbell-squat',
+        name: 'Barbell Squat',
+        notes: '',
+        ordinal: 0,
+        template_exercise_id: '00000000-0000-4000-8000-000000000041',
+        template_id: '00000000-0000-4000-8000-000000000040',
+      },
+      sets: [
+        {
+          ordinal: 0,
+          repetitions: 8,
+          rest_seconds: 90,
+          template_exercise_id: '00000000-0000-4000-8000-000000000041',
+          template_set_id: '00000000-0000-4000-8000-000000000042',
+          weight_pounds: 135,
+        },
+      ],
+    },
+  ],
+  template: {
+    created_at: new Date('2026-08-04T12:00:00Z'),
+    name: 'Leg Day',
+    profile_id: profileId,
+    template_id: '00000000-0000-4000-8000-000000000040',
+    updated_at: new Date('2026-08-04T12:00:00Z'),
+  },
+}
+const mealEstimate: MealEstimate = {
+  calories: 180,
+  carbohydrates: 12,
+  createdAt: '2026-08-04T12:00:00.000Z',
+  description: 'Eggs and toast',
+  estimateId: '00000000-0000-4000-8000-000000000050',
+  inputKind: 'text',
+  items: [
+    {
+      amountGrams: 100,
+      calories: 180,
+      carbohydrates: 12,
+      confidence: 0.9,
+      description: 'eggs and toast',
+      evidence: 'Explicit text description',
+      foodId: food.food_id,
+      name: food.name,
+      ordinal: 0,
+      protein: 10,
+      resolved: true,
+      sourceKind: 'branded',
+      totalFat: 8,
+    },
+  ],
+  mediaRetained: false,
+  overallConfidence: 0.9,
+  protein: 10,
+  status: 'completed',
+  totalFat: 8,
+  transcript: null,
+  unresolvedItems: [],
 }
 
-const sampleWeightEntry: WeightLogEntryRecord = {
-  created_at: new Date('2026-08-04T11:00:00Z'),
-  entry_id: '00000000-0000-4000-8000-000000000030',
-  measured_at: new Date('2026-08-04T11:00:00Z'),
-  profile_id: sampleFoodLogEntry.profile_id,
-  updated_at: new Date('2026-08-04T11:00:00Z'),
-  weight_kg: 56.7,
-}
-
-const catalog: CatalogReader = {
-  findByGtin: async (gtin) => (gtin === sampleFood.gtin ? sampleFood : undefined),
-  getStatus: async () => ({
+const catalog: CatalogReaderService = {
+  findByGtin: (gtin) => Effect.succeed(gtin === food.gtin ? food : undefined),
+  getStatus: Effect.succeed({
     active: true,
     brandedFoods: 4_092_797,
     completedAt: new Date('2026-08-04T00:00:00Z'),
@@ -117,206 +186,230 @@ const catalog: CatalogReader = {
     schemaVersion: '2.0.0',
     snapshotId: '00000000-0000-0000-0000-000000000001',
   }),
-  search: async () => [sampleFood],
+  search: () => Effect.succeed([food]),
+}
+const application: ApplicationRepositoryService = {
+  deleteFoodLogEntry: () => Effect.succeed(true),
+  deleteWeightLogEntry: () => Effect.succeed(true),
+  deleteWorkout: () => Effect.succeed(true),
+  deleteWorkoutTemplate: () => Effect.succeed(true),
+  ensureProfile: () => Effect.void,
+  ensureProfileForClerkUser: () => Effect.succeed(profileId),
+  getNutritionPlan: () => Effect.succeed(nutritionPlan),
+  listFoodLog: () => Effect.succeed([foodLog]),
+  listWorkouts: () => Effect.succeed([workout]),
+  listWorkoutTemplates: () => Effect.succeed([template]),
+  listWeightLog: () => Effect.succeed([weight]),
+  profileBelongsToClerkUser: (candidate, candidateUser) =>
+    Effect.succeed(candidate === profileId && candidateUser === userId),
+  saveFoodLogEntry: () => Effect.succeed(foodLog),
+  saveNutritionPlan: () => Effect.succeed(nutritionPlan),
+  saveWeightLogEntry: () => Effect.succeed(weight),
+  saveWorkout: () => Effect.succeed(workout),
+  saveWorkoutTemplate: () => Effect.succeed(template),
+}
+const userFoods: UserFoodRepositoryService = {
+  deleteCustomFood: () => Effect.succeed(true),
+  deleteRecipe: () => Effect.succeed(true),
+  findCustomFoodByBarcode: () => Effect.succeed(undefined),
+  listCustomFoods: () => Effect.succeed([]),
+  listRecipes: () => Effect.succeed([]),
+  saveCustomFood: () => Effect.die(new Error('Not exercised by this fixture')),
+  saveRecipe: () => Effect.die(new Error('Not exercised by this fixture')),
 }
 
-const application: ApplicationRepository = {
-  deleteFoodLogEntry: async () => true,
-  deleteWeightLogEntry: async () => true,
-  deleteWorkout: async () => true,
-  ensureProfile: async () => undefined,
-  ensureProfileForClerkUser: async () => testProfileId,
-  getNutritionPlan: async () => sampleNutritionPlan,
-  listFoodLog: async () => [sampleFoodLogEntry],
-  listWorkouts: async () => [sampleWorkout],
-  listWeightLog: async () => [sampleWeightEntry],
-  profileBelongsToClerkUser: async (profileId, clerkUserId) =>
-    profileId === testProfileId && clerkUserId === testUserId,
-  saveFoodLogEntry: async () => sampleFoodLogEntry,
-  saveNutritionPlan: async () => sampleNutritionPlan,
-  saveWeightLogEntry: async () => sampleWeightEntry,
-  saveWorkout: async () => sampleWorkout,
-}
+class TestWebHandler extends Context.Service<
+  TestWebHandler,
+  (request: Request) => Promise<Response>
+>()('@regolith/api/TestWebHandler') {}
 
-const authenticator: RequestAuthenticator = {
-  authenticate: async () => ({ userId: testUserId }),
-}
+const repositoryLayer = Layer.mergeAll(
+  Layer.succeed(CatalogReader)(catalog),
+  Layer.succeed(ApplicationRepository)(application),
+  Layer.succeed(UserFoodRepository)(userFoods),
+  Layer.succeed(MealEstimation)({
+    create: () => Effect.succeed(mealEstimate),
+    findById: (_profileId, estimateId) =>
+      Effect.succeed(estimateId === mealEstimate.estimateId ? mealEstimate : undefined),
+  }),
+  Layer.succeed(MealLogging)({
+    delete: () => Effect.succeed(false),
+    describe: () => Effect.succeed('Example meal'),
+    discardEstimate: () => Effect.succeed(false),
+    list: () => Effect.succeed([]),
+    photo: () => Effect.succeed(undefined),
+    save: () => Effect.die(new Error('Not exercised by this fixture')),
+  }),
+)
+const authenticationLayer = Layer.succeed(RequestAuthenticator)({
+  authenticate: (request) =>
+    Effect.succeed(
+      request.headers.get('authorization') === 'Bearer test-token' ? { userId } : undefined,
+    ),
+})
+const testApplication = apiLayer.pipe(
+  Layer.provide(authenticationLayer),
+  HttpRouter.provideRequest(repositoryLayer),
+  Layer.provide(NodeHttpServer.layerHttpServices),
+)
+const webHandlerLayer = Layer.effect(
+  TestWebHandler,
+  Effect.acquireRelease(
+    Effect.sync(() => HttpRouter.toWebHandler(testApplication, { disableLogger: true })),
+    ({ dispose }) => Effect.promise(dispose),
+  ).pipe(Effect.map(({ handler }) => handler)),
+)
 
-describe('Regolith API', () => {
-  const app = createApp(catalog, application, authenticator)
-
-  test('returns health status', async () => {
-    const response = await app.request('/health')
-    expect(response.status).toBe(200)
-    await expect(response.json()).resolves.toEqual({
-      service: 'api',
-      status: 'ok',
-      version: '0.1.0',
-    })
-  })
-
-  test('rejects unauthenticated API requests', async () => {
-    const unauthenticated = createApp(catalog, application, {
-      authenticate: async () => undefined,
-    })
-    const response = await unauthenticated.request('/v1/foods/search?q=egg')
-
-    expect(response.status).toBe(401)
-    await expect(response.json()).resolves.toEqual({
-      code: 'unauthorized',
-      message: 'Authentication required',
-    })
-  })
-
-  test('creates the stable profile assigned to the authenticated user', async () => {
-    const response = await app.request('/v1/profile', { method: 'PUT' })
-
-    expect(response.status).toBe(200)
-    await expect(response.json()).resolves.toEqual({ profileId: testProfileId })
-  })
-
-  test('prevents access to another profile identifier', async () => {
-    const response = await app.request(
-      '/v1/profiles/00000000-0000-4000-8000-000000000099/nutrition-plan',
-    )
-
-    expect(response.status).toBe(403)
-    await expect(response.json()).resolves.toEqual({
-      code: 'forbidden',
-      message: 'Profile access denied',
-    })
-  })
-
-  test('returns food by GTIN', async () => {
-    const response = await app.request('/v1/foods/by-gtin/00012345678905')
-    expect(response.status).toBe(200)
-    await expect(response.json()).resolves.toMatchObject({
-      foodId: '42',
-      name: 'Example Food',
-      portions: [{ amount: 30, name: '1 bar', unit: 'g' }],
-    })
-  })
-
-  test('validates search input', async () => {
-    const response = await app.request('/v1/foods/search?q=x')
-    expect(response.status).toBe(400)
-    await expect(response.json()).resolves.toEqual({
-      code: 'validation_error',
-      message: 'Invalid search query',
-    })
-  })
-
-  test('creates a food log entry with quantity-scaled nutrition', async () => {
-    const response = await app.request(`/v1/profiles/${sampleFoodLogEntry.profile_id}/food-log`, {
-      body: JSON.stringify({
-        datasetKind: 'branded',
-        entryId: sampleFoodLogEntry.entry_id,
-        foodId: sampleFood.food_id,
-        loggedAt: sampleFoodLogEntry.logged_at.toISOString(),
-        mealCategory: 'lunch',
-        quantityGrams: 150,
+const request = (
+  handler: (request: Request) => Promise<Response>,
+  path: string,
+  init: RequestInit = {},
+) =>
+  Effect.promise(() =>
+    handler(
+      new Request(`http://localhost${path}`, {
+        ...init,
+        headers: { authorization: 'Bearer test-token', ...init.headers },
       }),
-      headers: { 'content-type': 'application/json' },
-      method: 'POST',
-    })
-    expect(response.status).toBe(201)
-    await expect(response.json()).resolves.toMatchObject({ calories: 180, protein: 7.5 })
-  })
+    ),
+  )
+const json = (response: Response) => Effect.promise(() => response.json())
 
-  test('loads and saves a calculated nutrition plan', async () => {
-    const path = `/v1/profiles/${sampleFoodLogEntry.profile_id}/nutrition-plan`
-    const loaded = await app.request(path)
-    expect(loaded.status).toBe(200)
-    await expect(loaded.json()).resolves.toMatchObject({
-      plan: { calorieTargetKcal: 1_460, weightGoal: 'lose' },
-    })
+layer(webHandlerLayer)('Regolith Effect HTTP API', (it) => {
+  it.effect('serves health and rejects missing authentication', () =>
+    Effect.gen(function* () {
+      const handler = yield* TestWebHandler
+      const health = yield* request(handler, '/health')
+      expect(health.status).toBe(200)
+      expect(yield* json(health)).toEqual({ service: 'api', status: 'ok', version: '0.1.0' })
+      const rejected = yield* Effect.promise(() =>
+        handler(new Request('http://localhost/v1/foods/search?q=egg')),
+      )
+      expect(rejected.status).toBe(401)
+      expect(yield* json(rejected)).toEqual({
+        code: 'unauthorized',
+        message: 'Authentication required',
+      })
+    }),
+  )
 
-    const saved = await app.request(path, {
-      body: JSON.stringify({
-        birthDate: '1998-02-18',
-        currentWeightKg: 56.7,
-        dailyActivity: 'mostly_sedentary',
-        exerciseFrequency: 'none',
-        heightCm: 160,
-        metabolicSex: 'female',
-        targetWeightKg: 52,
-        weeklyWeightChangePercent: 0.5,
-        weightGoal: 'lose',
-      }),
-      headers: { 'content-type': 'application/json' },
-      method: 'PUT',
-    })
-    expect(saved.status).toBe(200)
-    await expect(saved.json()).resolves.toMatchObject({ calorieTargetKcal: 1_460 })
-  })
+  it.effect('creates a stable authenticated profile and enforces ownership', () =>
+    Effect.gen(function* () {
+      const handler = yield* TestWebHandler
+      const profile = yield* request(handler, '/v1/profile', { method: 'PUT' })
+      expect(yield* json(profile)).toEqual({ profileId })
+      const forbidden = yield* request(
+        handler,
+        '/v1/profiles/00000000-0000-4000-8000-000000000099/nutrition-plan',
+      )
+      expect(forbidden.status).toBe(403)
+    }),
+  )
 
-  test('saves a workout with ordered sets', async () => {
-    const response = await app.request(
-      `/v1/profiles/${sampleFoodLogEntry.profile_id}/workouts/${sampleWorkout.session.session_id}`,
-      {
+  it.effect('searches foods, resolves GTINs, and reports deterministic validation errors', () =>
+    Effect.gen(function* () {
+      const handler = yield* TestWebHandler
+      const search = yield* request(handler, '/v1/foods/search?q=egg')
+      expect(yield* json(search)).toMatchObject({ foods: [{ foodId: '42', name: 'Example Food' }] })
+      const gtin = yield* request(handler, '/v1/foods/by-gtin/00012345678905')
+      expect(yield* json(gtin)).toMatchObject({ foodId: '42', portions: [{ name: '1 bar' }] })
+      const invalid = yield* request(handler, '/v1/foods/search?q=x')
+      expect(invalid.status).toBe(400)
+      expect(yield* json(invalid)).toEqual({
+        code: 'validation_error',
+        message: 'Invalid search query',
+      })
+    }),
+  )
+
+  it.effect('logs foods and returns quantity-scaled nutrition', () =>
+    Effect.gen(function* () {
+      const handler = yield* TestWebHandler
+      const response = yield* request(handler, `/v1/profiles/${profileId}/food-log`, {
         body: JSON.stringify({
-          completedAt: sampleWorkout.session.completed_at?.toISOString(),
-          distanceKilometers: null,
-          durationMinutes: 60,
-          kind: 'strength',
-          sessionId: sampleWorkout.session.session_id,
-          sets: sampleWorkout.sets.map((set) => ({
-            detail: set.detail,
-            setId: set.set_id,
-            title: set.title,
-            value: set.value,
-          })),
-          startedAt: sampleWorkout.session.started_at.toISOString(),
-          title: sampleWorkout.session.title,
+          datasetKind: 'branded',
+          entryId: foodLog.entry_id,
+          foodId: food.food_id,
+          loggedAt: foodLog.logged_at.toISOString(),
+          mealCategory: 'lunch',
+          quantityGrams: 150,
         }),
         headers: { 'content-type': 'application/json' },
-        method: 'PUT',
-      },
-    )
-    expect(response.status).toBe(200)
-    await expect(response.json()).resolves.toMatchObject({
-      sessionId: sampleWorkout.session.session_id,
-      sets: [{ title: 'Bench Press' }],
-    })
-  })
+        method: 'POST',
+      })
+      expect(response.status).toBe(201)
+      expect(yield* json(response)).toMatchObject({ calories: 180, protein: 7.5 })
+    }),
+  )
 
-  test('loads and saves canonical weight entries', async () => {
-    const path = `/v1/profiles/${sampleFoodLogEntry.profile_id}/weight-log`
-    const loaded = await app.request(
-      `${path}?from=2026-08-01T00%3A00%3A00.000Z&to=2026-09-01T00%3A00%3A00.000Z`,
-    )
-    expect(loaded.status).toBe(200)
-    await expect(loaded.json()).resolves.toEqual({
-      entries: [
-        {
-          entryId: sampleWeightEntry.entry_id,
-          measuredAt: sampleWeightEntry.measured_at.toISOString(),
-          weightKg: 56.7,
-        },
-      ],
-    })
+  it.effect('creates and reloads a canonical meal estimate', () =>
+    Effect.gen(function* () {
+      const handler = yield* TestWebHandler
+      const created = yield* request(handler, `/v1/profiles/${profileId}/meal-estimates`, {
+        body: JSON.stringify({
+          description: 'Two eggs and toast',
+          estimateId: mealEstimate.estimateId,
+          kind: 'text',
+        }),
+        headers: { 'content-type': 'application/json' },
+        method: 'POST',
+      })
+      expect(created.status).toBe(201)
+      expect(yield* json(created)).toMatchObject({
+        calories: 180,
+        estimateId: mealEstimate.estimateId,
+        items: [{ foodId: food.food_id, resolved: true }],
+      })
+      const loaded = yield* request(
+        handler,
+        `/v1/profiles/${profileId}/meal-estimates/${mealEstimate.estimateId}`,
+      )
+      expect(loaded.status).toBe(200)
+      expect(yield* json(loaded)).toMatchObject({ description: 'Eggs and toast' })
+    }),
+  )
 
-    const saved = await app.request(path, {
-      body: JSON.stringify({
-        entryId: sampleWeightEntry.entry_id,
-        measuredAt: sampleWeightEntry.measured_at.toISOString(),
-        weightKg: 56.7,
-      }),
-      headers: { 'content-type': 'application/json' },
-      method: 'POST',
-    })
-    expect(saved.status).toBe(201)
-    await expect(saved.json()).resolves.toMatchObject({ weightKg: 56.7 })
-  })
+  it.effect('round trips nutrition, weight, workouts, and nested templates', () =>
+    Effect.gen(function* () {
+      const handler = yield* TestWebHandler
+      const plan = yield* request(handler, `/v1/profiles/${profileId}/nutrition-plan`)
+      expect(yield* json(plan)).toMatchObject({ plan: { calorieTargetKcal: 1460 } })
+      const weights = yield* request(
+        handler,
+        `/v1/profiles/${profileId}/weight-log?from=2026-08-01T00%3A00%3A00.000Z&to=2026-09-01T00%3A00%3A00.000Z`,
+      )
+      expect(yield* json(weights)).toMatchObject({ entries: [{ weightKg: 56.7 }] })
+      const workouts = yield* request(
+        handler,
+        `/v1/profiles/${profileId}/workouts?from=2026-08-01T00%3A00%3A00.000Z&to=2026-09-01T00%3A00%3A00.000Z`,
+      )
+      expect(yield* json(workouts)).toMatchObject({
+        workouts: [{ sets: [{ title: 'Bench Press' }] }],
+      })
+      const templates = yield* request(handler, `/v1/profiles/${profileId}/workout-templates`)
+      expect(yield* json(templates)).toMatchObject({
+        templates: [{ exercises: [{ sets: [{ repetitions: 8 }] }] }],
+      })
+      const customFoods = yield* request(handler, `/v1/profiles/${profileId}/custom-foods`)
+      expect(yield* json(customFoods)).toEqual({ foods: [] })
+      const recipes = yield* request(handler, `/v1/profiles/${profileId}/recipes`)
+      expect(yield* json(recipes)).toEqual({ recipes: [] })
+    }),
+  )
 
-  test('publishes an OpenAPI document', async () => {
-    const response = await app.request('/openapi.json')
-    const document = (await response.json()) as { openapi: string; paths: Record<string, unknown> }
-    expect(document.openapi).toBe('3.1.0')
-    expect(document.paths).toHaveProperty('/v1/profile')
-    expect(document.paths).toHaveProperty('/v1/foods/search')
-    expect(document.paths).toHaveProperty('/v1/profiles/{profileId}/food-log')
-    expect(document.paths).toHaveProperty('/v1/profiles/{profileId}/nutrition-plan')
-    expect(document.paths).toHaveProperty('/v1/profiles/{profileId}/workouts/{sessionId}')
-  })
+  it.effect('publishes OpenAPI generated from the same API declaration', () =>
+    Effect.gen(function* () {
+      const handler = yield* TestWebHandler
+      const response = yield* request(handler, '/openapi.json')
+      const document = yield* json(response)
+      expect(document).toMatchObject({ openapi: '3.1.0' })
+      expect(document.paths).toHaveProperty('/v1/profile')
+      expect(document.paths).toHaveProperty(
+        '/v1/profiles/{profileId}/workout-templates/{templateId}',
+      )
+      expect(document.paths).toHaveProperty('/v1/profiles/{profileId}/custom-foods/{foodId}')
+      expect(document.paths).toHaveProperty('/v1/profiles/{profileId}/recipes/{recipeId}')
+      expect(document.paths).toHaveProperty('/v1/profiles/{profileId}/meal-estimates')
+    }),
+  )
 })

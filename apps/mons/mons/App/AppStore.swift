@@ -4,14 +4,16 @@ import Observation
 @Observable
 @MainActor
 final class AppStore {
-    private(set) var foodLog: [FoodLogEntry] = []
-    private(set) var hasLoadedNutritionPlan = false
-    private(set) var isLoadingFoodLog = false
+    let meals: MealStore
+
     private(set) var isLoadingWorkouts = false
+    private(set) var isLoadingWorkoutTemplates = false
     private(set) var isLoadingWeightLog = false
-    private(set) var lastError: String?
     private(set) var nutritionPlan: NutritionPlan?
+    private(set) var profileBootstrapState = ProfileBootstrapState.loading
+    private(set) var toast: AppToast?
     private(set) var workouts: [WorkoutSession] = []
+    private(set) var workoutTemplates: [SavedWorkoutTemplate] = []
     private(set) var weightLog: [WeightLogEntry] = []
 
     private(set) var profileId: UUID
@@ -30,6 +32,18 @@ final class AppStore {
         self.profileId = profileId
         self.calendar = calendar
         self.networkEnabled = networkEnabled
+        meals = MealStore(
+            api: api,
+            profileId: profileId,
+            calendar: calendar,
+            networkEnabled: networkEnabled
+        )
+        meals.connect(profileId: profileId) { [weak self] event in
+            switch event {
+            case .failure(let error): self?.report(error)
+            case .success(let message): self?.showSuccess(message)
+            }
+        }
     }
 
     static var preview: AppStore {
@@ -39,38 +53,7 @@ final class AppStore {
             networkEnabled: false
         )
         store.nutritionPlan = .preview
-        store.foodLog = [
-            FoodLogEntry(
-                brand: nil,
-                calories: 95,
-                carbohydrates: 25,
-                datasetKind: .raw,
-                entryId: UUID(uuidString: "00000000-0000-4000-8000-000000000050") ?? UUID(),
-                fat: 0.3,
-                foodId: "171688",
-                gtin: nil,
-                loggedAt: Date(timeIntervalSince1970: 1_775_304_000),
-                mealCategory: .breakfast,
-                name: "Banana",
-                protein: 1.2,
-                quantityGrams: 100
-            ),
-            FoodLogEntry(
-                brand: "Example Farms",
-                calories: 90,
-                carbohydrates: 0.4,
-                datasetKind: .branded,
-                entryId: UUID(uuidString: "00000000-0000-4000-8000-000000000051") ?? UUID(),
-                fat: 6.8,
-                foodId: "747447",
-                gtin: "00000000000005",
-                loggedAt: Date(timeIntervalSince1970: 1_775_307_600),
-                mealCategory: .breakfast,
-                name: "Egg Fried",
-                protein: 6.3,
-                quantityGrams: 100
-            ),
-        ]
+        store.meals.configurePreview()
         store.weightLog = [
             WeightLogEntry(
                 entryId: UUID(uuidString: "00000000-0000-4000-8000-000000000040")
@@ -85,7 +68,16 @@ final class AppStore {
                 weightKg: 68.1
             ),
         ]
-        store.hasLoadedNutritionPlan = true
+        store.profileBootstrapState = .ready
+        store.workoutTemplates = [
+            SavedWorkoutTemplate(
+                id: UUID(uuidString: "00000000-0000-4000-8000-000000000060") ?? UUID(),
+                name: "Lower Body A",
+                exercises: ExerciseCatalog.exercises(for: ExerciseCatalog.templates[1]).map {
+                    WorkoutExerciseDraft(exercise: $0)
+                }
+            )
+        ]
         return store
     }
 
@@ -93,17 +85,29 @@ final class AppStore {
 
     func bootstrap(referenceDate: Date = .now) async {
         guard networkEnabled else {
-            hasLoadedNutritionPlan = true
+            profileBootstrapState = .ready
             return
         }
-        defer { hasLoadedNutritionPlan = true }
+        toast = nil
+        profileBootstrapState = .loading
         do {
             profileId = try await api.ensureProfile()
+            meals.connect(profileId: profileId) { [weak self] event in
+                switch event {
+                case .failure(let error): self?.report(error)
+                case .success(let message): self?.showSuccess(message)
+                }
+            }
             nutritionPlan = try await api.nutritionPlan(profileId: profileId)
-            await loadFoodLog(around: referenceDate)
-            await loadWorkouts(referenceDate: referenceDate)
-            await loadWeightLog(referenceDate: referenceDate)
+            profileBootstrapState = .ready
+            async let foodLog: Void = meals.load(around: referenceDate)
+            async let foodLibrary: Void = meals.loadLibrary()
+            async let workouts: Void = loadWorkouts(referenceDate: referenceDate)
+            async let workoutTemplates: Void = loadWorkoutTemplates()
+            async let weightLog: Void = loadWeightLog(referenceDate: referenceDate)
+            _ = await (foodLog, foodLibrary, workouts, workoutTemplates, weightLog)
         } catch {
+            profileBootstrapState = .failed(message: Self.bootstrapMessage(for: error))
             report(error)
         }
     }
@@ -112,143 +116,26 @@ final class AppStore {
     func completeOnboarding(_ draft: OnboardingDraft) async -> Bool {
         guard networkEnabled else {
             nutritionPlan = .preview
-            hasLoadedNutritionPlan = true
+            profileBootstrapState = .ready
             return true
+        }
+        guard profileBootstrapState == .ready else {
+            toast = AppToast(
+                kind: .error,
+                message: "Connect to the API before creating your program."
+            )
+            return false
         }
         do {
             nutritionPlan = try await api.saveNutritionPlan(
                 profileId: profileId,
                 request: NutritionPlanCalculator.request(draft: draft)
             )
-            lastError = nil
-            hasLoadedNutritionPlan = true
+            showSuccess("Plan saved")
             return true
         } catch {
             report(error)
             return false
-        }
-    }
-
-    func loadFoodLog(around date: Date) async {
-        guard networkEnabled else { return }
-        isLoadingFoodLog = true
-        defer { isLoadingFoodLog = false }
-        let day = calendar.startOfDay(for: date)
-        let from = calendar.date(byAdding: .day, value: -7, to: day) ?? day
-        let to = calendar.date(byAdding: .day, value: 8, to: day) ?? day
-        do {
-            foodLog = try await api.foodLog(profileId: profileId, from: from, to: to)
-            lastError = nil
-        } catch {
-            report(error)
-        }
-    }
-
-    func searchFoods(_ query: String, kind: DatasetKind? = nil) async -> [CatalogFood] {
-        guard networkEnabled, query.count >= 2 else { return [] }
-        do {
-            let foods = try await api.searchFoods(query: query, kind: kind)
-            lastError = nil
-            return foods
-        } catch is CancellationError {
-            return []
-        } catch let error as URLError where error.code == .cancelled {
-            return []
-        } catch {
-            report(error)
-            return []
-        }
-    }
-
-    func food(gtin: String) async -> CatalogFood? {
-        guard networkEnabled else { return nil }
-        do {
-            let food = try await api.food(gtin: gtin)
-            lastError = nil
-            return food
-        } catch {
-            report(error)
-            return nil
-        }
-    }
-
-    @discardableResult
-    func log(
-        food: CatalogFood,
-        quantityGrams: Double,
-        category: MealCategory,
-        loggedAt: Date,
-        entryId: UUID = UUID()
-    ) async -> Bool {
-        guard networkEnabled else { return false }
-        do {
-            let entry = try await api.logFood(
-                profileId: profileId,
-                entry: CreateFoodLogEntryRequest(
-                    datasetKind: food.datasetKind,
-                    entryId: entryId,
-                    foodId: food.foodId,
-                    loggedAt: loggedAt,
-                    mealCategory: category,
-                    quantityGrams: quantityGrams
-                )
-            )
-            upsert(entry)
-            lastError = nil
-            return true
-        } catch {
-            report(error)
-            return false
-        }
-    }
-
-    @discardableResult
-    func log(items: [PendingFoodLogItem]) async -> Bool {
-        for item in items {
-            let saved = await log(
-                food: item.food,
-                quantityGrams: item.quantityGrams,
-                category: item.mealCategory,
-                loggedAt: item.loggedAt,
-                entryId: item.entryId
-            )
-            guard saved else { return false }
-        }
-        return true
-    }
-
-    func rescheduleFoodLogEntry(_ entryId: UUID, to date: Date) async {
-        guard let index = foodLog.firstIndex(where: { $0.entryId == entryId }) else { return }
-        let original = foodLog[index]
-        foodLog[index].loggedAt = date
-        do {
-            let updated = try await api.logFood(
-                profileId: profileId,
-                entry: CreateFoodLogEntryRequest(
-                    datasetKind: original.datasetKind,
-                    entryId: original.entryId,
-                    foodId: original.foodId,
-                    loggedAt: date,
-                    mealCategory: MealCategory.inferred(from: date),
-                    quantityGrams: original.quantityGrams
-                )
-            )
-            upsert(updated)
-            lastError = nil
-        } catch {
-            foodLog[index] = original
-            report(error)
-        }
-    }
-
-    func deleteFoodLogEntry(_ entryId: UUID) async {
-        guard networkEnabled else { return }
-        do {
-            try await api.deleteFoodLogEntry(profileId: profileId, entryId: entryId)
-            foodLog.removeAll { $0.entryId == entryId }
-            lastError = nil
-        } catch {
-            report(error)
         }
     }
 
@@ -261,9 +148,59 @@ final class AppStore {
         do {
             let remote = try await api.workouts(profileId: profileId, from: from, to: to)
             workouts = remote.map(Self.workoutSession)
-            lastError = nil
         } catch {
             report(error)
+        }
+    }
+
+    func loadWorkoutTemplates() async {
+        guard networkEnabled else { return }
+        isLoadingWorkoutTemplates = true
+        defer { isLoadingWorkoutTemplates = false }
+        do {
+            workoutTemplates = try await api.workoutTemplates(profileId: profileId).map(Self.workoutTemplate)
+        } catch {
+            report(error)
+        }
+    }
+
+    @discardableResult
+    func saveWorkoutTemplate(_ template: SavedWorkoutTemplate) async -> SavedWorkoutTemplate? {
+        guard networkEnabled else {
+            upsert(template)
+            showSuccess("Template saved")
+            return template
+        }
+        do {
+            let remote = try await api.saveWorkoutTemplate(
+                profileId: profileId,
+                template: SaveWorkoutTemplateRequest(template: template)
+            )
+            let saved = Self.workoutTemplate(remote)
+            upsert(saved)
+            showSuccess("Template saved")
+            return saved
+        } catch {
+            report(error)
+            return nil
+        }
+    }
+
+    @discardableResult
+    func deleteWorkoutTemplate(_ templateId: UUID) async -> Bool {
+        guard networkEnabled else {
+            workoutTemplates.removeAll { $0.id == templateId }
+            showSuccess("Template deleted")
+            return true
+        }
+        do {
+            try await api.deleteWorkoutTemplate(profileId: profileId, templateId: templateId)
+            workoutTemplates.removeAll { $0.id == templateId }
+            showSuccess("Template deleted")
+            return true
+        } catch {
+            report(error)
+            return false
         }
     }
 
@@ -275,7 +212,6 @@ final class AppStore {
         let from = calendar.date(byAdding: .year, value: -1, to: referenceDate) ?? referenceDate
         do {
             weightLog = try await api.weightLog(profileId: profileId, from: from, to: to).sorted()
-            lastError = nil
         } catch {
             report(error)
         }
@@ -300,7 +236,7 @@ final class AppStore {
             weightLog.removeAll { $0.entryId == entry.entryId }
             weightLog.append(entry)
             weightLog.sort()
-            lastError = nil
+            showSuccess("Weight saved")
             return true
         } catch {
             report(error)
@@ -313,7 +249,7 @@ final class AppStore {
         do {
             try await api.deleteWeightLogEntry(profileId: profileId, entryId: entryId)
             weightLog.removeAll { $0.entryId == entryId }
-            lastError = nil
+            showSuccess("Weight entry deleted")
         } catch {
             report(error)
         }
@@ -321,14 +257,15 @@ final class AppStore {
 
     @discardableResult
     func saveWorkout(_ request: SaveWorkoutRequest) async -> Bool {
-        guard networkEnabled else { return false }
+        guard networkEnabled else {
+            upsert(Self.workoutSession(request))
+            showSuccess("Workout saved")
+            return true
+        }
         do {
             let remote = try await api.saveWorkout(profileId: profileId, workout: request)
-            let saved = Self.workoutSession(remote)
-            workouts.removeAll { $0.id == saved.id }
-            workouts.append(saved)
-            workouts.sort { $0.completedAt > $1.completedAt }
-            lastError = nil
+            upsert(Self.workoutSession(remote))
+            showSuccess("Workout saved")
             return true
         } catch {
             report(error)
@@ -336,30 +273,66 @@ final class AppStore {
         }
     }
 
-    func clearError() {
-        lastError = nil
+    @discardableResult
+    func deleteWorkout(_ sessionId: UUID) async -> Bool {
+        guard networkEnabled else {
+            workouts.removeAll { $0.id == sessionId.uuidString }
+            showSuccess("Workout deleted")
+            return true
+        }
+        do {
+            try await api.deleteWorkout(profileId: profileId, sessionId: sessionId)
+            workouts.removeAll { $0.id == sessionId.uuidString }
+            showSuccess("Workout deleted")
+            return true
+        } catch {
+            report(error)
+            return false
+        }
+    }
+
+    func dismissToast(_ toastId: UUID) {
+        guard toast?.id == toastId else { return }
+        toast = nil
+    }
+
+    func showSuccess(_ message: String, id: UUID = UUID()) {
+        toast = AppToast(id: id, kind: .success, message: message)
     }
 
     func resetForAuthenticationChange() {
-        foodLog = []
-        hasLoadedNutritionPlan = false
-        isLoadingFoodLog = false
+        meals.reset()
+        profileBootstrapState = .loading
         isLoadingWorkouts = false
+        isLoadingWorkoutTemplates = false
         isLoadingWeightLog = false
-        lastError = nil
         nutritionPlan = nil
+        toast = nil
         workouts = []
+        workoutTemplates = []
         weightLog = []
     }
 
-    private func upsert(_ entry: FoodLogEntry) {
-        foodLog.removeAll { $0.entryId == entry.entryId }
-        foodLog.append(entry)
-        foodLog.sort { $0.loggedAt < $1.loggedAt }
+    private func upsert(_ template: SavedWorkoutTemplate) {
+        workoutTemplates.removeAll { $0.id == template.id }
+        workoutTemplates.insert(template, at: 0)
+    }
+
+    private func upsert(_ workout: WorkoutSession) {
+        workouts.removeAll { $0.id == workout.id }
+        workouts.append(workout)
+        workouts.sort { $0.completedAt > $1.completedAt }
     }
 
     private func report(_ error: Error) {
-        lastError = error.localizedDescription
+        toast = AppToast(kind: .error, message: error.localizedDescription)
+    }
+
+    private static func bootstrapMessage(for error: Error) -> String {
+        if error is URLError {
+            return "Start the local API with pnpm dev:phone, keep this iPhone on the same network as your Mac, then try again."
+        }
+        return error.localizedDescription
     }
 
     private static func workoutSession(_ remote: RemoteWorkout) -> WorkoutSession {
@@ -379,10 +352,63 @@ final class AppStore {
         return WorkoutSession(
             id: remote.sessionId.uuidString,
             title: remote.title,
+            startedAt: remote.startedAt,
             completedAt: remote.completedAt ?? remote.startedAt,
             durationMinutes: remote.durationMinutes,
             metric: metric,
             sets: sets
+        )
+    }
+
+    private static func workoutSession(_ request: SaveWorkoutRequest) -> WorkoutSession {
+        let sets = request.sets.map {
+            WorkoutSet(
+                id: $0.setId.uuidString,
+                title: $0.title,
+                detail: $0.detail,
+                value: $0.value
+            )
+        }
+        let metric: WorkoutMetric = if request.kind == .cardio {
+            .cardio(distanceKilometers: request.distanceKilometers ?? 0)
+        } else {
+            .strength(exercises: Set(request.sets.map(\.title)).count, sets: request.sets.count)
+        }
+        return WorkoutSession(
+            id: request.sessionId.uuidString,
+            title: request.title,
+            startedAt: request.startedAt,
+            completedAt: request.completedAt ?? request.startedAt,
+            durationMinutes: request.durationMinutes,
+            metric: metric,
+            sets: sets
+        )
+    }
+
+    private static func workoutTemplate(_ remote: RemoteWorkoutTemplate) -> SavedWorkoutTemplate {
+        SavedWorkoutTemplate(
+            id: remote.templateId,
+            name: remote.name,
+            exercises: remote.exercises.map { exercise in
+                WorkoutExerciseDraft(
+                    id: exercise.templateExerciseId,
+                    exercise: ExerciseDefinition(
+                        id: exercise.exerciseId,
+                        name: exercise.name,
+                        category: exercise.category,
+                        equipment: exercise.equipment
+                    ),
+                    sets: exercise.sets.map { workoutSet in
+                        WorkoutLoggingSet(
+                            id: workoutSet.setId,
+                            weightPounds: workoutSet.weightPounds,
+                            repetitions: workoutSet.repetitions,
+                            restSeconds: workoutSet.restSeconds
+                        )
+                    },
+                    notes: exercise.notes
+                )
+            }
         )
     }
 }

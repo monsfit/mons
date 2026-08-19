@@ -1,6 +1,6 @@
 import Foundation
 
-struct WorkoutExerciseDraft: Identifiable, Hashable {
+nonisolated struct WorkoutExerciseDraft: Identifiable, Hashable, Sendable {
     let id: UUID
     let exercise: ExerciseDefinition
     var sets: [WorkoutLoggingSet]

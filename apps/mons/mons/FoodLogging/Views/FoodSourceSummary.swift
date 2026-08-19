@@ -4,11 +4,12 @@ struct FoodSourceSummary: View {
     let food: CatalogFood
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: MonsSpacing.medium) {
             Image(systemName: food.datasetKind == .raw ? "fork.knife" : "shippingbox.fill")
+                .foregroundStyle(MonsColor.textSecondary)
                 .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: MonsSpacing.xSmall) {
                 if let brand = food.brand, !brand.isEmpty {
                     Text(brand)
                         .font(MonsTypography.headline)
@@ -20,7 +21,7 @@ struct FoodSourceSummary: View {
 
             Spacer()
         }
-        .padding(12)
+        .padding(MonsSpacing.medium)
         .background(MonsColor.surface, in: .rect(cornerRadius: MonsRadius.medium))
         .overlay {
             RoundedRectangle(cornerRadius: MonsRadius.medium)
@@ -28,4 +29,3 @@ struct FoodSourceSummary: View {
         }
     }
 }
-

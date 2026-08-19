@@ -21,13 +21,13 @@ struct OnboardingNavigationControls: View {
             Spacer()
 
             Button(action: onNext) {
-                if isSaving {
-                    ProgressView()
-                        .frame(minWidth: 72)
-                } else {
-                    Label(nextTitle, systemImage: "chevron.right")
-                        .labelStyle(.titleAndIcon)
-                }
+                MonsAsyncActionLabel(
+                    title: nextTitle,
+                    loadingTitle: "Saving…",
+                    systemImage: "chevron.right",
+                    isLoading: isSaving
+                )
+                .frame(minWidth: 72)
             }
             .buttonStyle(MonsPrimaryButtonStyle())
             .frame(maxWidth: 220)

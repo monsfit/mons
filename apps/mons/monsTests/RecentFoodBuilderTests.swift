@@ -32,6 +32,34 @@ struct RecentFoodBuilderTests {
         #expect(foods[0].calories == 100)
     }
 
+    @Test func convertsLoggedAmountsBackToPerHundredValuesForEditing() {
+        let loggedEntry = FoodLogEntry(
+            brand: "Example",
+            calories: 150,
+            carbohydrates: 18,
+            datasetKind: .branded,
+            entryId: UUID(uuidString: "00000000-0000-4000-8000-000000000004") ?? UUID(),
+            fat: 6,
+            foodId: "42",
+            gtin: "00000000000042",
+            loggedAt: Date(timeIntervalSince1970: 400),
+            mealId: UUID(uuidString: "00000000-0000-4000-8000-000000000004") ?? UUID(),
+            mealCategory: .lunch,
+            name: "Test Food",
+            protein: 9,
+            quantityGrams: 50
+        )
+
+        let food = RecentFoodBuilder.catalogFood(from: loggedEntry)
+
+        #expect(food.foodId == "42")
+        #expect(food.datasetKind == .branded)
+        #expect(food.calories == 300)
+        #expect(food.protein == 18)
+        #expect(food.totalFat == 12)
+        #expect(food.carbohydrates == 36)
+    }
+
     private func entry(
         id: String,
         foodId: String,
@@ -48,6 +76,7 @@ struct RecentFoodBuilderTests {
             foodId: foodId,
             gtin: nil,
             loggedAt: loggedAt,
+            mealId: UUID(uuidString: id) ?? UUID(),
             mealCategory: .snack,
             name: name,
             protein: 2,

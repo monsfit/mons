@@ -1,21 +1,14 @@
-import { Kysely, PostgresDialect } from 'kysely'
-import { Pool } from 'pg'
-
-import type { CatalogDatabase } from './types.js'
+import { PgClient } from '@effect/sql-pg'
+import { Redacted } from 'effect'
 
 export interface DatabaseOptions {
-  connectionString: string
-  maximumPoolSize?: number
+  readonly connectionString: string
+  readonly maximumPoolSize?: number
 }
 
-export function createDatabase(options: DatabaseOptions): Kysely<CatalogDatabase> {
-  return new Kysely<CatalogDatabase>({
-    dialect: new PostgresDialect({
-      pool: new Pool({
-        application_name: 'regolith-api',
-        connectionString: options.connectionString,
-        max: options.maximumPoolSize ?? 10,
-      }),
-    }),
+export const createDatabaseLayer = (options: DatabaseOptions) =>
+  PgClient.layer({
+    applicationName: 'regolith-api',
+    maxConnections: options.maximumPoolSize ?? 10,
+    url: Redacted.make(options.connectionString),
   })
-}

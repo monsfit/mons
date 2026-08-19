@@ -1,4 +1,3 @@
-import MonsDesignSystem
 import SwiftUI
 
 public struct DashboardScreen<AccountMenu: View>: View {
@@ -27,28 +26,81 @@ public struct DashboardScreen<AccountMenu: View>: View {
 
     public var body: some View {
         NavigationStack {
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: MonsSpacing.xLarge) {
-                    DashboardPresentationHeader(date: state.date, accountMenu: accountMenu)
-                    DashboardNutritionPresentationCard(
-                        state: state,
-                        onShowCalories: onShowCalories
-                    )
-                    DashboardWorkoutPresentationCard(
-                        state: state,
-                        onShowWorkouts: onShowWorkouts
-                    )
-                    DashboardWeightPresentationCard(state: state, onLogWeight: onLogWeight)
+            List {
+                Section("Nutrition") {
+                    Button(action: onShowCalories) {
+                        LabeledContent {
+                            Text("\(state.consumedCalories.formatted()) of \(state.calorieGoal.formatted()) kcal")
+                                .foregroundStyle(.secondary)
+                        } label: {
+                            Label("Food Log", systemImage: "fork.knife")
+                        }
+                    }
+
+                    ProgressView(value: calorieProgress)
+
+                    macroRow("Protein", value: state.protein)
+                    macroRow("Carbohydrates", value: state.carbohydrates)
+                    macroRow("Fat", value: state.fat)
                 }
-                .padding(MonsSpacing.large)
+
+                Section("Workouts") {
+                    Button(action: onShowWorkouts) {
+                        Label("Open Workouts", systemImage: "figure.run")
+                    }
+
+                    LabeledContent("Sessions this week", value: state.weeklyWorkoutCount.formatted())
+                    LabeledContent("Minutes this week", value: state.weeklyWorkoutMinutes.formatted())
+
+                    if let title = state.recentWorkoutTitle {
+                        LabeledContent("Most recent") {
+                            VStack(alignment: .trailing) {
+                                Text(title)
+                                if let detail = state.recentWorkoutDetail {
+                                    Text(detail)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Section("Weight") {
+                    if let weight = state.latestWeight {
+                        LabeledContent("Latest") {
+                            Text("\(weight.formatted(.number.precision(.fractionLength(1)))) \(state.weightUnit)")
+                        }
+
+                        if let change = state.weightChange {
+                            LabeledContent("Change") {
+                                Text(change, format: .number.sign(strategy: .always()).precision(.fractionLength(1)))
+                            }
+                        }
+                    } else {
+                        Text("No weight logged")
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Button("Log Weight", systemImage: "plus", action: onLogWeight)
+                }
             }
-            .background(MonsColor.background)
-            .foregroundStyle(MonsColor.textPrimary)
             .refreshable { await onRefresh() }
-            #if os(iOS)
-            .toolbar(.hidden, for: .navigationBar)
-            #endif
+            .navigationTitle("Today")
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    accountMenu
+                }
+            }
         }
-        .task { MonsFontRegistrar.registerBundledFonts() }
+    }
+
+    private var calorieProgress: Double {
+        guard state.calorieGoal > 0 else { return 0 }
+        return min(max(Double(state.consumedCalories) / Double(state.calorieGoal), 0), 1)
+    }
+
+    private func macroRow(_ title: String, value: DashboardPresentationState.Macro) -> some View {
+        LabeledContent(title, value: "\(value.consumed.formatted()) / \(value.target.formatted()) g")
     }
 }

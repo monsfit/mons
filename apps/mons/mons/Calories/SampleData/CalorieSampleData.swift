@@ -182,6 +182,7 @@ enum CalorieSampleData {
             category: category,
             loggedAt: calendar.date(bySettingHour: hour, minute: minute, second: 0, of: day) ?? day,
             itemCount: itemCount,
+            hasPhoto: false,
             calories: calories,
             macros: macros
         )

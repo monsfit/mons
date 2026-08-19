@@ -10,10 +10,20 @@ struct FoodPendingLogButton: View {
             if isLogging {
                 ProgressView()
             } else {
-                Label("Log Foods", systemImage: "checkmark")
+                HStack(spacing: MonsSpacing.xSmall) {
+                    Image(systemName: "fork.knife")
+                    Text("Log Meal")
+                    Text(count, format: .number)
+                        .monospacedDigit()
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 3)
+                        .background(MonsColor.surfaceRaised, in: .capsule)
+                }
+                    .fontWeight(.semibold)
+                    .fixedSize()
             }
         }
         .disabled(isLogging)
-        .accessibilityLabel("Log \(count) foods")
+        .accessibilityLabel("Log meal with \(count) \(count == 1 ? "item" : "items")")
     }
 }

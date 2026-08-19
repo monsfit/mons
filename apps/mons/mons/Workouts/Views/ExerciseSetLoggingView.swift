@@ -19,7 +19,7 @@ struct ExerciseSetLoggingView: View {
 
                 WorkoutSetColumnHeader()
 
-                ForEach(Array(exercise.sets.enumerated()), id: \.element.id) { index, workoutSet in
+                ForEach(exercise.sets.enumerated(), id: \.element.id) { index, workoutSet in
                     WorkoutLoggingSetRow(
                         workoutSet: $exercise.sets[index],
                         number: index + 1,
@@ -55,16 +55,16 @@ struct ExerciseSetLoggingView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
-        .safeAreaInset(edge: .bottom) {
-            Button("Done", systemImage: "checkmark", action: dismiss.callAsFunction)
-                .buttonStyle(
-                    MonsPrimaryButtonStyle(
-                        tint: MonsColor.workoutAccent,
-                        foreground: MonsColor.accentForeground
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            MonsBottomActionBar {
+                Button("Done", systemImage: "checkmark", action: dismiss.callAsFunction)
+                    .buttonStyle(
+                        MonsPrimaryButtonStyle(
+                            tint: MonsColor.workoutAccent,
+                            foreground: MonsColor.accentForeground
+                        )
                     )
-                )
-                .padding(MonsSpacing.large)
-                .background(.ultraThinMaterial)
+            }
         }
     }
 

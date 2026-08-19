@@ -8,25 +8,21 @@ struct FoodNutritionSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: MonsSpacing.medium) {
             Text(group.title)
-                .font(MonsTypography.sectionTitle)
+                .font(MonsTypography.headline)
 
-            VStack(spacing: 0) {
-                ForEach(nutrients) { nutrient in
-                    FoodNutritionDetailRow(
-                        nutrient: nutrient,
-                        target: targets.target(for: nutrient)
-                    )
+            MonsCard {
+                VStack(spacing: 0) {
+                    ForEach(nutrients) { nutrient in
+                        FoodNutritionDetailRow(
+                            nutrient: nutrient,
+                            target: targets.target(for: nutrient)
+                        )
 
-                    if nutrient.id != nutrients.last?.id {
-                        Divider()
-                            .padding(.leading, MonsSpacing.large)
+                        if nutrient.id != nutrients.last?.id {
+                            Divider()
+                        }
                     }
                 }
-            }
-            .background(MonsColor.surface, in: .rect(cornerRadius: MonsRadius.medium))
-            .overlay {
-                RoundedRectangle(cornerRadius: MonsRadius.medium)
-                    .stroke(MonsColor.border, lineWidth: 1)
             }
         }
     }

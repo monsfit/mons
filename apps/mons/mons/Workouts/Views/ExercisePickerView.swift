@@ -53,8 +53,7 @@ struct ExercisePickerView: View {
                 }
             }
             .listStyle(.plain)
-            .scrollContentBackground(.hidden)
-            .background(MonsColor.background)
+            .monsGroupedContent()
             .navigationTitle("Add Exercises")
             .searchable(text: $searchText, prompt: mode == .exercises ? "Search exercises" : "Search templates")
             .toolbar {

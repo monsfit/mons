@@ -1,6 +1,6 @@
 import Foundation
 
-enum WorkoutMetric: Hashable {
+nonisolated enum WorkoutMetric: Hashable, Sendable {
     case strength(exercises: Int, sets: Int)
     case cardio(distanceKilometers: Double)
 

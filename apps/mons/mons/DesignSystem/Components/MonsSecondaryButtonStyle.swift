@@ -9,11 +9,10 @@ public struct MonsSecondaryButtonStyle: ButtonStyle {
             .foregroundStyle(MonsColor.textPrimary)
             .frame(minHeight: 44)
             .padding(.horizontal, MonsSpacing.large)
+            .contentShape(.capsule)
             .glassEffect(
                 .regular.interactive(),
-                in: .rect(cornerRadius: MonsRadius.medium)
+                in: .capsule
             )
-            .scaleEffect(configuration.isPressed ? 0.98 : 1)
-            .animation(.snappy(duration: 0.16), value: configuration.isPressed)
     }
 }

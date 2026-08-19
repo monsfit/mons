@@ -1,37 +1,98 @@
-export { KyselyApplicationRepository } from './application-repository.js'
-export type {
+export {
   ApplicationRepository,
+  applicationRepositoryLayer,
+  makeApplicationRepository,
+  RepositoryInvariantError,
+  RepositoryOwnershipError,
+} from './application-repository.ts'
+export type {
+  ApplicationRepositoryError,
+  ApplicationRepositoryService,
   CreateFoodLogEntryInput,
   FoodLogEntryRecord,
   NutritionPlanRecord,
   SaveWeightLogEntryInput,
   SaveWorkoutInput,
+  SaveWorkoutTemplateInput,
   WeightLogEntryRecord,
   WorkoutRecord,
   WorkoutSetInput,
-} from './application-repository.js'
-export { KyselyCatalogReader } from './catalog-repository.js'
+  WorkoutTemplateExerciseInput,
+  WorkoutTemplateRecord,
+  WorkoutTemplateSetInput,
+} from './application-repository.ts'
+export { CatalogReader, catalogReaderLayer, makeCatalogReader } from './catalog-repository.ts'
 export type {
-  CatalogReader,
+  CatalogReaderService,
   CatalogSnapshotRecord,
-  FoodRecord,
-  FoodPortionRecord,
   FoodNutrientRecord,
+  FoodPortionRecord,
+  FoodRecord,
   FoodSearchOptions,
-} from './catalog-repository.js'
-export { createDatabase } from './client.js'
-export type { DatabaseOptions } from './client.js'
+} from './catalog-repository.ts'
+export { createDatabaseLayer } from './client.ts'
+export type { DatabaseOptions } from './client.ts'
+export {
+  makeMealLogRepository,
+  mealLogRepositoryLayer,
+  MealLogInvariantError,
+  MealLogNotFoundError,
+  MealLogOwnershipError,
+  MealLogRepository,
+} from './meal-log-repository.ts'
+export type {
+  MealLogEntryRow,
+  MealLogItemInput,
+  MealLogRecord,
+  MealLogRepositoryError,
+  MealLogRepositoryService,
+  MealLogRow,
+  SaveMealLogInput,
+} from './meal-log-repository.ts'
+export {
+  MealEstimateRepository,
+  makeMealEstimateRepository,
+  mealEstimateRepositoryLayer,
+  MealEstimateInvariantError,
+  MealEstimateOwnershipError,
+} from './meal-estimate-repository.ts'
+export type {
+  MealEstimateItemRow,
+  MealEstimateRecord,
+  MealEstimateRepositoryError,
+  MealEstimateRepositoryService,
+  MealEstimateRow,
+  SaveMealEstimateInput,
+} from './meal-estimate-repository.ts'
 export {
   migrateApplicationDatabase,
   migrateCatalogSearch,
   validateSchemaName,
-} from './migrations.js'
-export { calculateNutritionPlan } from './nutrition-plan.js'
-export type { NutritionPlanCalculation, NutritionPlanInput } from './nutrition-plan.js'
+} from './migrations.ts'
+export { calculateNutritionPlan } from './nutrition-plan.ts'
+export { calculateRecipeNutrition } from './recipe-nutrition.ts'
 export type {
-  CatalogDatabase,
+  NutritionValues,
+  RecipeNutrition,
+  WeightedNutritionValues,
+} from './recipe-nutrition.ts'
+export {
+  UserFoodRepository,
+  makeUserFoodRepository,
+  userFoodRepositoryLayer,
+} from './user-food-repository.ts'
+export type {
+  CustomFoodRecord,
+  RecipeRecord,
+  SaveCustomFoodInput,
+  SaveRecipeInput,
+  UserFoodRepositoryService,
+} from './user-food-repository.ts'
+export type { NutritionPlanCalculation, NutritionPlanInput } from './nutrition-plan.ts'
+export type {
   DailyActivity,
   DatasetKind,
+  FoodSourceKind,
   ExerciseFrequency,
   FoodLogEntryTable,
   FoodTable,
@@ -47,4 +108,7 @@ export type {
   WorkoutKind,
   WorkoutSessionTable,
   WorkoutSetTable,
-} from './types.js'
+  WorkoutTemplateExerciseTable,
+  WorkoutTemplateSetTable,
+  WorkoutTemplateTable,
+} from './types.ts'

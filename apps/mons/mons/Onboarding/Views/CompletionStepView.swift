@@ -14,7 +14,7 @@ struct CompletionStepView: View {
                 ForEach(["person.fill", "scalemass.fill", "target", "fork.knife"], id: \.self) { image in
                     Image(systemName: image)
                         .font(MonsTypography.caption)
-                        .foregroundStyle(MonsColor.textPrimary)
+                        .foregroundStyle(MonsColor.actionForeground)
                         .frame(width: 30, height: 30)
                         .background(MonsColor.action, in: .circle)
                     Rectangle()

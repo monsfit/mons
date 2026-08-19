@@ -12,18 +12,18 @@
   "scripts": {
     "build": "tsgo -p tsconfig.build.json",
     "lint": "oxlint src --deny-warnings",
-    "migrate": "oxnode --env-file-if-exists=../../.env src/migrate.ts",
+    "migrate": "node --env-file-if-exists=../../.env src/migrate.ts",
     "test": "vitest run src",
     "typecheck": "tsgo -p tsconfig.json"
   },
   "dependencies": {
-    "kysely": "catalog:",
-    "pg": "catalog:"
+    "@effect/platform-node": "catalog:",
+    "@effect/sql-pg": "catalog:",
+    "effect": "catalog:"
   },
   "devDependencies": {
-    "@oxc-node/cli": "catalog:",
+    "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
-    "@types/pg": "catalog:",
     "@typescript/native-preview": "catalog:",
     "oxlint": "catalog:",
     "vitest": "catalog:"

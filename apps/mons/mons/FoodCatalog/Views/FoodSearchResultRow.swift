@@ -2,53 +2,73 @@ import SwiftUI
 
 struct FoodSearchResultRow: View {
     let food: CatalogFood
+    let searchText: String
 
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: food.datasetKind == .raw ? "fork.knife" : "shippingbox.fill")
-                .font(MonsTypography.body)
-                .foregroundStyle(MonsColor.metric)
-                .frame(width: 32, height: 32)
-                .background(MonsColor.surfaceRaised, in: .circle)
-                .accessibilityHidden(true)
+        let presentation = FoodSearchResultPresentation(food: food)
 
-            VStack(alignment: .leading, spacing: 3) {
-                Text(food.name)
+        HStack(alignment: .center, spacing: MonsSpacing.medium) {
+            VStack(alignment: .leading, spacing: MonsSpacing.xSmall) {
+                highlightedName
                     .font(MonsTypography.headline)
                     .foregroundStyle(MonsColor.textPrimary)
+                    .lineLimit(2)
+
+                Text(presentation.nutritionSummary)
+                    .font(MonsTypography.subheadline)
+                    .foregroundStyle(MonsColor.textSecondary)
                     .lineLimit(1)
 
-                Text(detailSummary)
+                Label(presentation.sourceAndServingSummary, systemImage: presentation.sourceIcon)
                     .font(MonsTypography.caption)
-                    .foregroundStyle(MonsColor.textSecondary)
+                    .foregroundStyle(MonsColor.textMuted)
                     .lineLimit(1)
             }
 
-            Spacer(minLength: 4)
+            Spacer(minLength: MonsSpacing.small)
 
-            Image(systemName: "plus.circle")
-                .font(MonsTypography.sectionTitle)
-                .foregroundStyle(MonsColor.action)
+            Image(systemName: "chevron.forward")
+                .font(.caption.bold())
+                .foregroundStyle(.tertiary)
                 .accessibilityHidden(true)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, MonsSpacing.xSmall)
         .accessibilityElement(children: .combine)
+        .accessibilityHint("Opens serving details")
     }
 
-    private var detailSummary: String {
-        guard let brand = food.brand, !brand.isEmpty else { return nutritionSummary }
-        return "\(brand) · \(nutritionSummary)"
-    }
+    private var highlightedName: Text {
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        var attributedName = AttributedString(food.name)
 
-    private var nutritionSummary: String {
-        let calories = food.calories ?? 0
-        let protein = food.protein ?? 0
-        let fat = food.totalFat ?? 0
-        let carbohydrates = food.carbohydrates ?? 0
-        return "\(whole(calories)) cal  \(whole(protein))P  \(whole(fat))F  \(whole(carbohydrates))C · 100 g"
-    }
+        if !query.isEmpty,
+           let range = attributedName.range(of: query, options: [.caseInsensitive, .diacriticInsensitive]) {
+            attributedName[range].inlinePresentationIntent = .stronglyEmphasized
+        }
 
-    private func whole(_ value: Double) -> String {
-        value.formatted(.number.precision(.fractionLength(0)))
+        return Text(attributedName)
     }
+}
+
+#Preview("Search result") {
+    FoodSearchResultRow(
+        food: CatalogFood(
+            brand: "Happy Egg Co.",
+            calories: 196,
+            carbohydrates: 1,
+            datasetKind: .branded,
+            foodId: "preview-egg",
+            gtin: nil,
+            name: "Eggs, Grade A, Large",
+            nutrients: [],
+            portions: [FoodPortion(amount: 82, name: "2 large eggs", unit: .grams)],
+            protein: 14,
+            source: "usda_branded",
+            sourceId: "preview",
+            totalFat: 15
+        ),
+        searchText: "egg"
+    )
+    .padding()
+    .background(MonsColor.background)
 }

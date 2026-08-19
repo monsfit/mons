@@ -1,6 +1,6 @@
 import Foundation
 
-struct WorkoutLoggingSet: Identifiable, Hashable {
+nonisolated struct WorkoutLoggingSet: Identifiable, Hashable, Sendable {
     let id: UUID
     var weightPounds: Double
     var repetitions: Int

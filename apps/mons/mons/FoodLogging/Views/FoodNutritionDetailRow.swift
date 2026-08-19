@@ -18,7 +18,6 @@ struct FoodNutritionDetailRow: View {
         VStack(spacing: MonsSpacing.small) {
             HStack(alignment: .firstTextBaseline, spacing: MonsSpacing.small) {
                 Text(nutrient.displayName)
-                    .fontWeight(.medium)
                     .lineLimit(2)
 
                 Spacer(minLength: MonsSpacing.small)
@@ -38,10 +37,8 @@ struct FoodNutritionDetailRow: View {
                 accent: accent
             )
         }
-        .font(MonsTypography.subheadline)
-        .padding(.horizontal, MonsSpacing.large)
-        .padding(.vertical, MonsSpacing.medium)
-        .frame(minHeight: 56)
+        .font(.subheadline)
+        .padding(.vertical, MonsSpacing.xSmall)
         .accessibilityElement(children: .combine)
         .accessibilityValue(accessibilityValue)
     }
@@ -54,18 +51,7 @@ struct FoodNutritionDetailRow: View {
     }
 
     private var accent: Color {
-        switch nutrient.group {
-        case .carbohydrates:
-            MonsColor.carbohydrateAccent
-        case .fats:
-            MonsColor.fatAccent
-        case .protein:
-            MonsColor.proteinAccent
-        case .other where nutrient.field == "calories":
-            MonsColor.calorieAccent
-        case .minerals, .other, .vitamins:
-            MonsColor.weightAccent
-        }
+        MonsColor.metric
     }
 
     private var accessibilityValue: String {

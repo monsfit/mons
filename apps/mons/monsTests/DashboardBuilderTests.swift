@@ -18,6 +18,7 @@ struct DashboardBuilderTests {
             foodId: "1",
             gtin: nil,
             loggedAt: referenceDate,
+            mealId: try #require(UUID(uuidString: "00000000-0000-4000-8000-000000000050")),
             mealCategory: .lunch,
             name: "Lunch",
             protein: 42,

@@ -30,7 +30,7 @@ struct DashboardView: View {
 
     var body: some View {
         let snapshot = DashboardBuilder.snapshot(
-            foodLog: store.foodLog,
+            foodLog: store.meals.foodLog,
             workouts: store.workouts,
             weightEntries: store.weightLog,
             calorieGoal: store.calorieGoal,
@@ -97,7 +97,7 @@ struct DashboardView: View {
     }
 
     private func refresh() async {
-        await store.loadFoodLog(around: referenceDate)
+        await store.meals.load(around: referenceDate)
         await store.loadWorkouts(referenceDate: referenceDate)
         await store.loadWeightLog(referenceDate: referenceDate)
     }

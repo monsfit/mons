@@ -1,55 +1,35 @@
 import SwiftUI
 
 struct FoodLogControls: View {
-    @Binding var amount: Double
-    @Binding var selectedPortion: FoodPortion?
-
-    let portions: [FoodPortion]
+    let amount: Double
+    let isEditing: Bool
     let isSaving: Bool
     let pendingItemCount: Int
     let onAdd: () -> Void
     let onLog: () -> Void
 
     var body: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: MonsSpacing.small) {
-                FoodLogQuantityControls(
-                    amount: $amount,
-                    selectedPortion: $selectedPortion,
-                    portions: portions
-                )
-                .frame(maxWidth: 160)
-
-                FoodLogActionControls(
-                    amount: amount,
-                    expands: false,
-                    isSaving: isSaving,
-                    pendingItemCount: pendingItemCount,
-                    onAdd: onAdd,
-                    onLog: onLog
-                )
-            }
-
-            VStack(spacing: MonsSpacing.small) {
-                FoodLogQuantityControls(
-                    amount: $amount,
-                    selectedPortion: $selectedPortion,
-                    portions: portions
-                )
-
-                FoodLogActionControls(
-                    amount: amount,
-                    expands: true,
-                    isSaving: isSaving,
-                    pendingItemCount: pendingItemCount,
-                    onAdd: onAdd,
-                    onLog: onLog
-                )
-            }
+        MonsBottomActionBar {
+            FoodLogActionControls(
+                amount: amount,
+                isEditing: isEditing,
+                isSaving: isSaving,
+                pendingItemCount: pendingItemCount,
+                onAdd: onAdd,
+                onLog: onLog
+            )
         }
-        .padding(MonsSpacing.small)
-        .glassEffect(.regular, in: .rect(cornerRadius: MonsRadius.medium))
-        .padding(.horizontal)
-        .padding(.vertical, MonsSpacing.small)
     }
+}
+
+#Preview("Food log controls") {
+    FoodLogControls(
+        amount: 1,
+        isEditing: false,
+        isSaving: false,
+        pendingItemCount: 0,
+        onAdd: {},
+        onLog: {}
+    )
+    .background(MonsColor.background)
 }

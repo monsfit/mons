@@ -9,10 +9,11 @@ source datasets
 Titan (Python) ──► versioned JSONL + manifests ──► PostgreSQL
       │                                               │
       └──► generated JSON Schemas                     ▼
-                                            Hono API (TypeScript)
+                                           Effect API (TypeScript)
                                                       │
-                                                      ▼
-                                               Mons (SwiftUI)
+                                      ┌───────────────┴──────────────┐
+                                      ▼                              ▼
+                               Mons (SwiftUI)           Marketing (TanStack Start)
 ```
 
 ## Repository layout
@@ -20,17 +21,19 @@ Titan (Python) ──► versioned JSONL + manifests ──► PostgreSQL
 ```text
 apps/
   api/                 TypeScript HTTP API and generated OpenAPI document
+  marketing/           TanStack Start marketing website
   mons/                SwiftUI application and Xcode tests
 packages/
-  contracts/           Valibot API contracts and generated food JSON Schemas
-  database/            Kysely database types and catalog repository
+  contracts/           Effect Schema API contracts and generated food JSON Schemas
+  database/            Effect SQL migrations and repositories
 services/
   titan/               Python normalization and PostgreSQL ingestion library
 data/                   Local inputs and generated snapshots; intentionally ignored
 ```
 
-See [the API guide](apps/api/README.md), [the Titan guide](services/titan/README.md), and
-[data-source policy](services/titan/DATA_SOURCES.md) for component-specific details.
+See [the API guide](apps/api/README.md), [the marketing guide](apps/marketing/README.md),
+[the Titan guide](services/titan/README.md), and [data-source policy](services/titan/DATA_SOURCES.md)
+for component-specific details.
 
 ## Requirements
 
@@ -39,8 +42,8 @@ See [the API guide](apps/api/README.md), [the Titan guide](services/titan/README
 - Python 3.11 or newer and `uv`
 - Xcode 26 for the Mons app
 
-The workspace pins pnpm, TypeScript 7 native preview, Turborepo, Oxfmt, Oxlint, Hono,
-Kysely, and Vitest in `pnpm-workspace.yaml` and `pnpm-lock.yaml`.
+The workspace pins pnpm, TypeScript 7 native preview, Turborepo, Oxfmt, Oxlint, Effect,
+Effect SQL, and Vitest in `pnpm-workspace.yaml` and `pnpm-lock.yaml`.
 
 ## Quick start
 
@@ -59,23 +62,31 @@ npx pnpm@11.20.0 dev
 The API starts at <http://localhost:3000>. OpenAPI JSON is served at `/openapi.json`, and
 interactive API documentation is served at `/docs`.
 
+Run `npx pnpm@11.20.0 dev:marketing` in a second terminal to start the marketing website at
+<http://localhost:3001>.
+
+The pnpm prepare lifecycle clones the exact Effect 4 source tag used by the workspace into
+ignored `.repos/effect`. `scripts/prepare-effect.sh` verifies the pinned commit, giving contributors
+a reproducible local reference without vendoring framework source into this repository.
+
 The Clerk CLI command writes the development publishable and secret keys to the ignored `.env`
 file. Never commit that file. PostgreSQL data is kept in the `regolith-postgres` Docker volume
 between container restarts.
 
 ## Common commands
 
-| Command | Purpose |
-|---|---|
-| `npx pnpm@11.20.0 dev` | Run the API in watch mode through the Oxc TypeScript runner |
-| `npx pnpm@11.20.0 db:status` | Inspect the active PostgreSQL snapshot |
-| `npx pnpm@11.20.0 db:migrate` | Migrate stable app tables and catalog full-text search |
-| `npx pnpm@11.20.0 db:ingest` | Atomically ingest the schema-v2 raw and branded snapshots |
-| `npx pnpm@11.20.0 contracts` | Regenerate raw and branded JSON Schemas |
-| `npx pnpm@11.20.0 openapi` | Regenerate the OpenAPI document |
-| `npx pnpm@11.20.0 mons:test` | Build and test the Mons Xcode project on macOS |
-| `npx pnpm@11.20.0 mons:build:ios` | Compile the iOS app and barcode scanner path |
-| `npx pnpm@11.20.0 verify` | Run every local formatting, build, test, contract, database, and Xcode check |
+| Command                           | Purpose                                                                      |
+| --------------------------------- | ---------------------------------------------------------------------------- |
+| `npx pnpm@11.20.0 dev`            | Run the API in watch mode through the Oxc TypeScript runner                  |
+| `npx pnpm@11.20.0 dev:marketing`  | Run the TanStack Start marketing website on port 3001                        |
+| `npx pnpm@11.20.0 db:status`      | Inspect the active PostgreSQL snapshot                                       |
+| `npx pnpm@11.20.0 db:migrate`     | Migrate stable app tables and catalog full-text search                       |
+| `npx pnpm@11.20.0 db:ingest`      | Atomically ingest the schema-v2 raw and branded snapshots                    |
+| `npx pnpm@11.20.0 contracts`      | Regenerate raw and branded JSON Schemas                                      |
+| `npx pnpm@11.20.0 openapi`        | Regenerate the OpenAPI document                                              |
+| `npx pnpm@11.20.0 mons:test`      | Build and test the Mons Xcode project on macOS                               |
+| `npx pnpm@11.20.0 mons:build:ios` | Compile the iOS app and barcode scanner path                                 |
+| `npx pnpm@11.20.0 verify`         | Run every local formatting, build, test, contract, database, and Xcode check |
 
 `db:ingest` expects the manifest-backed files under `data/outputs/v2`. Titan verifies their
 schema versions and SHA-256 hashes before loading them.
@@ -83,6 +94,8 @@ schema versions and SHA-256 hashes before loading them.
 ## Development guarantees
 
 - Dependency versions are exact and resolved by one pnpm lockfile.
+- HTTP routes, OpenAPI, request validation, errors, layers, logging, and PostgreSQL access use
+  Effect 4 modules end to end; the generated contract and runtime share one declaration.
 - Titan emits stable JSONL bytes and records hashes, row counts, source hashes, rejection
   details, and field coverage in sidecar manifests.
 - PostgreSQL ingestion uses staging schemas and an atomic schema swap.
@@ -93,8 +106,8 @@ schema versions and SHA-256 hashes before loading them.
   a defensive quality predicate.
 - Catalog search and barcode responses include every available normalized nutrient and household
   gram portion, while preserving raw and branded provenance.
-- Profiles, food logs, weight history, and workouts live in `regolith_app`, outside replaceable
-  catalog snapshots.
+- Profiles, food logs, custom foods, measured-yield recipes, weight history, workout templates, and completed workouts live in
+  `regolith_app`, outside replaceable catalog snapshots.
 - Clerk session tokens authenticate every `/v1` request. A unique `clerk_user_id` maps each Clerk
   account to a database-generated internal profile UUID, and profile routes verify ownership.
 - Adult onboarding inputs and the resulting nutrition plan live in `regolith_app`; the API

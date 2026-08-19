@@ -17,7 +17,7 @@
     "typecheck": "tsgo -p tsconfig.json"
   },
   "dependencies": {
-    "valibot": "catalog:"
+    "effect": "catalog:"
   },
   "devDependencies": {
     "@typescript/native-preview": "catalog:",

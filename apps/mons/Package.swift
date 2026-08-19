@@ -17,7 +17,7 @@ let package = Package(
         .target(
             name: "MonsDesignSystem",
             path: "mons/DesignSystem",
-            resources: [.process("Fonts")]
+            exclude: ["Fonts"]
         ),
         .target(
             name: "MonsDashboardFeature",

@@ -97,6 +97,120 @@ actor RegolithAPIClient {
         )
     }
 
+    func customFoods(profileId: UUID) async throws -> [CustomFood] {
+        let response: CustomFoodResponse = try await request(
+            path: ["v1", "profiles", profileId.uuidString, "custom-foods"]
+        )
+        return response.foods
+    }
+
+    func saveCustomFood(
+        profileId: UUID,
+        food: SaveCustomFoodRequest
+    ) async throws -> CustomFood {
+        try await request(
+            path: ["v1", "profiles", profileId.uuidString, "custom-foods", food.foodId.uuidString],
+            method: "PUT",
+            body: try encoder.encode(food)
+        )
+    }
+
+    func deleteCustomFood(profileId: UUID, foodId: UUID) async throws {
+        try await requestWithoutContent(
+            path: ["v1", "profiles", profileId.uuidString, "custom-foods", foodId.uuidString],
+            method: "DELETE"
+        )
+    }
+
+    func recipes(profileId: UUID) async throws -> [Recipe] {
+        let response: RecipeResponse = try await request(
+            path: ["v1", "profiles", profileId.uuidString, "recipes"]
+        )
+        return response.recipes
+    }
+
+    func saveRecipe(profileId: UUID, recipe: SaveRecipeRequest) async throws -> Recipe {
+        try await request(
+            path: ["v1", "profiles", profileId.uuidString, "recipes", recipe.recipeId.uuidString],
+            method: "PUT",
+            body: try encoder.encode(recipe)
+        )
+    }
+
+    func deleteRecipe(profileId: UUID, recipeId: UUID) async throws {
+        try await requestWithoutContent(
+            path: ["v1", "profiles", profileId.uuidString, "recipes", recipeId.uuidString],
+            method: "DELETE"
+        )
+    }
+
+    func createMealEstimate(
+        profileId: UUID,
+        request estimate: CreateMealEstimateRequest
+    ) async throws -> MealEstimate {
+        try await request(
+            path: ["v1", "profiles", profileId.uuidString, "meal-estimates"],
+            method: "POST",
+            body: try encoder.encode(estimate),
+            timeoutInterval: 180
+        )
+    }
+
+    func mealLogs(profileId: UUID, from: Date, to: Date) async throws -> [MealLog] {
+        let response: MealLogResponse = try await request(
+            path: ["v1", "profiles", profileId.uuidString, "meal-logs"],
+            query: timeRange(from: from, to: to)
+        )
+        return response.meals
+    }
+
+    func saveMealLog(
+        profileId: UUID,
+        request meal: SaveMealLogRequest,
+        updating: Bool
+    ) async throws -> MealLog {
+        try await request(
+            path: updating
+                ? ["v1", "profiles", profileId.uuidString, "meal-logs", meal.mealId.uuidString]
+                : ["v1", "profiles", profileId.uuidString, "meal-logs"],
+            method: updating ? "PUT" : "POST",
+            body: try encoder.encode(meal)
+        )
+    }
+
+    func deleteMealLog(profileId: UUID, mealId: UUID) async throws {
+        try await requestWithoutContent(
+            path: ["v1", "profiles", profileId.uuidString, "meal-logs", mealId.uuidString],
+            method: "DELETE"
+        )
+    }
+
+    func mealPhoto(profileId: UUID, mealId: UUID) async throws -> Data? {
+        let response: MealPhotoResponse = try await request(
+            path: ["v1", "profiles", profileId.uuidString, "meal-logs", mealId.uuidString, "photo"]
+        )
+        return response.data
+    }
+
+    func describeMeal(
+        profileId: UUID,
+        request description: MealDescriptionRequest
+    ) async throws -> String {
+        let response: MealDescriptionResponse = try await request(
+            path: ["v1", "profiles", profileId.uuidString, "meal-descriptions"],
+            method: "POST",
+            body: try encoder.encode(description)
+        )
+        return response.description
+    }
+
+    func discardMealEstimate(profileId: UUID, estimateId: UUID) async throws {
+        try await requestWithoutContent(
+            path: ["v1", "profiles", profileId.uuidString, "meal-estimates", estimateId.uuidString],
+            method: "DELETE"
+        )
+    }
+
     func weightLog(profileId: UUID, from: Date, to: Date) async throws -> [WeightLogEntry] {
         let response: WeightLogResponse = try await request(
             path: ["v1", "profiles", profileId.uuidString, "weight-log"],
@@ -131,6 +245,37 @@ actor RegolithAPIClient {
         return response.workouts
     }
 
+    func workoutTemplates(profileId: UUID) async throws -> [RemoteWorkoutTemplate] {
+        let response: WorkoutTemplateResponse = try await request(
+            path: ["v1", "profiles", profileId.uuidString, "workout-templates"]
+        )
+        return response.templates
+    }
+
+    func saveWorkoutTemplate(
+        profileId: UUID,
+        template: SaveWorkoutTemplateRequest
+    ) async throws -> RemoteWorkoutTemplate {
+        try await request(
+            path: [
+                "v1", "profiles", profileId.uuidString, "workout-templates",
+                template.templateId.uuidString
+            ],
+            method: "PUT",
+            body: try encoder.encode(template)
+        )
+    }
+
+    func deleteWorkoutTemplate(profileId: UUID, templateId: UUID) async throws {
+        try await requestWithoutContent(
+            path: [
+                "v1", "profiles", profileId.uuidString, "workout-templates",
+                templateId.uuidString
+            ],
+            method: "DELETE"
+        )
+    }
+
     func saveWorkout(profileId: UUID, workout: SaveWorkoutRequest) async throws -> RemoteWorkout {
         try await request(
             path: [
@@ -152,13 +297,15 @@ actor RegolithAPIClient {
         path: [String],
         method: String = "GET",
         query: [URLQueryItem] = [],
-        body: Data? = nil
+        body: Data? = nil,
+        timeoutInterval: TimeInterval? = nil
     ) async throws -> Response {
         let (data, response) = try await session.data(for: try await urlRequest(
             path: path,
             method: method,
             query: query,
-            body: body
+            body: body,
+            timeoutInterval: timeoutInterval
         ))
         try validate(response: response, data: data)
         return try decoder.decode(Response.self, from: data)
@@ -179,7 +326,8 @@ actor RegolithAPIClient {
         path: [String],
         method: String,
         query: [URLQueryItem] = [],
-        body: Data? = nil
+        body: Data? = nil,
+        timeoutInterval: TimeInterval? = nil
     ) async throws -> URLRequest {
         let token = try await authorizationTokenProvider.token()
         return try requestBuilder.request(
@@ -187,7 +335,8 @@ actor RegolithAPIClient {
             method: method,
             query: query,
             body: body,
-            token: token
+            token: token,
+            timeoutInterval: timeoutInterval
         )
     }
 

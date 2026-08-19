@@ -10,59 +10,60 @@ import SwiftUI
 struct ContentView: View {
     @Environment(AppStore.self) private var store
 
-    @State private var searchText = ""
     @State private var selection = AppTab.dashboard
+    @State private var workoutCoordinator = WorkoutCoordinator()
+
+    init(initialSelection: AppTab = .dashboard) {
+        _selection = State(initialValue: initialSelection)
+    }
 
     var body: some View {
         Group {
-            if !store.hasLoadedNutritionPlan {
+            switch store.profileBootstrapState {
+            case .loading:
                 ZStack {
                     MonsColor.background.ignoresSafeArea()
                     ProgressView("Loading profile")
                         .font(MonsTypography.body)
                         .foregroundStyle(MonsColor.textSecondary)
                 }
-            } else if store.nutritionPlan == nil {
-                OnboardingFlowView { draft in
-                    await store.completeOnboarding(draft)
+            case .failed(let message):
+                ProfileConnectionUnavailableView(message: message) {
+                    Task { await store.bootstrap() }
                 }
-            } else {
-                TabView(selection: $selection) {
-                    Tab("Dashboard", systemImage: "square.grid.2x2", value: .dashboard) {
-                        DashboardView(
-                            onShowCalories: showCalories,
-                            onShowWorkouts: showWorkouts
-                        )
+            case .ready:
+                if store.nutritionPlan == nil {
+                    OnboardingFlowView { draft in
+                        await store.completeOnboarding(draft)
                     }
+                } else {
+                    TabView(selection: $selection) {
+                        Tab(AppTab.dashboard.title, systemImage: AppTab.dashboard.systemImage, value: .dashboard) {
+                            DashboardView(
+                                onShowCalories: showCalories,
+                                onShowWorkouts: showWorkouts
+                            )
+                        }
 
-                    Tab("Calories", systemImage: "fork.knife", value: .calories) {
-                        CalorieListView()
-                    }
+                        Tab(AppTab.calories.title, systemImage: AppTab.calories.systemImage, value: .calories) {
+                            CalorieListView()
+                        }
 
-                    Tab("Workouts", systemImage: "figure.run", value: .workouts) {
-                        WorkoutListView()
-                    }
+                        Tab(AppTab.workouts.title, systemImage: AppTab.workouts.systemImage, value: .workouts) {
+                            WorkoutListView()
+                        }
 
-                    Tab(value: .search, role: .search) {
-                        FoodSearchBrowser(
-                            searchText: $searchText,
-                            loggedAt: .now,
-                            showsModalChrome: false,
-                            onLogged: showCalories
-                        )
+                        Tab(AppTab.recipes.title, systemImage: AppTab.recipes.systemImage, value: .recipes) {
+                            RecipeLibraryView()
+                        }
                     }
-                }
-            }
-        }
-        .foregroundStyle(MonsColor.textPrimary)
-        .background(MonsColor.background.ignoresSafeArea())
-        .safeAreaInset(edge: .bottom) {
-            VStack(spacing: MonsSpacing.small) {
-                if let error = store.lastError {
-                    AppErrorBanner(message: error, onDismiss: store.clearError)
+                    .environment(workoutCoordinator)
+                    .modifier(WorkoutTabAccessoryModifier())
                 }
             }
         }
+        .environment(workoutCoordinator)
+        .appToast(store.toast, onDismiss: store.dismissToast)
     }
 
     private func showCalories() {
@@ -72,7 +73,6 @@ struct ContentView: View {
     private func showWorkouts() {
         selection = .workouts
     }
-
 }
 
 #Preview {

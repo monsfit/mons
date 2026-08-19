@@ -79,6 +79,7 @@ struct CalorieTimelineBuilderTests {
             category: .breakfast,
             loggedAt: date,
             itemCount: 1,
+            hasPhoto: false,
             calories: 100,
             macros: .zero
         )

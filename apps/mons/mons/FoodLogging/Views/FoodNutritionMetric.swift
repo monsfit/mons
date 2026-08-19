@@ -8,19 +8,21 @@ struct FoodNutritionMetric: View {
     var isPrimary = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(value, format: .number.precision(.fractionLength(0)))
-                .font(isPrimary ? MonsTypography.display : MonsTypography.title)
-                .foregroundStyle(isPrimary ? MonsColor.textPrimary : color)
-                .contentTransition(.numericText())
-
+        VStack(alignment: .leading, spacing: MonsSpacing.xSmall) {
             Text(title)
                 .font(MonsTypography.caption)
                 .foregroundStyle(MonsColor.textSecondary)
 
-            Text(unit)
-                .font(MonsTypography.caption)
-                .foregroundStyle(MonsColor.textMuted)
+            HStack(alignment: .firstTextBaseline, spacing: 2) {
+                Text(value, format: .number.precision(.fractionLength(0)))
+                    .font(isPrimary ? MonsTypography.display : MonsTypography.title)
+                    .foregroundStyle(isPrimary ? MonsColor.textPrimary : color)
+                    .contentTransition(.numericText())
+
+                Text(unit)
+                    .font(MonsTypography.caption)
+                    .foregroundStyle(MonsColor.textMuted)
+            }
         }
         .accessibilityElement(children: .combine)
     }

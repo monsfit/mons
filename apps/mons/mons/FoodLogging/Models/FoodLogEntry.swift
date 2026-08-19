@@ -10,7 +10,8 @@ nonisolated struct FoodLogEntry: Codable, Identifiable, Sendable {
     let foodId: String
     let gtin: String?
     var loggedAt: Date
-    let mealCategory: MealCategory
+    let mealId: UUID
+    var mealCategory: MealCategory
     let name: String
     let protein: Double?
     let quantityGrams: Double
@@ -19,11 +20,12 @@ nonisolated struct FoodLogEntry: Codable, Identifiable, Sendable {
 
     var mealEvent: MealEvent {
         MealEvent(
-            id: entryId.uuidString,
+            id: mealId.uuidString,
             title: name,
             category: mealCategory,
             loggedAt: loggedAt,
             itemCount: 1,
+            hasPhoto: false,
             calories: Int((calories ?? 0).rounded()),
             macros: MacroTotals(
                 protein: Int((protein ?? 0).rounded()),

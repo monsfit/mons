@@ -36,6 +36,7 @@ struct MealEntrySheet: View {
                     TextField("Fat (g)", value: $fat, format: .number)
                 }
             }
+            .monsGroupedContent()
             .navigationTitle("Add meal")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -59,6 +60,7 @@ struct MealEntrySheet: View {
             category: category,
             loggedAt: scheduledAt,
             itemCount: 1,
+            hasPhoto: false,
             calories: max(calories, 0),
             macros: MacroTotals(
                 protein: max(protein, 0),

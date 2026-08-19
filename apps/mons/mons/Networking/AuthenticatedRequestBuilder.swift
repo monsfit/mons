@@ -8,7 +8,8 @@ nonisolated struct AuthenticatedRequestBuilder: Sendable {
         method: String,
         query: [URLQueryItem] = [],
         body: Data? = nil,
-        token: String?
+        token: String?,
+        timeoutInterval: TimeInterval? = nil
     ) throws -> URLRequest {
         guard let token, !token.isEmpty else {
             throw APIClientError.authenticationRequired
@@ -32,6 +33,9 @@ nonisolated struct AuthenticatedRequestBuilder: Sendable {
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.httpBody = body
+        if let timeoutInterval {
+            request.timeoutInterval = timeoutInterval
+        }
         request.setValue("application/json", forHTTPHeaderField: "accept")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "authorization")
         if body != nil {

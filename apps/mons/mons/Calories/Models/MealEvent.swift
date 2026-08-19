@@ -6,6 +6,7 @@ struct MealEvent: Identifiable, Hashable {
     let category: MealCategory
     let loggedAt: Date
     let itemCount: Int
+    let hasPhoto: Bool
     let calories: Int
     let macros: MacroTotals
 
@@ -16,6 +17,7 @@ struct MealEvent: Identifiable, Hashable {
             category: category,
             loggedAt: date,
             itemCount: itemCount,
+            hasPhoto: hasPhoto,
             calories: calories,
             macros: macros
         )

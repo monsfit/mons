@@ -37,6 +37,6 @@ struct WorkoutSessionRow: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(session.title), \(session.metric.kind.title)")
         .accessibilityValue("\(session.metric.summary), \(session.durationMinutes) minutes")
-        .accessibilityHint("Opens the workout details placeholder")
+        .accessibilityHint("Opens workout details")
     }
 }

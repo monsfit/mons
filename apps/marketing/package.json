@@ -1,0 +1,33 @@
+{
+  "name": "@regolith/marketing",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite dev --host 0.0.0.0",
+    "lint": "oxlint src vite.config.ts vitest.config.ts --deny-warnings",
+    "preview": "vite preview",
+    "start": "PORT=${PORT:-3001} node .output/server/index.mjs",
+    "test": "vitest run --config vitest.config.ts",
+    "typecheck": "tsgo -p tsconfig.json"
+  },
+  "dependencies": {
+    "@tanstack/react-router": "catalog:",
+    "@tanstack/react-start": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@typescript/native-preview": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "nitro": "catalog:",
+    "oxlint": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  }
+}

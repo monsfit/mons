@@ -35,8 +35,9 @@ struct FoodPortionMenu: View {
     }
 
     private func select(_ portion: FoodPortion) {
+        let currentGrams = amount * (selectedPortion?.gramAmount ?? 1)
         selectedPortion = portion
-        amount = 1
+        amount = currentGrams / portion.amount
     }
 
     private func selectGrams() {

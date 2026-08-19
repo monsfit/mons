@@ -1,45 +1,63 @@
 import SwiftUI
 
 struct WorkoutBuilderView: View {
+    @Environment(WorkoutCoordinator.self) private var coordinator
+    @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
 
+    private let isEditing: Bool
+
     @State private var exercises: [WorkoutExerciseDraft] = []
-    @State private var editingExerciseID: UUID?
     @State private var isPickingExercises = false
-    @State private var isStartingWorkout = false
-    @State private var sessionId = UUID()
-    @State private var startedAt = Date.now
+    @State private var isSaving = false
+    @State private var templateId = UUID()
     @State private var title = ""
+
+    init(template: SavedWorkoutTemplate? = nil) {
+        isEditing = template != nil
+        _exercises = State(initialValue: template?.exercises ?? [])
+        _templateId = State(initialValue: template?.id ?? UUID())
+        _title = State(initialValue: template?.name ?? "")
+    }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: MonsSpacing.large) {
-                    TextField("Workout name", text: $title)
-                        .font(MonsTypography.sectionTitle)
-                        .padding(MonsSpacing.large)
-                        .background(MonsColor.surface, in: .rect(cornerRadius: MonsRadius.medium))
-                        .overlay {
-                            RoundedRectangle(cornerRadius: MonsRadius.medium)
-                                .stroke(MonsColor.border, lineWidth: 1)
-                        }
+                    VStack(alignment: .leading, spacing: MonsSpacing.small) {
+                        TextField("Template name", text: $title)
+                            .font(MonsTypography.sectionTitle)
+                            .padding(MonsSpacing.large)
+                            .background(MonsColor.surface, in: .rect(cornerRadius: MonsRadius.medium))
+                            .overlay {
+                                RoundedRectangle(cornerRadius: MonsRadius.medium)
+                                    .stroke(MonsColor.border, lineWidth: 1)
+                            }
 
-                    Text("Selected Exercises")
+                        Text(
+                            isEditing
+                                ? "Update the exercises and set prescriptions in this template."
+                                : "Build an exercise group once, then start it whenever you train."
+                        )
+                            .font(MonsTypography.subheadline)
+                            .foregroundStyle(MonsColor.textSecondary)
+                    }
+
+                    Text("Exercises")
                         .font(MonsTypography.sectionTitle)
 
                     if exercises.isEmpty {
                         ContentUnavailableView(
                             "No exercises yet",
                             systemImage: "dumbbell",
-                            description: Text("Choose exercises or start from a template.")
+                            description: Text("Choose exercises or begin with a starter preset.")
                         )
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, MonsSpacing.xLarge)
                     } else {
-                        ForEach(exercises) { exercise in
-                            WorkoutExerciseSelectionRow(
-                                exercise: exercise,
-                                onEdit: { edit(exercise.id) },
+                        ForEach($exercises) { $exercise in
+                            WorkoutTemplateExerciseTreeRow(
+                                exercise: $exercise,
                                 onRemove: { remove(exercise.id) }
                             )
                         }
@@ -58,7 +76,7 @@ struct WorkoutBuilderView: View {
                 .padding(.bottom, 88)
             }
             .background(MonsColor.background)
-            .navigationTitle("New Workout")
+            .navigationTitle(isEditing ? "Edit Template" : "New Template")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.large)
             #endif
@@ -67,17 +85,24 @@ struct WorkoutBuilderView: View {
                     Button("Close", systemImage: "xmark", action: dismiss.callAsFunction)
                 }
             }
-            .safeAreaInset(edge: .bottom) {
-                Button("Start Workout", systemImage: "play.fill", action: startWorkout)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                MonsBottomActionBar {
+                    Button(action: saveTemplate) {
+                        MonsAsyncActionLabel(
+                            title: isEditing ? "Save Changes" : "Save Template",
+                            loadingTitle: "Saving…",
+                            systemImage: "checkmark",
+                            isLoading: isSaving
+                        )
+                    }
                     .buttonStyle(
                         MonsPrimaryButtonStyle(
                             tint: MonsColor.workoutAccent,
                             foreground: MonsColor.accentForeground
                         )
                     )
-                    .disabled(trimmedTitle.isEmpty || exercises.isEmpty)
-                    .padding(MonsSpacing.large)
-                    .background(.ultraThinMaterial)
+                    .disabled(trimmedTitle.isEmpty || exercises.isEmpty || isSaving)
+                }
             }
             .sheet(isPresented: $isPickingExercises) {
                 ExercisePickerView(
@@ -86,24 +111,10 @@ struct WorkoutBuilderView: View {
                     onSelectTemplate: add
                 )
             }
-            .navigationDestination(isPresented: $isStartingWorkout) {
-                ActiveWorkoutLoggingView(
-                    title: trimmedTitle,
-                    initialExercises: exercises,
-                    sessionId: sessionId,
-                    startedAt: startedAt,
-                    onSaved: dismiss.callAsFunction
-                )
-            }
-            .navigationDestination(item: $editingExerciseID) { exerciseID in
-                if let index = exercises.firstIndex(where: { $0.id == exerciseID }) {
-                    ExerciseSetLoggingView(exercise: $exercises[index])
-                } else {
-                    ContentUnavailableView("Exercise unavailable", systemImage: "dumbbell")
-                }
-            }
+            .interactiveDismissDisabled(isSaving)
         }
         .tint(MonsColor.workoutAccent)
+        .appToast(store.toast, onDismiss: store.dismissToast)
     }
 
     private var trimmedTitle: String {
@@ -130,13 +141,22 @@ struct WorkoutBuilderView: View {
         exercises.removeAll { $0.id == identifier }
     }
 
-    private func edit(_ identifier: UUID) {
-        editingExerciseID = identifier
+    private func saveTemplate() {
+        guard !isSaving else { return }
+        isSaving = true
+        let template = SavedWorkoutTemplate(id: templateId, name: trimmedTitle, exercises: exercises)
+        Task {
+            if let saved = await store.saveWorkoutTemplate(template) {
+                coordinator.prepare(saved)
+                dismiss()
+            }
+            isSaving = false
+        }
     }
+}
 
-    private func startWorkout() {
-        sessionId = UUID()
-        startedAt = .now
-        isStartingWorkout = true
-    }
+#Preview {
+    WorkoutBuilderView()
+        .environment(AppStore.preview)
+        .environment(WorkoutCoordinator())
 }

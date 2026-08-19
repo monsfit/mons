@@ -5,7 +5,7 @@ struct CalorieListView: View {
 
     @State private var selectedDate: Date
     @State private var addMealRequest: AddMealRequest?
-    @State private var isNutritionSummaryPinned = false
+    @State private var editingMealLog: MealLog?
 
     private let referenceDate: Date
     private let calendar: Calendar
@@ -31,7 +31,7 @@ struct CalorieListView: View {
             guard let date = calendar.date(byAdding: .day, value: offset, to: selectedDate) else {
                 return nil
             }
-            let meals = store.foodLog
+            let meals = store.meals.mealLogs
                 .filter { calendar.isDate($0.loggedAt, inSameDayAs: date) }
                 .map(\.mealEvent)
             return CalorieDayData(date: date, calorieGoal: store.calorieGoal, meals: meals)
@@ -43,56 +43,55 @@ struct CalorieListView: View {
             ?? .empty(on: calendar.startOfDay(for: selectedDate))
     }
 
+    private var sortedMeals: [MealEvent] {
+        selectedDay.meals.sorted { $0.loggedAt > $1.loggedAt }
+    }
+
+    private var composerLogDate: Date {
+        if calendar.isDateInToday(selectedDate) {
+            return referenceDate
+        }
+
+        let time = calendar.dateComponents([.hour, .minute, .second], from: referenceDate)
+        return calendar.date(
+            bySettingHour: time.hour ?? 12,
+            minute: time.minute ?? 0,
+            second: time.second ?? 0,
+            of: selectedDate
+        ) ?? selectedDate
+    }
+
     var body: some View {
         NavigationStack {
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: MonsSpacing.large, pinnedViews: [.sectionHeaders]) {
-                    CalorieSummaryRow(day: selectedDay)
-                        .padding(.horizontal)
-                        .padding(.top, MonsSpacing.large)
-                        .onGeometryChange(for: Bool.self) { geometry in
-                            geometry.frame(in: .scrollView(axis: .vertical)).maxY <= 0
-                        } action: { isPastSummary in
-                            isNutritionSummaryPinned = isPastSummary
-                        }
-                        .scrollTransition(.interactive, axis: .vertical) { content, phase in
-                            content
-                                .opacity(phase.isIdentity ? 1 : 0)
-                        }
-
-                    Section {
-                        CalorieTimingChart(
-                            meals: selectedDay.meals,
-                            day: selectedDay.date,
-                            calendar: calendar
-                        )
-                        .padding(.top, 12)
-                        .padding(.horizontal)
-
-                        Divider()
-                            .padding(.horizontal)
-                            .padding(.vertical, 8)
-
-                        CalorieTimelineList(
-                            meals: selectedDay.meals,
-                            day: selectedDay.date,
-                            referenceDate: referenceDate,
-                            calendar: calendar,
-                            onAddMeal: requestMealEntry,
-                            onMoveMeal: moveMeal
-                        )
-                        .padding(.horizontal)
-                    } header: {
-                        CompactNutritionSummary(
-                            day: selectedDay,
-                            isPinned: isNutritionSummaryPinned
-                        )
-                    }
+            List {
+                if store.meals.isLoading && store.meals.mealLogs.isEmpty {
+                    ProgressView("Loading food log…")
+                        .frame(maxWidth: .infinity)
                 }
-                .padding(.vertical)
+
+                CalorieSummaryRow(day: selectedDay)
+                    .listRowInsets(.init(top: 16, leading: 16, bottom: 16, trailing: 16))
+                    .listRowSeparator(.hidden)
+
+                Section("Meals") {
+                    if sortedMeals.isEmpty {
+                        Text("No meals logged.")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ForEach(sortedMeals) { meal in
+                            Button {
+                                editMeal(meal)
+                            } label: {
+                                CalorieMealRow(meal: meal)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+
+                    Button("Add Food", systemImage: "plus", action: requestMealEntry)
+                }
             }
-            .background(MonsColor.background)
-            .foregroundStyle(MonsColor.textPrimary)
+            .listStyle(.plain)
             .safeAreaInset(edge: .top, spacing: 0) {
                 CalorieTimelineHeader(
                     selectedDate: $selectedDate,
@@ -102,33 +101,36 @@ struct CalorieListView: View {
                 )
             }
 #if os(iOS)
+            .modifier(FoodLogSearchAccessory(loggedAt: composerLogDate))
+#endif
+#if os(iOS)
             .toolbar(.hidden, for: .navigationBar)
 #endif
-            .navigationDestination(for: DetailDestination.self, destination: PlaceholderDetailView.init)
             .sheet(item: $addMealRequest) { request in
                 FoodSearchView(
                     loggedAt: request.scheduledAt,
                     startsWithScanner: request.mode == .scanner
                 ) { }
             }
+            .sheet(item: $editingMealLog) { meal in
+                MealLogDetailView(meal: meal) {
+                    editingMealLog = nil
+                }
+            }
             .task(id: selectedDate) {
-                await store.loadFoodLog(around: selectedDate)
+                await store.meals.load(around: selectedDate)
             }
         }
     }
 
-    private func requestMealEntry(at date: Date) {
-        addMealRequest = AddMealRequest(scheduledAt: date)
+    private func requestMealEntry() {
+        addMealRequest = AddMealRequest(scheduledAt: composerLogDate)
     }
 
-    private func moveMeal(_ identifier: String, to destination: Date) -> Bool {
-        guard let entryId = UUID(uuidString: identifier) else { return false }
-        Task {
-            await store.rescheduleFoodLogEntry(entryId, to: destination)
-        }
-        return true
+    private func editMeal(_ meal: MealEvent) {
+        guard let mealId = UUID(uuidString: meal.id) else { return }
+        editingMealLog = store.meals.mealLogs.first { $0.mealId == mealId }
     }
-
 }
 
 #Preview("Calories") {

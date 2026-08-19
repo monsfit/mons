@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ActiveWorkoutLoggingView: View {
     @Environment(AppStore.self) private var store
+    @Environment(\.dismiss) private var dismiss
 
     @State private var exercises: [WorkoutExerciseDraft]
     @State private var isSaving = false
@@ -9,6 +10,7 @@ struct ActiveWorkoutLoggingView: View {
     let title: String
     let sessionId: UUID
     let startedAt: Date
+    let onExercisesChanged: ([WorkoutExerciseDraft]) -> Void
     let onSaved: () -> Void
 
     init(
@@ -16,12 +18,14 @@ struct ActiveWorkoutLoggingView: View {
         initialExercises: [WorkoutExerciseDraft],
         sessionId: UUID,
         startedAt: Date,
+        onExercisesChanged: @escaping ([WorkoutExerciseDraft]) -> Void = { _ in },
         onSaved: @escaping () -> Void
     ) {
         self.title = title
         _exercises = State(initialValue: initialExercises)
         self.sessionId = sessionId
         self.startedAt = startedAt
+        self.onExercisesChanged = onExercisesChanged
         self.onSaved = onSaved
     }
 
@@ -45,7 +49,7 @@ struct ActiveWorkoutLoggingView: View {
                 Text("Exercises")
                     .font(MonsTypography.sectionTitle)
 
-                ForEach(Array(exercises.enumerated()), id: \.element.id) { index, exercise in
+                ForEach(exercises.enumerated(), id: \.element.id) { index, exercise in
                     NavigationLink(value: exercise.id) {
                         WorkoutExerciseProgressRow(exercise: exercise, index: index + 1)
                     }
@@ -56,11 +60,27 @@ struct ActiveWorkoutLoggingView: View {
             .padding(.bottom, 88)
         }
         .background(MonsColor.background)
+        .onChange(of: exercises) { _, updated in
+            onExercisesChanged(updated)
+        }
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
-        .safeAreaInset(edge: .bottom) {
-            Button("Finish Workout", systemImage: "checkmark.circle.fill", action: finishWorkout)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Close workout", systemImage: "xmark", action: dismiss.callAsFunction)
+            }
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            MonsBottomActionBar {
+                Button(action: finishWorkout) {
+                    MonsAsyncActionLabel(
+                        title: "Finish Workout",
+                        loadingTitle: "Saving…",
+                        systemImage: "checkmark.circle.fill",
+                        isLoading: isSaving
+                    )
+                }
                 .buttonStyle(
                     MonsPrimaryButtonStyle(
                         tint: MonsColor.workoutAccent,
@@ -68,8 +88,7 @@ struct ActiveWorkoutLoggingView: View {
                     )
                 )
                 .disabled(isSaving)
-                .padding(MonsSpacing.large)
-                .background(.ultraThinMaterial)
+            }
         }
         .navigationDestination(for: UUID.self) { exerciseID in
             if let index = exercises.firstIndex(where: { $0.id == exerciseID }) {
@@ -78,6 +97,7 @@ struct ActiveWorkoutLoggingView: View {
                 ContentUnavailableView("Exercise unavailable", systemImage: "dumbbell")
             }
         }
+        .appToast(store.toast, onDismiss: store.dismissToast)
     }
 
     private func finishWorkout() {

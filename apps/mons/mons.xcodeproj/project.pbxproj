@@ -25,11 +25,25 @@
 /* Begin PBXFileReference section */
 		A5593D97302161B400AD989B /* mons.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = mons.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B00000000000000000000001 /* monsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = monsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E10000000000000000000001 /* Configuration/Development.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Configuration/Development.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		E10000000000000000000002 /* Exceptions for "mons" folder in "mons" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"iOS-Info.plist",
+			);
+			target = A5593D96302161B400AD989B /* mons */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		A5593D99302161B400AD989B /* mons */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				E10000000000000000000002 /* Exceptions for "mons" folder in "mons" target */,
+			);
 			path = mons;
 			sourceTree = "<group>";
 		};
@@ -64,6 +78,7 @@
 		A5593D8E302161B400AD989B = {
 			isa = PBXGroup;
 			children = (
+				E10000000000000000000001 /* Configuration/Development.xcconfig */,
 				A5593D99302161B400AD989B /* mons */,
 				B00000000000000000000002 /* monsTests */,
 				A5593D98302161B400AD989B /* Products */,
@@ -342,9 +357,9 @@
 		};
 		A5593DA3302161B500AD989B /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = E10000000000000000000001 /* Configuration/Development.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = mons/mons.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -354,8 +369,15 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSCameraUsageDescription = "Scan packaged-food barcodes.";
+				"GENERATE_INFOPLIST_FILE[sdk=iphoneos*]" = NO;
+				"GENERATE_INFOPLIST_FILE[sdk=iphonesimulator*]" = NO;
+				"INFOPLIST_FILE[sdk=iphoneos*]" = "mons/iOS-Info.plist";
+				"INFOPLIST_FILE[sdk=iphonesimulator*]" = "mons/iOS-Info.plist";
+				INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsLocalNetworking = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Photograph meals and scan food barcodes for nutrition logging.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Connect to the Regolith API running on your local network.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Describe meals by voice for transcription and food matching.";
+				INFOPLIST_KEY_REGOLITH_API_BASE_URL = "$(REGOLITH_API_BASE_URL)";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -393,7 +415,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = mons/mons.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -403,8 +424,13 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSCameraUsageDescription = "Scan packaged-food barcodes.";
+				"GENERATE_INFOPLIST_FILE[sdk=iphoneos*]" = NO;
+				"GENERATE_INFOPLIST_FILE[sdk=iphonesimulator*]" = NO;
+				"INFOPLIST_FILE[sdk=iphoneos*]" = "mons/iOS-Info.plist";
+				"INFOPLIST_FILE[sdk=iphonesimulator*]" = "mons/iOS-Info.plist";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Photograph meals and scan food barcodes for nutrition logging.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Connect to the Regolith API running on your local network.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Describe meals by voice for transcription and food matching.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;

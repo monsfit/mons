@@ -1,6 +1,6 @@
 import Foundation
 
-struct WorkoutSet: Identifiable, Hashable {
+nonisolated struct WorkoutSet: Identifiable, Hashable, Sendable {
     let id: String
     let title: String
     let detail: String

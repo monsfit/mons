@@ -5,8 +5,8 @@ public struct MonsSheetPresentationModifier: ViewModifier {
 
     public func body(content: Content) -> some View {
         content
-            .presentationBackground(.thinMaterial)
-            .presentationCornerRadius(MonsRadius.large)
+            .presentationDragIndicator(.visible)
+            .presentationContentInteraction(.scrolls)
     }
 }
 

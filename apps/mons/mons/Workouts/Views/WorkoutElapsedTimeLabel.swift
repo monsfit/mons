@@ -16,6 +16,6 @@ struct WorkoutElapsedTimeLabel: View {
 
     private func elapsed(at date: Date) -> String {
         let seconds = max(Int(date.timeIntervalSince(startedAt)), 0)
-        return "\(seconds / 60):\(String(format: "%02d", seconds % 60))"
+        return WorkoutDurationFormatter.minuteSecond(seconds)
     }
 }

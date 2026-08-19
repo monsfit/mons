@@ -1,9 +1,8 @@
 # Contracts
 
-This package owns the API's Valibot schemas and Titan's generated language-neutral food
-schemas.
+This package owns the API's Effect schemas and Titan's generated language-neutral food schemas.
 
-- `src/index.ts`: runtime validation and TypeScript types used by the Hono API.
+- `src/index.ts`: runtime validation and TypeScript types used by the Effect HTTP API.
 - `schema/raw-food-v2.schema.json`: normalized raw-food contract.
 - `schema/branded-food-v2.schema.json`: normalized branded-food contract.
 

@@ -1,23 +1,27 @@
-import { createDatabase } from './client.js'
-import { migrateApplicationDatabase, migrateCatalogSearch } from './migrations.js'
+import { NodeRuntime } from '@effect/platform-node'
+import { Config, Effect } from 'effect'
 
-const database = createDatabase({
-  connectionString:
-    process.env.DATABASE_URL ?? 'postgresql://regolith:regolith_local@localhost:5432/regolith',
+import { createDatabaseLayer } from './client.ts'
+import { migrateApplicationDatabase, migrateCatalogSearch } from './migrations.ts'
+
+const program = Effect.gen(function* () {
+  const databaseUrl = yield* Config.string('DATABASE_URL').pipe(
+    Config.withDefault('postgresql://regolith:regolith_local@localhost:5432/regolith'),
+  )
+  const appSchema = yield* Config.string('REGOLITH_APP_SCHEMA').pipe(
+    Config.withDefault('regolith_app'),
+  )
+  const catalogSchema = yield* Config.string('REGOLITH_SCHEMA').pipe(Config.withDefault('regolith'))
+  const database = createDatabaseLayer({ connectionString: databaseUrl })
+
+  yield* Effect.gen(function* () {
+    const migrations = yield* migrateApplicationDatabase(appSchema)
+    const catalogAvailable = yield* migrateCatalogSearch(catalogSchema)
+    yield* Effect.logInfo('Regolith database migration complete', {
+      applicationMigrations: migrations.length,
+      catalogAvailable,
+    })
+  }).pipe(Effect.provide(database))
 })
 
-try {
-  await migrateApplicationDatabase(database, process.env.REGOLITH_APP_SCHEMA ?? 'regolith_app')
-  const catalogAvailable = await migrateCatalogSearch(
-    database,
-    process.env.REGOLITH_SCHEMA ?? 'regolith',
-  )
-  console.log('Regolith application database is up to date')
-  console.log(
-    catalogAvailable
-      ? 'Regolith catalog search is up to date'
-      : 'Regolith catalog is not loaded; search migration skipped',
-  )
-} finally {
-  await database.destroy()
-}
+NodeRuntime.runMain(program)

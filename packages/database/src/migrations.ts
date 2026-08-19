@@ -1,100 +1,122 @@
-import { promises as fileSystem } from 'node:fs'
-import { fileURLToPath } from 'node:url'
-import path from 'node:path'
+import { Effect, Schema } from 'effect'
+import { Migrator, SqlClient } from 'effect/unstable/sql'
 
-import { sql, type Kysely } from 'kysely'
-import { FileMigrationProvider, Migrator } from 'kysely/migration'
+import { up as initialApplication } from './migrations/001_initial_application.ts'
+import { up as clerkIdentity } from './migrations/002_clerk_identity.ts'
+import { up as workoutTemplates } from './migrations/003_workout_templates.ts'
+import { up as userFoodsAndRecipes } from './migrations/004_user_foods_and_recipes.ts'
+import { up as structuredRecipeIngredients } from './migrations/005_structured_recipe_ingredients.ts'
+import { up as mealEstimates } from './migrations/006_meal_estimates.ts'
+import { up as mealLogs } from './migrations/007_meal_logs.ts'
+import { up as mealMediaCleanup } from './migrations/008_meal_media_cleanup.ts'
 
-import type { CatalogDatabase } from './types.js'
+const schemaNameSchema = Schema.String.check(Schema.isPattern(/^[a-z_][a-z0-9_]{0,31}$/)).annotate({
+  identifier: 'PostgreSQLSchemaName',
+})
 
-const schemaPattern = /^[a-z_][a-z0-9_]{0,31}$/
+export const validateSchemaName = Schema.decodeUnknownEffect(schemaNameSchema)
 
-export function validateSchemaName(schema: string): string {
-  if (!schemaPattern.test(schema)) {
-    throw new Error('PostgreSQL schema must be a safe lowercase identifier')
-  }
-  return schema
-}
+const applicationMigrationLoader = (schema: string): Migrator.Loader =>
+  Effect.succeed([
+    [1, 'initial_application', Effect.succeed(initialApplication(schema))],
+    [2, 'clerk_identity', Effect.succeed(clerkIdentity(schema))],
+    [3, 'workout_templates', Effect.succeed(workoutTemplates(schema))],
+    [4, 'user_foods_and_recipes', Effect.succeed(userFoodsAndRecipes(schema))],
+    [5, 'structured_recipe_ingredients', Effect.succeed(structuredRecipeIngredients(schema))],
+    [6, 'meal_estimates', Effect.succeed(mealEstimates(schema))],
+    [7, 'meal_logs', Effect.succeed(mealLogs(schema))],
+    [8, 'meal_media_cleanup', Effect.succeed(mealMediaCleanup(schema))],
+  ])
 
-export async function migrateApplicationDatabase(
-  database: Kysely<CatalogDatabase>,
-  schema = 'regolith_app',
-): Promise<void> {
-  const safeSchema = validateSchemaName(schema)
-  await database.schema.createSchema(safeSchema).ifNotExists().execute()
-
-  const migrator = new Migrator({
-    db: database.withSchema(safeSchema),
-    migrationTableSchema: safeSchema,
-    provider: new FileMigrationProvider({
-      fs: fileSystem,
-      migrationFolder: fileURLToPath(new URL('./migrations', import.meta.url)),
-      path,
+export const migrateApplicationDatabase = (schema = 'regolith_app') =>
+  Effect.gen(function* () {
+    const safeSchema = yield* validateSchemaName(schema)
+    const sql = yield* SqlClient.SqlClient
+    yield* sql`CREATE SCHEMA IF NOT EXISTS ${sql(safeSchema)}`
+    return yield* Migrator.make({})({
+      loader: applicationMigrationLoader(safeSchema),
+      table: `${safeSchema}.effect_sql_migrations`,
+    })
+  }).pipe(
+    Effect.withSpan('database.migrate.application', {
+      attributes: { 'db.namespace': schema },
     }),
-  })
-  const { error } = await migrator.migrateToLatest()
-  if (error !== undefined) throw error
-}
+  )
 
-export async function migrateCatalogSearch(
-  database: Kysely<CatalogDatabase>,
-  schema = 'regolith',
-): Promise<boolean> {
-  const safeSchema = validateSchemaName(schema)
-  const table = `"${safeSchema}"."foods"`
-  const catalog = await sql<{ exists: boolean }>`
-    select to_regclass(${`${safeSchema}.foods`}) is not null as exists
-  `.execute(database)
-  if (catalog.rows[0]?.exists !== true) {
-    return false
-  }
+export const migrateCatalogSearch = (schema = 'regolith') =>
+  Effect.gen(function* () {
+    const safeSchema = yield* validateSchemaName(schema)
+    const sql = yield* SqlClient.SqlClient
+    const foods = sql(`${safeSchema}.foods`)
+    const rawFoods = sql(`${safeSchema}.raw_foods`)
+    const brandedFoods = sql(`${safeSchema}.branded_foods`)
 
-  const column = await sql<{ exists: boolean }>`
-    select exists (
-      select 1 from information_schema.columns
-      where table_schema = ${safeSchema}
-        and table_name = 'foods'
-        and column_name = 'search_document'
-    ) as exists
-  `.execute(database)
-  let changed = false
-  if (column.rows[0]?.exists !== true) {
-    await sql
-      .raw(`
-      ALTER TABLE ${table}
-      ADD COLUMN search_document tsvector GENERATED ALWAYS AS (
-        setweight(to_tsvector('simple', coalesce(name, '')), 'A') ||
-        setweight(to_tsvector('simple', coalesce(brand, '')), 'B')
-      ) STORED
-    `)
-      .execute(database)
-    changed = true
-  }
+    const catalog = yield* sql<{ readonly exists: boolean }>`
+      SELECT to_regclass(${`${safeSchema}.foods`}) IS NOT NULL AS exists
+    `
+    if (catalog[0]?.exists !== true) return false
 
-  const indexes = await sql<{ indexname: string }>`
-    select indexname from pg_indexes
-    where schemaname = ${safeSchema}
-      and indexname in ('raw_foods_search_document_idx', 'branded_foods_search_document_idx')
-  `.execute(database)
-  const names = new Set(indexes.rows.map((row) => row.indexname))
-  if (!names.has('raw_foods_search_document_idx')) {
-    await sql
-      .raw(
-        `CREATE INDEX raw_foods_search_document_idx ON "${safeSchema}"."raw_foods" USING gin (search_document)`,
-      )
-      .execute(database)
-    changed = true
-  }
-  if (!names.has('branded_foods_search_document_idx')) {
-    await sql
-      .raw(
-        `CREATE INDEX branded_foods_search_document_idx ON "${safeSchema}"."branded_foods" USING gin (search_document)`,
-      )
-      .execute(database)
-    changed = true
-  }
-  if (changed) {
-    await sql.raw(`ANALYZE ${table}`).execute(database)
-  }
-  return true
-}
+    yield* sql`CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public`
+
+    const columns = yield* sql<{ readonly exists: boolean }>`
+      SELECT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = ${safeSchema}
+          AND table_name = 'foods'
+          AND column_name = 'search_document'
+      ) AS exists
+    `
+    let changed = false
+    if (columns[0]?.exists !== true) {
+      yield* sql`ALTER TABLE ${foods}
+        ADD COLUMN search_document tsvector GENERATED ALWAYS AS (
+          setweight(to_tsvector('simple', coalesce(name, '')), 'A') ||
+          setweight(to_tsvector('simple', coalesce(brand, '')), 'B')
+        ) STORED`
+      changed = true
+    }
+
+    const indexes = yield* sql<{ readonly indexname: string }>`
+      SELECT indexname FROM pg_indexes
+      WHERE schemaname = ${safeSchema}
+        AND indexname IN (
+          'raw_foods_search_document_idx',
+          'branded_foods_search_document_idx',
+          'raw_foods_name_trgm_idx',
+          'branded_foods_name_trgm_idx',
+          'branded_foods_brand_trgm_idx'
+        )
+    `
+    const names = new Set(indexes.map((row) => row.indexname))
+    if (!names.has('raw_foods_search_document_idx')) {
+      yield* sql`CREATE INDEX raw_foods_search_document_idx
+        ON ${rawFoods} USING gin (search_document)`
+      changed = true
+    }
+    if (!names.has('branded_foods_search_document_idx')) {
+      yield* sql`CREATE INDEX branded_foods_search_document_idx
+        ON ${brandedFoods} USING gin (search_document)`
+      changed = true
+    }
+    if (!names.has('raw_foods_name_trgm_idx')) {
+      yield* sql`CREATE INDEX raw_foods_name_trgm_idx
+        ON ${rawFoods} USING gin (name gin_trgm_ops)`
+      changed = true
+    }
+    if (!names.has('branded_foods_name_trgm_idx')) {
+      yield* sql`CREATE INDEX branded_foods_name_trgm_idx
+        ON ${brandedFoods} USING gin (name gin_trgm_ops)`
+      changed = true
+    }
+    if (!names.has('branded_foods_brand_trgm_idx')) {
+      yield* sql`CREATE INDEX branded_foods_brand_trgm_idx
+        ON ${brandedFoods} USING gin (brand gin_trgm_ops)`
+      changed = true
+    }
+    if (changed) yield* sql`ANALYZE ${foods}`
+    return true
+  }).pipe(
+    Effect.withSpan('database.migrate.catalog-search', {
+      attributes: { 'db.namespace': schema },
+    }),
+  )

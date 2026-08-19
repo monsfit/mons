@@ -27,7 +27,7 @@ nonisolated enum RecentFoodBuilder {
         .map { $0 }
     }
 
-    private static func catalogFood(from entry: FoodLogEntry) -> CatalogFood {
+    static func catalogFood(from entry: FoodLogEntry) -> CatalogFood {
         let calories = perHundred(entry.calories, quantityGrams: entry.quantityGrams)
         let carbohydrates = perHundred(entry.carbohydrates, quantityGrams: entry.quantityGrams)
         let protein = perHundred(entry.protein, quantityGrams: entry.quantityGrams)

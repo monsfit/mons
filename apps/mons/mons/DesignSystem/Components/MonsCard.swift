@@ -19,5 +19,10 @@ public struct MonsCard<Content: View>: View {
                 RoundedRectangle(cornerRadius: MonsRadius.large)
                     .stroke(MonsColor.border, lineWidth: 1)
             }
+            .shadow(
+                color: isRaised ? MonsColor.shadow : .clear,
+                radius: isRaised ? MonsSpacing.medium : 0,
+                y: isRaised ? MonsSpacing.xSmall : 0
+            )
     }
 }

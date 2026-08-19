@@ -25,4 +25,21 @@ struct AuthenticatedRequestBuilderTests {
             try builder.request(path: ["v1", "profile"], method: "PUT", token: nil)
         }
     }
+
+    @Test func appliesAnExplicitTimeoutOnlyForLongRunningRequests() throws {
+        let normal = try builder.request(
+            path: ["v1", "profile"],
+            method: "GET",
+            token: "session-token"
+        )
+        let analysis = try builder.request(
+            path: ["v1", "meal-estimates"],
+            method: "POST",
+            token: "session-token",
+            timeoutInterval: 180
+        )
+
+        #expect(normal.timeoutInterval == 60)
+        #expect(analysis.timeoutInterval == 180)
+    }
 }

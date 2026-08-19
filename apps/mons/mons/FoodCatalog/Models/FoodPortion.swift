@@ -16,4 +16,10 @@ nonisolated struct FoodPortion: Codable, Hashable, Identifiable, Sendable {
     var menuTitle: String {
         "\(name) · \(amount.formatted(.number.precision(.fractionLength(0...1)))) \(unit.rawValue)"
     }
+
+    static let standardHundredGrams = FoodPortion(
+        amount: 100,
+        name: "100 gram serving",
+        unit: .grams
+    )
 }

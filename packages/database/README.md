@@ -1,8 +1,8 @@
 # Database
 
-This package contains the Kysely types, PostgreSQL client factory, migrations, catalog reader,
-and application repository used by the API. Titan owns replaceable catalog ingestion. This
-package owns the stable `regolith_app` schema.
+This package contains Effect SQL PostgreSQL layers, ordered migrations, schema-decoded catalog
+queries, and application repositories used by the API. Titan owns replaceable catalog ingestion.
+This package owns the stable `regolith_app` schema.
 
 The repository supports:
 
@@ -13,7 +13,14 @@ The repository supports:
 - one server-calculated nutrition plan per profile, including its source inputs and calculation
   timestamp;
 - idempotent canonical-kilogram weight entries ordered by measurement time and UUID;
-- atomic workout and ordered-set persistence.
+- atomic reusable workout-template hierarchy persistence;
+- atomic completed-workout and ordered-set persistence.
+- profile-owned custom foods with optional GTINs, household portions, and compressed image data;
+- measured-yield recipes with ordered catalog/custom ingredients, freeform ingredients, deterministic
+  per-100-gram nutrition, and explicit pending-estimate states;
+- GIN full-text indexes for custom-food and recipe names alongside the catalog indexes.
+- auditable meal estimates with model/prompt provenance and ordered, catalog-constrained food
+  matches; calculated calories and macros are persisted separately from the model observations.
 
 Application tables are intentionally separate from the `regolith` catalog schema. Titan can
 atomically replace the catalog without deleting user history.

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 
-import { calculateNutritionPlan } from './nutrition-plan.js'
+import { calculateNutritionPlan } from './nutrition-plan.ts'
 
 describe('calculateNutritionPlan', () => {
   test('calculates a deterministic expenditure and loss target', () => {
