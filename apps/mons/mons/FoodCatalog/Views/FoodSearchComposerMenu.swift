@@ -24,7 +24,7 @@ struct FoodSearchComposerMenu: View {
             }
 
             Button(action: onPaste) {
-                FoodSearchComposerMenuItem(title: "Paste", systemImage: "doc.on.clipboard")
+                FoodSearchComposerMenuItem(title: "Paste Context", systemImage: "doc.on.clipboard")
             }
         }
         .buttonStyle(.plain)

@@ -43,6 +43,7 @@ struct BarcodeScannerSheet: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .clipped()
         .foregroundStyle(.white)
         .background(.black)
         .overlay(alignment: .topLeading) {
@@ -59,9 +60,11 @@ struct BarcodeScannerSheet: View {
                     .frame(width: 54, height: 54)
             }
             .buttonStyle(.plain)
+            .contentShape(Circle())
             .glassEffect(.regular.interactive(), in: .circle)
             .accessibilityLabel("Close scanner")
             .padding()
+            .zIndex(10)
         }
     }
 

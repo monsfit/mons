@@ -5,41 +5,49 @@ struct CalorieMealRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: meal.category.systemImage)
-                .frame(width: 32, height: 32)
-                .foregroundStyle(.secondary)
-                .accessibilityHidden(true)
-
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(meal.title)
                     .font(.body)
-
-                Text("\(meal.macros.protein)g protein · \(meal.macros.carbohydrates)g carbs · \(meal.macros.fat)g fat")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
                     .lineLimit(1)
-            }
 
-            Spacer()
+                HStack(spacing: 5) {
+                    Text(meal.loggedAt, format: .dateTime.hour().minute())
 
-            VStack(alignment: .trailing, spacing: 4) {
-                Text(meal.loggedAt, format: .dateTime.hour().minute())
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    Text("·")
+
+                    Text(meal.itemCount == 1 ? "1 item" : "\(meal.itemCount) items")
+                }
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
 
                 Text("\(meal.calories) cal")
-                    .font(.body)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .monospacedDigit()
             }
+
+            Spacer(minLength: 8)
+
+            Image(systemName: "chevron.right")
+                .font(.subheadline)
+                .foregroundStyle(.tertiary)
+                .accessibilityHidden(true)
         }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.background, in: .rect(cornerRadius: 14))
         .contentShape(.rect)
         .accessibilityElement(children: .combine)
-        .accessibilityHint("Opens meal details")
+        .accessibilityHint("Opens meal details and editing")
     }
 }
 
 #Preview {
     let day = CalorieSampleData.days(referenceDate: .now, calendar: .current)[0]
-    List {
+    VStack(spacing: 8) {
         CalorieMealRow(meal: day.meals[0])
+        CalorieMealRow(meal: day.meals[1])
     }
+    .padding()
+    .background(Color.secondary.opacity(0.08))
 }

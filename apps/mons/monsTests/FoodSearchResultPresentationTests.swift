@@ -23,12 +23,30 @@ struct FoodSearchResultPresentationTests {
         #expect(presentation.sourceIcon == "fork.knife")
     }
 
-    private func food(brand: String?, portions: [FoodPortion]) -> CatalogFood {
+    @Test func identifiesCustomFoodsAndRecipes() {
+        let custom = FoodSearchResultPresentation(
+            food: food(brand: nil, datasetKind: .custom, portions: [])
+        )
+        let recipe = FoodSearchResultPresentation(
+            food: food(brand: nil, datasetKind: .recipe, portions: [])
+        )
+
+        #expect(custom.sourceAndServingSummary == "My Food · Per 100 g")
+        #expect(custom.sourceIcon == "square.and.pencil")
+        #expect(recipe.sourceAndServingSummary == "Recipe · Per 100 g")
+        #expect(recipe.sourceIcon == "book.closed")
+    }
+
+    private func food(
+        brand: String?,
+        datasetKind: DatasetKind? = nil,
+        portions: [FoodPortion]
+    ) -> CatalogFood {
         CatalogFood(
             brand: brand,
             calories: 196,
             carbohydrates: 1,
-            datasetKind: brand == nil ? .raw : .branded,
+            datasetKind: datasetKind ?? (brand == nil ? .raw : .branded),
             foodId: "food",
             gtin: nil,
             name: "Eggs, Grade A, Large",

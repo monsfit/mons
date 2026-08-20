@@ -5,10 +5,11 @@ struct CalorieTimelineHeader: View {
 
     let maximumDate: Date
     let days: [CalorieDayData]
+
     let calendar: Calendar
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 16) {
             DateNavigationRow(
                 selectedDate: $selectedDate,
                 maximumDate: maximumDate,
@@ -24,9 +25,21 @@ struct CalorieTimelineHeader: View {
         }
         .padding(.horizontal, MonsSpacing.large)
         .padding(.bottom, 12)
-        .background(MonsColor.chrome)
-        .overlay(alignment: .bottom) {
-            Divider().overlay(MonsColor.border)
+        .background {
+            Rectangle()
+                .fill(.ultraThinMaterial)
+                .mask {
+                    LinearGradient(
+                        stops: [
+                            .init(color: .black, location: 0),
+                            .init(color: .black, location: 0.68),
+                            .init(color: .clear, location: 1)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                }
+                .ignoresSafeArea(edges: .top)
         }
     }
 }

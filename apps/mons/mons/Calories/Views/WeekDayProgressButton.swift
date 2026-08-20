@@ -17,28 +17,27 @@ struct WeekDayProgressButton: View {
         date <= calendar.startOfDay(for: maximumDate)
     }
 
-    private var progress: Double {
-        guard day.calorieGoal > 0 else { return 0 }
-        return min(max(Double(day.consumedCalories) / Double(day.calorieGoal), 0), 1)
-    }
-
     var body: some View {
         Button(action: selectDate) {
-            VStack(spacing: 5) {
-                MiniCalorieRing(
-                    weekday: date.formatted(.dateTime.weekday(.narrow)),
-                    progress: progress,
-                    isSelected: isSelected,
-                    isOverGoal: day.remainingCalories < 0
-                )
+            VStack(spacing: 3) {
+                Text(date.formatted(.dateTime.weekday(.narrow)))
+                    .font(.caption)
 
                 Text(calendar.component(.day, from: date), format: .number)
-                    .font(MonsTypography.caption)
+                    .font(.body)
                     .fontWeight(isSelected ? .semibold : .regular)
-                    .foregroundStyle(isSelected ? MonsColor.textPrimary : MonsColor.textMuted)
                     .monospacedDigit()
             }
-            .frame(maxWidth: .infinity, minHeight: 54)
+            .foregroundStyle(isSelected ? Color.white : Color.primary)
+            .frame(maxWidth: .infinity, minHeight: 54, maxHeight: 54)
+            .background(
+                isSelected ? Color.accentColor : Color.clear,
+                in: RoundedRectangle(cornerRadius: 18)
+            )
+            .glassEffect(
+                .clear.interactive(),
+                in: .rect(cornerRadius: 18)
+            )
             .opacity(isAvailable ? 1 : 0.55)
         }
         .buttonStyle(.plain)

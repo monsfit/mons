@@ -18,7 +18,13 @@ struct FoodLogSearchAccessory: ViewModifier {
     @State private var searchText = ""
     @State private var selectedMealPhoto: PhotosPickerItem?
     @State private var startedCameraPOC = false
+
     func body(content: Content) -> some View {
+        #if DEBUG
+        MealComposerPrototypeShell(loggedAt: loggedAt, usesCameraFixture: false) {
+            content
+        }
+        #else
         content
         .safeAreaInset(edge: .bottom, spacing: 0) {
             Color.clear.frame(height: 76)
@@ -74,6 +80,7 @@ struct FoodLogSearchAccessory: ViewModifier {
                 }
             }
         }
+        #endif
     }
 
     @ViewBuilder

@@ -17,16 +17,30 @@ nonisolated struct FoodSearchResultPresentation: Equatable, Sendable {
         sourceAndServingSummary = [Self.sourceName(food), Self.servingName(defaultPortion)]
             .compactMap { $0 }
             .joined(separator: " · ")
-        sourceIcon = food.datasetKind == .raw ? "fork.knife" : "shippingbox"
+        sourceIcon = Self.sourceIcon(food.datasetKind)
     }
 
     private static func sourceName(_ food: CatalogFood) -> String {
         guard let brand = food.brand?.trimmingCharacters(in: .whitespacesAndNewlines),
               !brand.isEmpty
         else {
-            return food.datasetKind == .raw ? "Common food" : "Branded food"
+            return switch food.datasetKind {
+            case .raw: "Common food"
+            case .branded: "Branded food"
+            case .custom: "My Food"
+            case .recipe: "Recipe"
+            }
         }
         return brand
+    }
+
+    private static func sourceIcon(_ datasetKind: DatasetKind) -> String {
+        switch datasetKind {
+        case .raw: "fork.knife"
+        case .branded: "shippingbox"
+        case .custom: "square.and.pencil"
+        case .recipe: "book.closed"
+        }
     }
 
     private static func servingName(_ portion: FoodPortion?) -> String {

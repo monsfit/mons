@@ -27,18 +27,6 @@ nonisolated struct WorkoutSession: Identifiable, Hashable, Sendable {
         self.sets = sets
     }
 
-    func replacingSets(with sets: [WorkoutSet]) -> WorkoutSession {
-        WorkoutSession(
-            id: id,
-            title: title,
-            startedAt: startedAt,
-            completedAt: completedAt,
-            durationMinutes: durationMinutes,
-            metric: metric,
-            sets: sets
-        )
-    }
-
     var distanceKilometers: Double? {
         guard case .cardio(let distanceKilometers) = metric else { return nil }
         return distanceKilometers

@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct DateNavigationRow: View {
+    @State private var isCalendarPresented = false
+
     @Binding var selectedDate: Date
 
     let maximumDate: Date
@@ -26,12 +28,29 @@ struct DateNavigationRow: View {
 
             Spacer()
 
-            Text(dateTitle)
-                .font(MonsTypography.headline)
-                .foregroundStyle(MonsColor.textPrimary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.75)
-                .accessibilityLabel("Selected day, \(dateTitle)")
+            Button(action: presentCalendar) {
+                HStack(spacing: 8) {
+                    Image(systemName: "calendar")
+
+                    Text(dateTitle)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                }
+                .font(.headline)
+                .foregroundStyle(.primary)
+                .padding(.horizontal, 16)
+                .frame(minHeight: 44)
+                .glassEffect(.regular.interactive(), in: .capsule)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Choose date. Selected day, \(dateTitle)")
+            .sheet(isPresented: $isCalendarPresented) {
+                CalorieDatePicker(
+                    selectedDate: $selectedDate,
+                    maximumDate: maximumDate,
+                    calendar: calendar
+                )
+            }
 
             Spacer()
 
@@ -46,6 +65,10 @@ struct DateNavigationRow: View {
 
     private func previousDay() {
         selectedDate = calendar.date(byAdding: .day, value: -1, to: selectedDate) ?? selectedDate
+    }
+
+    private func presentCalendar() {
+        isCalendarPresented = true
     }
 
     private func nextDay() {

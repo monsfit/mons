@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct PendingFoodLogItem: Identifiable, Sendable {
+nonisolated struct PendingFoodLogItem: Equatable, Identifiable, Sendable {
     let entryId: UUID
     let food: CatalogFood
     let loggedAt: Date

@@ -59,6 +59,9 @@ struct ContentView: View {
                     }
                     .environment(workoutCoordinator)
                     .modifier(WorkoutTabAccessoryModifier())
+                    #if os(iOS)
+                    .toolbarBackgroundVisibility(.hidden, for: .tabBar)
+                    #endif
                 }
             }
         }

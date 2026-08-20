@@ -4,7 +4,6 @@ struct CalorieListView: View {
     @Environment(AppStore.self) private var store
 
     @State private var selectedDate: Date
-    @State private var addMealRequest: AddMealRequest?
     @State private var editingMealLog: MealLog?
 
     private let referenceDate: Date
@@ -20,7 +19,6 @@ struct CalorieListView: View {
         self.calendar = calendar
         previewDays = days
         _selectedDate = State(initialValue: calendar.startOfDay(for: referenceDate))
-        _addMealRequest = State(initialValue: nil)
     }
 
     private var days: [CalorieDayData] {
@@ -43,8 +41,16 @@ struct CalorieListView: View {
             ?? .empty(on: calendar.startOfDay(for: selectedDate))
     }
 
-    private var sortedMeals: [MealEvent] {
-        selectedDay.meals.sorted { $0.loggedAt > $1.loggedAt }
+    private var mealSections: [CalorieMealSection] {
+        let mealsByCategory = Dictionary(grouping: selectedDay.meals, by: \.category)
+
+        return MealCategory.allCases.compactMap { category in
+            guard let meals = mealsByCategory[category] else { return nil }
+            return CalorieMealSection(
+                category: category,
+                meals: meals.sorted { $0.loggedAt > $1.loggedAt }
+            )
+        }
     }
 
     private var composerLogDate: Date {
@@ -63,35 +69,60 @@ struct CalorieListView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                if store.meals.isLoading && store.meals.mealLogs.isEmpty {
-                    ProgressView("Loading food log…")
-                        .frame(maxWidth: .infinity)
-                }
+            ZStack {
+                Color.secondary.opacity(0.08)
+                    .ignoresSafeArea()
 
-                CalorieSummaryRow(day: selectedDay)
-                    .listRowInsets(.init(top: 16, leading: 16, bottom: 16, trailing: 16))
-                    .listRowSeparator(.hidden)
-
-                Section("Meals") {
-                    if sortedMeals.isEmpty {
-                        Text("No meals logged.")
-                            .foregroundStyle(.secondary)
-                    } else {
-                        ForEach(sortedMeals) { meal in
-                            Button {
-                                editMeal(meal)
-                            } label: {
-                                CalorieMealRow(meal: meal)
-                            }
-                            .buttonStyle(.plain)
-                        }
+                List {
+                    if store.meals.isLoading && store.meals.mealLogs.isEmpty {
+                        ProgressView("Loading food log…")
+                            .frame(maxWidth: .infinity)
                     }
 
-                    Button("Add Food", systemImage: "plus", action: requestMealEntry)
+                    CalorieSummaryRow(day: selectedDay)
+                        .listRowInsets(.init(top: 16, leading: 16, bottom: 16, trailing: 16))
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
+
+                    if mealSections.isEmpty {
+                        Section("Diary") {
+                            Text("No meals logged.")
+                                .foregroundStyle(.secondary)
+                        }
+                    } else {
+                        ForEach(mealSections) { section in
+                            Section(section.category.title) {
+                                ForEach(section.meals) { meal in
+                                    Button(action: { editMeal(meal) }) {
+                                        CalorieMealRow(meal: meal)
+                                    }
+                                    .buttonStyle(.plain)
+                                    .listRowInsets(.init(top: 4, leading: 16, bottom: 4, trailing: 16))
+                                    .listRowSeparator(.hidden)
+                                    .listRowBackground(Color.clear)
+                                    .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                                        Button("Edit", systemImage: "pencil") {
+                                            editMeal(meal)
+                                        }
+                                    }
+                                    .swipeActions(edge: .trailing) {
+                                        Button("Delete", systemImage: "trash", role: .destructive) {
+                                            deleteMeal(meal)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
+                .listStyle(.plain)
+                #if os(iOS)
+                .listSectionSpacing(.custom(14))
+                #endif
+                .scrollContentBackground(.hidden)
+                .background(Color.secondary.opacity(0.08))
+                .environment(\.defaultMinListRowHeight, 1)
             }
-            .listStyle(.plain)
             .safeAreaInset(edge: .top, spacing: 0) {
                 CalorieTimelineHeader(
                     selectedDate: $selectedDate,
@@ -106,12 +137,6 @@ struct CalorieListView: View {
 #if os(iOS)
             .toolbar(.hidden, for: .navigationBar)
 #endif
-            .sheet(item: $addMealRequest) { request in
-                FoodSearchView(
-                    loggedAt: request.scheduledAt,
-                    startsWithScanner: request.mode == .scanner
-                ) { }
-            }
             .sheet(item: $editingMealLog) { meal in
                 MealLogDetailView(meal: meal) {
                     editingMealLog = nil
@@ -123,13 +148,16 @@ struct CalorieListView: View {
         }
     }
 
-    private func requestMealEntry() {
-        addMealRequest = AddMealRequest(scheduledAt: composerLogDate)
-    }
-
     private func editMeal(_ meal: MealEvent) {
         guard let mealId = UUID(uuidString: meal.id) else { return }
         editingMealLog = store.meals.mealLogs.first { $0.mealId == mealId }
+    }
+
+    private func deleteMeal(_ meal: MealEvent) {
+        guard let mealId = UUID(uuidString: meal.id) else { return }
+        Task {
+            _ = await store.meals.delete(mealId)
+        }
     }
 }
 

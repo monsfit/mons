@@ -24,6 +24,8 @@ struct FoodCameraPreviewFixture: View {
                 .foregroundStyle(.white.opacity(0.72))
                 .symbolRenderingMode(.hierarchical)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .clipped()
         .accessibilityHidden(true)
     }
 }

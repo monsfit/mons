@@ -38,7 +38,6 @@ struct MealPhotoCaptureView: View {
                         captureRequest: $captureRequest,
                         cameraDevice: $cameraDevice,
                         flashMode: $flashMode,
-                        usesCustomControls: showsCustomControls,
                         onCapture: onCapture,
                         onCancel: dismissCamera
                     )
@@ -48,13 +47,12 @@ struct MealPhotoCaptureView: View {
                     captureRequest: $captureRequest,
                     cameraDevice: $cameraDevice,
                     flashMode: $flashMode,
-                    usesCustomControls: showsCustomControls,
                     onCapture: onCapture,
                     onCancel: dismissCamera
                 )
                 #endif
             }
-            .scaleEffect(showsCustomControls ? 1.2 : 1)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             if showsCustomControls {
                 LinearGradient(
@@ -74,6 +72,7 @@ struct MealPhotoCaptureView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(.black)
+        .clipped()
         .task {
             await autoDismissForPOCIfNeeded()
         }

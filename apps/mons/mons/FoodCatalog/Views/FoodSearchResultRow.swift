@@ -3,6 +3,13 @@ import SwiftUI
 struct FoodSearchResultRow: View {
     let food: CatalogFood
     let searchText: String
+    let showsDisclosureIndicator: Bool
+
+    init(food: CatalogFood, searchText: String, showsDisclosureIndicator: Bool = true) {
+        self.food = food
+        self.searchText = searchText
+        self.showsDisclosureIndicator = showsDisclosureIndicator
+    }
 
     var body: some View {
         let presentation = FoodSearchResultPresentation(food: food)
@@ -27,10 +34,12 @@ struct FoodSearchResultRow: View {
 
             Spacer(minLength: MonsSpacing.small)
 
-            Image(systemName: "chevron.forward")
-                .font(.caption.bold())
-                .foregroundStyle(.tertiary)
-                .accessibilityHidden(true)
+            if showsDisclosureIndicator {
+                Image(systemName: "chevron.forward")
+                    .font(.caption.bold())
+                    .foregroundStyle(.tertiary)
+                    .accessibilityHidden(true)
+            }
         }
         .padding(.vertical, MonsSpacing.xSmall)
         .accessibilityElement(children: .combine)

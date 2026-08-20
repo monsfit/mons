@@ -15,6 +15,9 @@ struct FoodSearchComposer<CameraContent: View>: View {
     let onCamera: () -> Void
     let onPaste: () -> Void
     let onVoiceCapture: (Data) async -> Void
+    var onReview: (() -> Void)? = nil
+    var onSearch: (() -> Void)? = nil
+    var searchPrompt = "Search foods or meals"
     @ViewBuilder let cameraContent: () -> CameraContent
 
     @FocusState private var isSearchFocused: Bool
@@ -26,7 +29,10 @@ struct FoodSearchComposer<CameraContent: View>: View {
         GlassEffectContainer(spacing: MonsSpacing.xSmall) {
             GeometryReader { proxy in
                 ZStack(alignment: .bottomLeading) {
-                    inputBar
+                    if surfacePhase != .camera {
+                        inputBar
+                            .transition(.opacity)
+                    }
 
                     if surfacePhase == .menu {
                         Color.clear
@@ -63,10 +69,10 @@ struct FoodSearchComposer<CameraContent: View>: View {
                         alignment: .bottomLeading
                     )
                     .background(surfaceBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: surfaceCornerRadius, style: .continuous))
+                    .clipShape(surfaceShape)
                     .glassEffect(
-                        .regular.interactive(),
-                        in: .rect(cornerRadius: surfaceCornerRadius)
+                        surfaceGlass,
+                        in: surfaceShape
                     )
                     .offset(
                         x: surfacePhase == .button ? MonsSpacing.xSmall : 0,
@@ -110,12 +116,25 @@ struct FoodSearchComposer<CameraContent: View>: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .transition(.blurReplace)
                 } else {
-                    TextField("Search foods or meals", text: $searchText)
-                        .focused($isSearchFocused)
-                        .submitLabel(.search)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
+                    if let onSearch {
+                        Button(action: onSearch) {
+                            Text(searchText.isEmpty ? searchPrompt : searchText)
+                                .foregroundStyle(searchText.isEmpty ? .secondary : .primary)
+                                .lineLimit(1)
+                                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityHint("Opens exact food search")
                         .transition(.blurReplace)
+                    } else {
+                        TextField(searchPrompt, text: $searchText)
+                            .focused($isSearchFocused)
+                            .submitLabel(.search)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .transition(.blurReplace)
+                    }
                 }
             }
             .animation(.smooth(duration: 0.2), value: recorder.isRecording)
@@ -129,12 +148,25 @@ struct FoodSearchComposer<CameraContent: View>: View {
             }
             .labelStyle(.iconOnly)
             .font(.title2)
-            .frame(width: 68, height: 52)
+            .frame(width: onReview == nil ? 68 : 52, height: 52)
             .buttonStyle(.plain)
             .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 22))
             .tint(recorder.isRecording ? .red : nil)
             .disabled(isProcessingVoice)
             .accessibilityLabel(recorder.isRecording ? "Stop recording" : "Describe meal by voice")
+
+            if let onReview {
+                Button(action: onReview) {
+                    Image(systemName: "arrow.up")
+                        .font(.title3.bold())
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+                .labelStyle(.iconOnly)
+                .frame(width: 52, height: 52)
+                .buttonStyle(.plain)
+                .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 22))
+                .accessibilityLabel("Review meal")
+            }
         }
         .padding(MonsSpacing.xSmall)
         .frame(minHeight: 60)
@@ -153,6 +185,19 @@ struct FoodSearchComposer<CameraContent: View>: View {
         case .button: 22
         case .menu: 30
         case .camera: 38
+        }
+    }
+
+    private var surfaceShape: RoundedRectangle {
+        RoundedRectangle(cornerRadius: surfaceCornerRadius)
+    }
+
+    private var surfaceGlass: Glass {
+        switch surfacePhase {
+        case .button, .menu:
+            .regular.interactive()
+        case .camera:
+            .identity
         }
     }
 
@@ -196,12 +241,18 @@ struct FoodSearchComposer<CameraContent: View>: View {
 
     private func presentBarcodeCamera() {
         isSearchFocused = false
-        performCameraTransition(onBarcode)
+        performCameraTransition {
+            isMenuExpanded = false
+            onBarcode()
+        }
     }
 
     private func presentMealCamera() {
         isSearchFocused = false
-        performCameraTransition(onCamera)
+        performCameraTransition {
+            isMenuExpanded = false
+            onCamera()
+        }
     }
 
     private func pasteDescription() {

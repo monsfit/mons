@@ -64,42 +64,6 @@ struct WorkoutLogicTests {
         #expect(summary.totalDistanceKilometers == 5.5)
     }
 
-    @Test func movesSetBetweenWorkoutFolders() {
-        let calendar = testCalendar()
-        let firstSet = WorkoutSet(id: "bench", title: "Bench", detail: "4 × 8", value: "135 lb")
-        let secondSet = WorkoutSet(id: "row", title: "Row", detail: "4 × 10", value: "115 lb")
-        let destinationSet = WorkoutSet(id: "squat", title: "Squat", detail: "5 × 5", value: "185 lb")
-        let sessions = [
-            WorkoutSession(
-                id: "upper",
-                title: "Upper",
-                completedAt: date(day: 5, hour: 8, calendar: calendar),
-                durationMinutes: 45,
-                metric: .strength(exercises: 2, sets: 8),
-                sets: [firstSet, secondSet]
-            ),
-            WorkoutSession(
-                id: "lower",
-                title: "Lower",
-                completedAt: date(day: 4, hour: 8, calendar: calendar),
-                durationMinutes: 45,
-                metric: .strength(exercises: 1, sets: 5),
-                sets: [destinationSet]
-            )
-        ]
-
-        let updated = WorkoutHierarchyEditor.movingSet(
-            "row",
-            from: "upper",
-            to: "lower",
-            before: "squat",
-            in: sessions
-        )
-
-        #expect(updated?[0].sets.map(\.id) == ["bench"])
-        #expect(updated?[1].sets.map(\.id) == ["row", "squat"])
-    }
-
     private func testCalendar() -> Calendar {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(secondsFromGMT: 0) ?? .gmt
