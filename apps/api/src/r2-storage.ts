@@ -81,6 +81,22 @@ export interface R2Client {
   readonly putObject: (input: PutR2Object) => Promise<void>
 }
 
+export interface R2BucketObjectBody {
+  readonly arrayBuffer: () => Promise<ArrayBuffer>
+  readonly etag?: string
+  readonly httpMetadata?: { readonly contentType?: string }
+}
+
+export interface R2BucketBinding {
+  readonly delete: (key: string) => Promise<void>
+  readonly get: (key: string) => Promise<R2BucketObjectBody | null>
+  readonly put: (
+    key: string,
+    value: Uint8Array,
+    options?: { readonly httpMetadata?: { readonly contentType?: string } },
+  ) => Promise<unknown>
+}
+
 export const r2Endpoint = (accountId: string) => `https://${accountId}.r2.cloudflarestorage.com`
 
 const validateKey = Effect.fn('R2Storage.validateKey')(function* (key: string) {
@@ -126,6 +142,33 @@ export const makeR2StorageLayer = (options: {
   readonly bucket: string
   readonly client: R2Client
 }) => Layer.succeed(R2Storage)(makeService(options.bucket, options.client))
+
+export const makeR2BindingStorageLayer = (options: {
+  readonly binding: R2BucketBinding
+  readonly bucket: string
+}) =>
+  makeR2StorageLayer({
+    bucket: options.bucket,
+    client: {
+      deleteObject: (key) => options.binding.delete(key),
+      getObject: async (key) => {
+        const object = await options.binding.get(key)
+        if (object === null) return undefined
+        return {
+          body: new Uint8Array(await object.arrayBuffer()),
+          contentType: object.httpMetadata?.contentType,
+          etag: object.etag,
+        }
+      },
+      putObject: async (input) => {
+        const bindingOptions =
+          input.contentType === undefined
+            ? undefined
+            : { httpMetadata: { contentType: input.contentType } }
+        await options.binding.put(input.key, input.body, bindingOptions)
+      },
+    },
+  })
 
 const unavailable = (operation: string) => Effect.fail(R2StorageUnavailable.make({ operation }))
 

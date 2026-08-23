@@ -50,19 +50,20 @@ Effect SQL, and Vitest in `pnpm-workspace.yaml` and `pnpm-lock.yaml`.
 Run commands from the repository root:
 
 ```bash
-npx pnpm@11.20.0 install
+nvm use
+pnpm install
 uv sync --project services/titan --all-extras
 npx clerk@latest env pull --app app_2ydgnHRPQ7JmVCswcMHsCCx0PMZ --instance dev --file .env
-npx pnpm@11.20.0 db:up
-npx pnpm@11.20.0 db:migrate
-npx pnpm@11.20.0 db:status
-npx pnpm@11.20.0 dev
+pnpm db:up
+pnpm db:migrate
+pnpm db:status
+pnpm dev
 ```
 
 The API starts at <http://localhost:3000>. OpenAPI JSON is served at `/openapi.json`, and
 interactive API documentation is served at `/docs`.
 
-Run `npx pnpm@11.20.0 dev:marketing` in a second terminal to start the marketing website at
+Run `pnpm dev:marketing` in a second terminal to start the marketing website at
 <http://localhost:3001>.
 
 The pnpm prepare lifecycle clones the exact Effect 4 source tag used by the workspace into
@@ -70,23 +71,80 @@ ignored `.repos/effect`. `scripts/prepare-effect.sh` verifies the pinned commit,
 a reproducible local reference without vendoring framework source into this repository.
 
 The Clerk CLI command writes the development publishable and secret keys to the ignored `.env`
-file. Never commit that file. PostgreSQL data is kept in the `regolith-postgres` Docker volume
-between container restarts.
+file. Never commit that file.
+
+The VPS runs separate PostgreSQL 18 development and production containers. Development is bound
+only to the VPS Tailscale address at `100.71.253.62:5433`; production has no host-published port.
+Both require TLS and SCRAM authentication, and their data persists in separate Docker volumes.
+Provision credentials and certificates before first startup, then start the desired environment:
+
+```bash
+pnpm db:provision
+pnpm db:up
+pnpm db:up:prod
+```
+
+On the VPS, retrieve the development application password without printing any other secret:
+
+```bash
+sudo cat /etc/regolith/postgres/dev/app-password
+```
+
+Put that value into the ignored `.env` using the URL shape in `.env.example`.
+
+Cloudflare connectivity uses the shared `regolith-postgres` Tunnel. The
+`mons-postgres-dev` and `mons-postgres-prod` Workers VPC services resolve the corresponding
+Docker-internal hostnames and enforce `verify_full` against their Cloudflare Origin CA
+certificates. Hyperdrive configurations `mons-development` and `mons-production` use the
+environment-specific application roles. Start the connector alongside PostgreSQL with:
+
+```bash
+docker compose --profile cloudflare up -d
+```
+
+The private `mons-postgres-backups` R2 bucket is reserved for production pgBackRest backups.
+Production continuously archives completed WAL segments to R2. A systemd timer creates a full
+backup every Sunday at 03:00 UTC and differential backups Monday through Saturday at 03:00 UTC;
+pgBackRest retains four full backup sets and their required WAL. Inspect or validate the repository
+with `pnpm db:backup:info` and `pnpm db:backup:check`. Install the timers only after an initial full
+backup succeeds:
+
+```bash
+pnpm db:provision:backups
+pnpm db:backup:full
+./scripts/install-pgbackrest-timers.sh
+```
+
+The same installer activates a 15-minute operational check for both database containers,
+`cloudflared`, WAL archive failures, repository consistency, and backup age. Inspect it with
+`systemctl status regolith-postgres-operations-check.service`. Run a disposable point-in-time
+restore verification with `pnpm db:backup:restore-drill`.
+
+Migrations run as the environment's migration role before an API deployment; the API runtime role
+cannot create schemas or tables, and API startup never applies migrations. CI applies every
+migration twice against PostgreSQL 18 to verify both forward execution and idempotency. Deploy the
+dev Hyperdrive smoke Worker with `pnpm deploy:dev` and verify its `/health` response before routing
+the full API. Production uses `pnpm deploy:production` only after its migration job succeeds.
+
+SST provisions the stage-specific Cloudflare AI Gateway and links the existing `mons` R2 bucket as
+the native `Media` binding. Deployed Workers therefore need neither an AI provider token nor R2
+access keys. The S3-compatible R2 variables in `.env.example` are optional and apply only when the
+standalone Node server needs remote media access during local development.
 
 ## Common commands
 
 | Command                           | Purpose                                                                      |
 | --------------------------------- | ---------------------------------------------------------------------------- |
-| `npx pnpm@11.20.0 dev`            | Run the API in watch mode through the Oxc TypeScript runner                  |
-| `npx pnpm@11.20.0 dev:marketing`  | Run the TanStack Start marketing website on port 3001                        |
-| `npx pnpm@11.20.0 db:status`      | Inspect the active PostgreSQL snapshot                                       |
-| `npx pnpm@11.20.0 db:migrate`     | Migrate stable app tables and catalog full-text search                       |
-| `npx pnpm@11.20.0 db:ingest`      | Atomically ingest the schema-v2 raw and branded snapshots                    |
-| `npx pnpm@11.20.0 contracts`      | Regenerate raw and branded JSON Schemas                                      |
-| `npx pnpm@11.20.0 openapi`        | Regenerate the OpenAPI document                                              |
-| `npx pnpm@11.20.0 mons:test`      | Build and test the Mons Xcode project on macOS                               |
-| `npx pnpm@11.20.0 mons:build:ios` | Compile the iOS app and barcode scanner path                                 |
-| `npx pnpm@11.20.0 verify`         | Run every local formatting, build, test, contract, database, and Xcode check |
+| `pnpm dev`            | Run the API in watch mode through the Oxc TypeScript runner                  |
+| `pnpm dev:marketing`  | Run the TanStack Start marketing website on port 3001                        |
+| `pnpm db:status`      | Inspect the active PostgreSQL snapshot                                       |
+| `pnpm db:migrate`     | Migrate stable app tables and catalog full-text search                       |
+| `pnpm db:ingest`      | Atomically ingest the schema-v2 raw and branded snapshots                    |
+| `pnpm contracts`      | Regenerate raw and branded JSON Schemas                                      |
+| `pnpm openapi`        | Regenerate the OpenAPI document                                              |
+| `pnpm mons:test`      | Build and test the Mons Xcode project on macOS                               |
+| `pnpm mons:build:ios` | Compile the iOS app and barcode scanner path                                 |
+| `pnpm verify`         | Run every local formatting, build, test, contract, database, and Xcode check |
 
 `db:ingest` expects the manifest-backed files under `data/outputs/v2`. Titan verifies their
 schema versions and SHA-256 hashes before loading them.

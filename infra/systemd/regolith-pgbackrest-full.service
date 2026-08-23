@@ -1,0 +1,9 @@
+[Unit]
+Description=Regolith production PostgreSQL full backup
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/ubuntu/projects/regolith
+ExecStart=/usr/bin/docker compose exec -T --user postgres postgres-prod pgbackrest --config=/var/lib/postgresql/pgbackrest/pgbackrest.conf --stanza=regolith-prod --type=full backup

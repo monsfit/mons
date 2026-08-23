@@ -44,7 +44,7 @@ const program = Effect.gen(function* () {
         ? yield* Effect.gen(function* () {
             const fileSystem = yield* FileSystem.FileSystem
             const bytes = yield* fileSystem.readFile(audioPath)
-            return yield* service.transcribe(bytes)
+            return yield* service.transcribe(bytes, 'audio/m4a')
           })
         : 'Two fried eggs and one slice of whole wheat toast.'
     return yield* service.analyzeText('00000000-0000-4000-8000-000000000000', description)

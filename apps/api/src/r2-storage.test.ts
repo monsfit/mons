@@ -7,6 +7,8 @@ import {
   R2Storage,
   R2StorageUnavailable,
   type R2Client,
+  type R2BucketBinding,
+  makeR2BindingStorageLayer,
   makeR2StorageLayer,
   r2Endpoint,
   r2StorageUnavailableLayer,
@@ -70,6 +72,52 @@ describe('R2Storage', () => {
     assert.strictEqual(
       r2Endpoint('59724eca0ed8946b29fdf2319593fd1b'),
       'https://59724eca0ed8946b29fdf2319593fd1b.r2.cloudflarestorage.com',
+    )
+  })
+
+  it.layer(
+    makeR2BindingStorageLayer({
+      binding: {
+        delete: async (key) => {
+          objects.delete(key)
+        },
+        get: async (key) => {
+          const object = objects.get(key)
+          if (object === undefined) return null
+          const bytes = object.body.slice()
+          return {
+            arrayBuffer: () =>
+              Promise.resolve(
+                bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
+              ),
+            etag: `native-${key}`,
+            ...(object.contentType === undefined
+              ? {}
+              : { httpMetadata: { contentType: object.contentType } }),
+          }
+        },
+        put: async (key, value, options) => {
+          objects.set(key, {
+            body: value.slice(),
+            ...(options?.httpMetadata?.contentType === undefined
+              ? {}
+              : { contentType: options.httpMetadata.contentType }),
+          })
+        },
+      } satisfies R2BucketBinding,
+      bucket: 'mons',
+    }),
+  )((test) => {
+    test.effect('uses a native Cloudflare R2 binding without credentials', () =>
+      Effect.gen(function* () {
+        const storage = yield* R2Storage
+        const body = new TextEncoder().encode('native binding')
+        yield* storage.putObject({ body, contentType: 'text/plain', key: 'native/test.txt' })
+        const stored = yield* storage.getObject('native/test.txt')
+        assert.deepStrictEqual(stored.body, body)
+        assert.strictEqual(stored.contentType, 'text/plain')
+        assert.strictEqual(stored.etag, 'native-native/test.txt')
+      }),
     )
   })
 

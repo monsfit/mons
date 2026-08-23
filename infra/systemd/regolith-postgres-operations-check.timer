@@ -1,0 +1,11 @@
+[Unit]
+Description=Check Regolith PostgreSQL health, WAL archiving, and backups
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=15min
+Persistent=true
+Unit=regolith-postgres-operations-check.service
+
+[Install]
+WantedBy=timers.target

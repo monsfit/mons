@@ -152,7 +152,7 @@ export const makeMealEstimationLayer = (options: {
             transcript: null,
           })
         }
-        const transcript = yield* intelligence.transcribe(bytes)
+        const transcript = yield* intelligence.transcribe(bytes, input.mediaType)
         const analysis = yield* intelligence.analyzeText(profileId, transcript)
         return yield* persist({
           analysis,

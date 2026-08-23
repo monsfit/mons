@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:17-alpine
+        image: postgres:18.4-alpine
         env:
           POSTGRES_DB: regolith
           POSTGRES_USER: regolith
@@ -22,6 +22,8 @@ jobs:
           --health-timeout 5s
           --health-retries 12
     env:
+      DATABASE_URL: postgresql://regolith:regolith_local@localhost:5432/regolith
+      REGOLITH_DATABASE_RUNTIME_USER: regolith
       REGOLITH_TEST_DATABASE_URL: postgresql://regolith:regolith_local@localhost:5432/regolith
     steps:
       - uses: actions/checkout@v4
@@ -34,6 +36,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
+      - run: pnpm db:migrate
+      - run: pnpm db:migrate
       - run: pnpm openapi:check
 
   python:
@@ -41,10 +45,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11", "3.12", "3.13"]
+        python-version: ['3.11', '3.12', '3.13']
     services:
       postgres:
-        image: postgres:17-alpine
+        image: postgres:18.4-alpine
         env:
           POSTGRES_DB: regolith
           POSTGRES_USER: regolith
