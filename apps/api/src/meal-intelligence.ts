@@ -1,11 +1,10 @@
 import {
   NoObjectGeneratedError,
   Output,
-  gateway,
+  type LanguageModel,
   generateText,
   stepCountIs,
   tool,
-  transcribe,
 } from 'ai'
 import {
   CatalogReader,
@@ -168,108 +167,132 @@ export interface MealAiClient {
   ) => Promise<MealResolution>
   readonly transcribe: (input: {
     readonly bytes: Uint8Array
+    readonly mediaType: 'audio/m4a' | 'audio/mp4' | 'audio/mpeg' | 'audio/wav' | 'audio/webm'
     readonly model: string
   }) => Promise<string>
 }
 
-export const defaultMealAiClient: MealAiClient = {
-  describe: async ({ items, model }) => {
-    const result = await generateText({
-      instructions:
-        'Write a concise, natural meal description of at most 200 characters. Use only the supplied foods, avoid nutrition claims, and do not include quantities unless they distinguish the meal.',
-      maxRetries: 1,
-      model,
-      output: descriptionOutput,
-      prompt: JSON.stringify(items),
-      temperature: 0,
-    })
-    return Schema.decodeUnknownPromise(MealDescriptionWire)(result.output)
-  },
-  observePhoto: async ({ bytes, context, mediaType, model, schemaRetry }) => {
-    const normalizedContext = context?.trim()
-    const request =
-      normalizedContext === undefined || normalizedContext.length === 0
-        ? 'Describe and decompose this meal for database-backed nutrition logging.'
-        : `Describe and decompose this meal for database-backed nutrition logging. The user added this context: ${JSON.stringify(normalizedContext)}. Treat it as evidence about what was served or consumed; use the image to estimate portions and do not add ingredients unsupported by either source.`
-    const result = await generateText({
-      maxRetries: 1,
-      messages: [
-        {
-          content: [
-            {
-              text: request,
-              type: 'text',
-            },
-            {
-              data: { data: bytes, type: 'data' },
-              mediaType,
-              type: 'file',
-            },
-          ],
-          role: 'user',
-        },
-      ],
-      model,
-      output: observationOutput,
-      system: `${observationInstructions}${schemaRetry ? `\n${observationSchemaRecoveryInstructions}` : ''}`,
-      temperature: 0,
-    })
-    return Schema.decodeUnknownPromise(MealObservation)(result.output)
-  },
-  observeText: async ({ model, schemaRetry, text }) => {
-    const result = await generateText({
-      maxRetries: 1,
-      model,
-      output: observationOutput,
-      prompt: text,
-      system: `${observationInstructions}${schemaRetry ? `\n${observationSchemaRecoveryInstructions}` : ''}`,
-      temperature: 0,
-    })
-    return Schema.decodeUnknownPromise(MealObservation)(result.output)
-  },
-  resolve: async ({ model, observation, searchCatalog, searchPersonal }) => {
-    const searchCatalogTool = tool({
-      description:
-        'Searches valid USDA and Open Food Facts catalog records. Returns real IDs that may be selected.',
-      execute: ({ limit, query }) =>
-        searchCatalog(query.trim().slice(0, 200), Math.max(1, Math.min(20, Math.trunc(limit)))),
-      inputSchema: standardAiSchema(MealSearchInput),
-    })
-    const searchPersonalTool = tool({
-      description:
-        'Searches this profile custom foods and calculated recipes. Returns real IDs that may be selected.',
-      execute: ({ limit, query }) =>
-        searchPersonal(query.trim().slice(0, 200), Math.max(1, Math.min(20, Math.trunc(limit)))),
-      inputSchema: standardAiSchema(MealSearchInput),
-    })
-    const result = await generateText({
-      instructions: `Resolve every observed item to the best real food record and write a concise natural description for the complete meal.
+export const makeMealAiClient = (options?: {
+  readonly languageModel?: (model: string) => LanguageModel
+}): MealAiClient => {
+  const languageModel = options?.languageModel ?? ((model: string) => model)
+  return {
+    describe: async ({ items, model }) => {
+      const result = await generateText({
+        instructions:
+          'Write a concise, natural meal description of at most 200 characters. Use only the supplied foods, avoid nutrition claims, and do not include quantities unless they distinguish the meal.',
+        maxRetries: 1,
+        model: languageModel(model),
+        output: descriptionOutput,
+        prompt: JSON.stringify(items),
+        temperature: 0,
+      })
+      return Schema.decodeUnknownPromise(MealDescriptionWire)(result.output)
+    },
+    observePhoto: async ({ bytes, context, mediaType, model, schemaRetry }) => {
+      const normalizedContext = context?.trim()
+      const request =
+        normalizedContext === undefined || normalizedContext.length === 0
+          ? 'Describe and decompose this meal for database-backed nutrition logging.'
+          : `Describe and decompose this meal for database-backed nutrition logging. The user added this context: ${JSON.stringify(normalizedContext)}. Treat it as evidence about what was served or consumed; use the image to estimate portions and do not add ingredients unsupported by either source.`
+      const result = await generateText({
+        maxRetries: 1,
+        messages: [
+          {
+            content: [
+              {
+                text: request,
+                type: 'text',
+              },
+              {
+                data: { data: bytes, type: 'data' },
+                mediaType,
+                type: 'file',
+              },
+            ],
+            role: 'user',
+          },
+        ],
+        model: languageModel(model),
+        output: observationOutput,
+        system: `${observationInstructions}${schemaRetry ? `\n${observationSchemaRecoveryInstructions}` : ''}`,
+        temperature: 0,
+      })
+      return Schema.decodeUnknownPromise(MealObservation)(result.output)
+    },
+    observeText: async ({ model, schemaRetry, text }) => {
+      const result = await generateText({
+        maxRetries: 1,
+        model: languageModel(model),
+        output: observationOutput,
+        prompt: text,
+        system: `${observationInstructions}${schemaRetry ? `\n${observationSchemaRecoveryInstructions}` : ''}`,
+        temperature: 0,
+      })
+      return Schema.decodeUnknownPromise(MealObservation)(result.output)
+    },
+    resolve: async ({ model, observation, searchCatalog, searchPersonal }) => {
+      const searchCatalogTool = tool({
+        description:
+          'Searches valid USDA and Open Food Facts catalog records. Returns real IDs that may be selected.',
+        execute: ({ limit, query }) =>
+          searchCatalog(query.trim().slice(0, 200), Math.max(1, Math.min(20, Math.trunc(limit)))),
+        inputSchema: standardAiSchema(MealSearchInput),
+      })
+      const searchPersonalTool = tool({
+        description:
+          'Searches this profile custom foods and calculated recipes. Returns real IDs that may be selected.',
+        execute: ({ limit, query }) =>
+          searchPersonal(query.trim().slice(0, 200), Math.max(1, Math.min(20, Math.trunc(limit)))),
+        inputSchema: standardAiSchema(MealSearchInput),
+      })
+      const result = await generateText({
+        instructions: `Resolve every observed item to the best real food record and write a concise natural description for the complete meal.
 Use the search tools for every item. Prefer a specific preparation match over a generic name.
 Only return a foodKey that appeared in a tool result from this request. Return null when no candidate is defensible.
 Return exactly one selection for every observationOrdinal and do not change quantities.`,
-      maxRetries: 1,
-      model,
-      output: resolutionOutput,
-      prompt: JSON.stringify(observation),
-      stopWhen: stepCountIs(10),
-      temperature: 0,
-      tools: { searchCatalog: searchCatalogTool, searchPersonal: searchPersonalTool },
-    })
-    return result.output
-  },
-  transcribe: async ({ bytes, model }) => {
-    const result = await transcribe({
-      audio: bytes,
-      maxRetries: 1,
-      model: gateway.transcriptionModel(model),
-    })
-    return result.text
-  },
+        maxRetries: 1,
+        model: languageModel(model),
+        output: resolutionOutput,
+        prompt: JSON.stringify(observation),
+        stopWhen: stepCountIs(10),
+        temperature: 0,
+        tools: { searchCatalog: searchCatalogTool, searchPersonal: searchPersonalTool },
+      })
+      return result.output
+    },
+    transcribe: async ({ bytes, mediaType, model }) => {
+      const result = await generateText({
+        maxRetries: 1,
+        messages: [
+          {
+            content: [
+              {
+                text: 'Transcribe this meal description accurately. Return only the spoken words without commentary, formatting, or inferred details.',
+                type: 'text',
+              },
+              {
+                data: { data: bytes, type: 'data' },
+                mediaType,
+                type: 'file',
+              },
+            ],
+            role: 'user',
+          },
+        ],
+        model: languageModel(model),
+        temperature: 0,
+      })
+      return result.text
+    },
+  }
 }
 
-export const defaultMealObservationModel = 'google/gemini-3.5-flash-lite'
-export const defaultMealResolutionModel = 'openai/gpt-5.6-luna'
-export const defaultMealTranscriptionModel = 'openai/gpt-4o-mini-transcribe'
+export const defaultMealAiClient: MealAiClient = makeMealAiClient()
+
+export const defaultMealObservationModel = 'google/gemini-3.7-flash'
+export const defaultMealResolutionModel = 'google/gemini-3.7-flash'
+export const defaultMealTranscriptionModel = 'google/gemini-3.7-flash'
 export const mealPromptVersion = 'meal-estimation-v2'
 
 export const mealObservationModelConfig = Config.nonEmptyString(
@@ -322,7 +345,10 @@ export interface MealIntelligenceService {
   readonly describe: (
     items: ReadonlyArray<{ readonly name: string; readonly quantityGrams: number }>,
   ) => Effect.Effect<string, MealIntelligenceError>
-  readonly transcribe: (bytes: Uint8Array) => Effect.Effect<string, MealIntelligenceError>
+  readonly transcribe: (
+    bytes: Uint8Array,
+    mediaType: 'audio/m4a' | 'audio/mp4' | 'audio/mpeg' | 'audio/wav' | 'audio/webm',
+  ) => Effect.Effect<string, MealIntelligenceError>
 }
 
 export class MealIntelligence extends Context.Service<MealIntelligence, MealIntelligenceService>()(
@@ -647,10 +673,10 @@ export const makeMealIntelligenceLayer = (options: {
             })
           return description
         }),
-        transcribe: Effect.fn('MealIntelligence.transcribe')(function* (bytes) {
+        transcribe: Effect.fn('MealIntelligence.transcribe')(function* (bytes, mediaType) {
           const transcript = yield* Effect.tryPromise({
             catch: mapAiError(options.transcriptionModel, 'transcribe'),
-            try: () => client.transcribe({ bytes, model: options.transcriptionModel }),
+            try: () => client.transcribe({ bytes, mediaType, model: options.transcriptionModel }),
           })
           if (transcript.trim().length < 2)
             return yield* MealIntelligenceError.make({

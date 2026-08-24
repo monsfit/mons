@@ -4,6 +4,7 @@ import {
   type ApplicationRepositoryService,
   CatalogReader,
   type CatalogReaderService,
+  DatabaseHealth,
   type FoodLogEntryRecord,
   type FoodRecord,
   type NutritionPlanRecord,
@@ -224,6 +225,7 @@ class TestWebHandler extends Context.Service<
 >()('@regolith/api/TestWebHandler') {}
 
 const repositoryLayer = Layer.mergeAll(
+  Layer.succeed(DatabaseHealth)({ check: Effect.void }),
   Layer.succeed(CatalogReader)(catalog),
   Layer.succeed(ApplicationRepository)(application),
   Layer.succeed(UserFoodRepository)(userFoods),

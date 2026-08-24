@@ -80,7 +80,10 @@ const createdMealEstimateSchema = mealEstimateSchema.pipe(HttpApiSchema.status(2
 const createdMealLogSchema = mealLogSchema.pipe(HttpApiSchema.status(201))
 
 const system = HttpApiGroup.make('system').add(
-  HttpApiEndpoint.get('health', '/health', { success: healthSchema }),
+  HttpApiEndpoint.get('health', '/health', {
+    success: healthSchema,
+    error: ServiceUnavailableError,
+  }),
 )
 
 const catalog = HttpApiGroup.make('catalog')

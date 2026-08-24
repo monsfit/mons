@@ -1,6 +1,11 @@
 import { Effect, Layer } from 'effect'
 import { HttpApiBuilder, HttpApiSchema } from 'effect/unstable/httpapi'
-import { ApplicationRepository, CatalogReader, UserFoodRepository } from '@regolith/database'
+import {
+  ApplicationRepository,
+  CatalogReader,
+  DatabaseHealth,
+  UserFoodRepository,
+} from '@regolith/database'
 
 import { RegolithApi } from './api.ts'
 import { CurrentIdentity } from './auth.ts'
@@ -9,6 +14,7 @@ import {
   NotFoundError,
   forbiddenError,
   internalApiError,
+  serviceUnavailableError,
   validationError,
 } from './errors.ts'
 import {
@@ -52,7 +58,14 @@ const withProfile = <A, E, R>(profileId: string, effect: Effect.Effect<A, E, R>)
 
 export const systemHandlers = HttpApiBuilder.group(RegolithApi, 'system', (handlers) =>
   handlers.handle('health', () =>
-    Effect.succeed({ service: 'api' as const, status: 'ok' as const, version: '0.1.0' }),
+    Effect.gen(function* () {
+      const database = yield* DatabaseHealth
+      yield* database.check.pipe(
+        Effect.tapError((error) => Effect.logError('Database health check failed', error)),
+        Effect.mapError(() => serviceUnavailableError('Database unavailable')),
+      )
+      return { service: 'api' as const, status: 'ok' as const, version: '0.1.0' }
+    }),
   ),
 )
 

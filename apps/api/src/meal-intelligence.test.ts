@@ -142,7 +142,7 @@ describe('MealIntelligence', () => {
       Effect.gen(function* () {
         const service = yield* MealIntelligence
         assert.strictEqual(
-          yield* service.transcribe(new Uint8Array([1, 2, 3])),
+          yield* service.transcribe(new Uint8Array([1, 2, 3]), 'audio/m4a'),
           '150 grams of example food',
         )
       }),

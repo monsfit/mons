@@ -1,7 +1,7 @@
-import { streamText as streamSdkText } from 'ai'
+import { type LanguageModel, streamText as streamSdkText } from 'ai'
 import { Config, Context, Effect, Layer, Schema, Stream } from 'effect'
 
-export const defaultAiGatewayModel = 'google/gemini-3.5-flash-lite'
+export const defaultAiGatewayModel = 'google/gemini-3.7-flash'
 
 export const aiGatewayModelConfig = Config.nonEmptyString('AI_GATEWAY_MODEL').pipe(
   Config.withDefault(defaultAiGatewayModel),
@@ -33,10 +33,13 @@ export interface AiGatewayClient {
   }) => AsyncIterable<string>
 }
 
-const sdkClient: AiGatewayClient = {
+export const makeAiSdkClient = (
+  resolveModel: (model: string) => LanguageModel = (model) => model,
+): AiGatewayClient => ({
   streamText: (request) => {
     const result = streamSdkText({
       ...request,
+      model: resolveModel(request.model),
       // Error events are consumed below and mapped into Effect's typed error channel.
       onError: () => {},
     })
@@ -47,13 +50,13 @@ const sdkClient: AiGatewayClient = {
       }
     })()
   },
-}
+})
 
 export const makeAiGatewayLayer = (options: {
   readonly client?: AiGatewayClient
   readonly model: string
 }) => {
-  const client = options.client ?? sdkClient
+  const client = options.client ?? makeAiSdkClient()
   const toError = (cause: unknown) =>
     AiGatewayError.make({ cause, model: options.model, operation: 'streamText' })
 

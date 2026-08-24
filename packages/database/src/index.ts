@@ -30,8 +30,8 @@ export type {
   FoodRecord,
   FoodSearchOptions,
 } from './catalog-repository.ts'
-export { createDatabaseLayer } from './client.ts'
-export type { DatabaseOptions } from './client.ts'
+export { createDatabaseLayer, DatabaseHealth, databaseHealthLayer } from './client.ts'
+export type { DatabaseHealthService, DatabaseOptions } from './client.ts'
 export {
   makeMealLogRepository,
   mealLogRepositoryLayer,
@@ -65,6 +65,7 @@ export type {
   SaveMealEstimateInput,
 } from './meal-estimate-repository.ts'
 export {
+  grantRuntimeDatabaseAccess,
   migrateApplicationDatabase,
   migrateCatalogSearch,
   validateSchemaName,

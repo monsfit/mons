@@ -16,6 +16,41 @@ const schemaNameSchema = Schema.String.check(Schema.isPattern(/^[a-z_][a-z0-9_]{
 
 export const validateSchemaName = Schema.decodeUnknownEffect(schemaNameSchema)
 
+export const grantRuntimeDatabaseAccess = (
+  runtimeRole: string,
+  appSchema = 'regolith_app',
+  catalogSchema = 'regolith',
+) =>
+  Effect.gen(function* () {
+    const safeRole = yield* validateSchemaName(runtimeRole)
+    const safeAppSchema = yield* validateSchemaName(appSchema)
+    const safeCatalogSchema = yield* validateSchemaName(catalogSchema)
+    const sql = yield* SqlClient.SqlClient
+    const role = sql(safeRole)
+    const application = sql(safeAppSchema)
+    const catalog = sql(safeCatalogSchema)
+
+    yield* sql`GRANT USAGE ON SCHEMA ${application} TO ${role}`
+    yield* sql`GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA ${application} TO ${role}`
+    yield* sql`GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA ${application} TO ${role}`
+    yield* sql`ALTER DEFAULT PRIVILEGES IN SCHEMA ${application}
+      GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO ${role}`
+    yield* sql`ALTER DEFAULT PRIVILEGES IN SCHEMA ${application}
+      GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO ${role}`
+
+    const catalogExists = yield* sql<{ readonly exists: boolean }>`
+      SELECT EXISTS (SELECT FROM pg_namespace WHERE nspname = ${safeCatalogSchema}) AS exists
+    `
+    if (catalogExists[0]?.exists === true) {
+      yield* sql`GRANT USAGE ON SCHEMA ${catalog} TO ${role}`
+      yield* sql`GRANT SELECT ON ALL TABLES IN SCHEMA ${catalog} TO ${role}`
+    }
+  }).pipe(
+    Effect.withSpan('database.grant-runtime-access', {
+      attributes: { 'db.runtime_role': runtimeRole },
+    }),
+  )
+
 const applicationMigrationLoader = (schema: string): Migrator.Loader =>
   Effect.succeed([
     [1, 'initial_application', Effect.succeed(initialApplication(schema))],

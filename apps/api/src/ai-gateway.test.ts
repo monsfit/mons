@@ -34,7 +34,7 @@ describe('AiGateway', () => {
 
         assert.deepStrictEqual(chunks, ['clear ', 'blue light'])
         assert.deepStrictEqual(requests, [
-          { model: 'google/gemini-3.5-flash-lite', prompt: 'Why is the sky blue?' },
+          { model: defaultAiGatewayModel, prompt: 'Why is the sky blue?' },
         ])
       }),
     )
