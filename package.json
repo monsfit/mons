@@ -40,7 +40,11 @@
     "mons:configure:local": "./scripts/configure-local-ios-api.sh",
     "mons:check": "pnpm mons:test:packages && pnpm mons:build:ios && pnpm mons:test",
     "mons:test:packages": "swift test --package-path apps/mons -Xswiftc -warnings-as-errors",
-    "mons:test": "xcodebuild test -project apps/mons/mons.xcodeproj -scheme mons -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO"
+    "mons:test": "xcodebuild test -project apps/mons/mons.xcodeproj -scheme mons -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO",
+    "monitoring:logs": "docker compose -f infra/vps/monitoring/compose.yaml logs --follow",
+    "monitoring:provision": "./infra/vps/monitoring/provision.sh",
+    "monitoring:stop": "docker compose -f infra/vps/monitoring/compose.yaml stop",
+    "monitoring:up": "docker compose -f infra/vps/monitoring/compose.yaml up -d"
   },
   "devDependencies": {
     "oxfmt": "catalog:",
