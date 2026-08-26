@@ -1,7 +1,7 @@
-# Regolith marketing
+# Mons web client
 
 The marketing website for Mons is a server-rendered React application built with TanStack Start,
-TanStack Router, Vite, and Nitro. It lives in the Regolith pnpm workspace and participates in the
+TanStack Router, Vite, and Nitro. It lives in the Mons pnpm workspace and participates in the
 same Turbo formatting, linting, TypeScript 7, test, and build checks as the API.
 
 ## Run locally

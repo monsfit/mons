@@ -38,7 +38,7 @@ coverage/
 **/*.xcuserstate
 **/.build/
 DerivedData/
-apps/mons/Configuration/Local.xcconfig
+clients/ios/Configuration/Local.xcconfig
 
 # OS/editor artifacts
 .DS_Store

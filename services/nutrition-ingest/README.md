@@ -1,6 +1,6 @@
-# Titan
+# Nutrition ingest
 
-Titan converts public food datasets into one deterministic schema, publishes versioned
+The nutrition-ingest service converts public food datasets into one deterministic schema, publishes versioned
 JSONL snapshots with verification manifests, and atomically loads those snapshots into
 PostgreSQL.
 
@@ -9,7 +9,7 @@ Run all commands below from the monorepo root.
 ## Setup
 
 ```bash
-uv sync --project services/titan --all-extras
+uv sync --project services/nutrition-ingest --all-extras
 ```
 
 The active contract is schema `2.0.0`. Nutrients are normalized per 100 g.
@@ -52,7 +52,7 @@ intervals. Use `--output -` for non-transactional stdout without sidecars.
 
 ## Sources
 
-| Dataset | Snapshot role | Titan command |
+| Dataset | Snapshot role | Command |
 |---|---|---|
 | Australian Food Composition Database | Raw | `titan australia` |
 | Canadian Nutrient File | Raw | `titan canada` |
@@ -69,7 +69,7 @@ USDA wins when it and Open Food Facts contain the same valid GTIN. Branded rows 
 only when they have a valid GTIN, a display-safe name, and finite calories, protein, fat, and
 carbohydrate values per 100 g. Calories must be between 0 and 1,000 kcal, individual macros
 between 0 and 100 g, and their combined weight at most 120 g. Open Food Facts rows marked
-obsolete, without nutrition data, or with source quality-error tags are excluded. Titan reads
+obsolete, without nutrition data, or with source quality-error tags are excluded. Nutrition ingest reads
 only explicit Open Food Facts `100g` nutriment values; serving values are never relabeled as
 per-100-g data. Source names written entirely in uppercase are deterministically converted to
 display case; existing mixed-case and non-Latin names are preserved.
@@ -117,20 +117,20 @@ regolith.ingestion_runs           snapshot provenance and load status
 ```
 
 The local Compose defaults are database/user `regolith`, password `regolith_local`, and port `5432`.
-Override them through `.env` or command options. The `regolith-postgres` volume persists across
+Override them through `.env` or command options. The `mons-postgres` volume persists across
 ordinary container restarts.
 
 ## Development
 
 ```bash
-npx pnpm@11.20.0 titan:lint
-npx pnpm@11.20.0 titan:typecheck
-npx pnpm@11.20.0 titan:test
-npx pnpm@11.20.0 titan:test:postgres
+npx pnpm@11.20.0 nutrition:lint
+npx pnpm@11.20.0 nutrition:typecheck
+npx pnpm@11.20.0 nutrition:test
+npx pnpm@11.20.0 nutrition:test:postgres
 ```
 
 Small deterministic tests do not require source downloads. When `data/inputs` exists, the
 same suite automatically exercises every available source parser and unit contract.
 
-Titan is Apache-2.0 software. That license does not grant redistribution rights for source
+Nutrition ingest is Apache-2.0 software. That license does not grant redistribution rights for source
 or generated datasets; consult [DATA_SOURCES.md](DATA_SOURCES.md) before publishing data.

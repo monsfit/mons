@@ -7,13 +7,12 @@ RUN apt-get update \
     && pgbackrest version \
     && rm -rf /var/lib/apt/lists/*
 
-COPY docker-entrypoint-regolith.sh /usr/local/bin/docker-entrypoint-regolith
-COPY init-regolith.sh /docker-entrypoint-initdb.d/10-regolith.sh
+COPY docker-entrypoint-mons.sh /usr/local/bin/docker-entrypoint-mons
+COPY init-mons.sh /docker-entrypoint-initdb.d/10-mons.sh
 
 RUN chmod 0755 \
-    /usr/local/bin/docker-entrypoint-regolith \
-    /docker-entrypoint-initdb.d/10-regolith.sh
+    /usr/local/bin/docker-entrypoint-mons \
+    /docker-entrypoint-initdb.d/10-mons.sh
 
-ENTRYPOINT ["docker-entrypoint-regolith"]
+ENTRYPOINT ["docker-entrypoint-mons"]
 CMD ["postgres"]
-

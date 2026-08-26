@@ -4,7 +4,7 @@ set -euo pipefail
 
 script_directory=${0:A:h}
 repository_directory=${script_directory:h}
-configuration_file="$repository_directory/apps/mons/Configuration/Local.xcconfig"
+configuration_file="$repository_directory/clients/ios/Configuration/Local.xcconfig"
 api_port=${API_PORT:-3000}
 api_host=${1:-}
 

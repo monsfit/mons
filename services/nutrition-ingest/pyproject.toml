@@ -1,5 +1,5 @@
 [project]
-name = "titan"
+name = "nutrition-ingest"
 version = "0.2.0"
 description = "Normalize multiple food composition databases into a shared JSONL schema."
 readme = "README.md"
@@ -14,7 +14,7 @@ postgres = ["psycopg[binary]>=3.2.0"]
 all = ["pyarrow>=23.0.0", "psycopg[binary]>=3.2.0"]
 
 [project.scripts]
-titan = "titan.cli:main"
+nutrition-ingest = "titan.cli:main"
 
 [build-system]
 requires = ["setuptools>=68"]

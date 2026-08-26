@@ -88,11 +88,11 @@
   ],
   "refresh": "30s",
   "schemaVersion": 41,
-  "tags": ["regolith", "vps"],
+  "tags": ["mons", "vps"],
   "templating": { "list": [] },
   "time": { "from": "now-6h", "to": "now" },
   "timezone": "browser",
   "title": "VPS overview",
-  "uid": "regolith-vps",
+  "uid": "mons-vps",
   "version": 1
 }

@@ -3,7 +3,7 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url('../../mons/mons/DesignSystem/Fonts/SpaceGrotesk-Regular.ttf') format('truetype');
+  src: url('../../ios/mons/DesignSystem/Fonts/SpaceGrotesk-Regular.ttf') format('truetype');
 }
 
 @font-face {
@@ -11,7 +11,7 @@
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url('../../mons/mons/DesignSystem/Fonts/SpaceGrotesk-Medium.ttf') format('truetype');
+  src: url('../../ios/mons/DesignSystem/Fonts/SpaceGrotesk-Medium.ttf') format('truetype');
 }
 
 @font-face {
@@ -19,7 +19,7 @@
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url('../../mons/mons/DesignSystem/Fonts/SpaceGrotesk-Bold.ttf') format('truetype');
+  src: url('../../ios/mons/DesignSystem/Fonts/SpaceGrotesk-Bold.ttf') format('truetype');
 }
 
 :root {
