@@ -135,9 +135,8 @@ destination.
 
 Migrations run as the environment's migration role before an API deployment; the API runtime role
 cannot create schemas or tables, and API startup never applies migrations. CI applies every
-migration twice against PostgreSQL 18 to verify both forward execution and idempotency. Deploy the
-dev Hyperdrive smoke Worker with `pnpm deploy:dev` and verify its `/health` response before routing
-the full API. Production uses `pnpm deploy:production` only after its migration job succeeds.
+migration twice against PostgreSQL 18 to verify both forward execution and idempotency. Production
+uses `pnpm deploy:production` only after its migration job succeeds.
 
 SST provisions the stage-specific Cloudflare AI Gateway and links the existing `mons` R2 bucket as
 the native `Media` binding. Deployed Workers therefore need neither an AI provider token nor R2
