@@ -16,12 +16,14 @@ export default $config({
       dev: '8c533f1b36d644fab96b3ebe4cb5bc08',
       production: '0d5ed6f6c3c94a6c8efca2deb51ea2ea',
     } as const
-    if ($app.stage !== 'dev' && $app.stage !== 'production') {
-      throw new Error(`Unsupported stage: ${$app.stage}`)
-    }
+    // `sst dev` intentionally uses SST's personal stage by default. Personal
+    // stages share the development database while keeping their Worker and AI
+    // Gateway isolated. The explicit `dev` stage remains the shared deployment
+    // target used by `sst deploy --stage dev`.
+    const databaseStage = $app.stage === 'production' ? 'production' : 'dev'
 
     const database = sst.cloudflare.Hyperdrive.get('Database', {
-      hyperdriveId: hyperdriveIds[$app.stage],
+      hyperdriveId: hyperdriveIds[databaseStage],
     })
     const media = new sst.Linkable('Media', {
       include: [
@@ -63,20 +65,9 @@ export default $config({
       placement: { mode: 'smart' },
       url: true,
     })
-    const smoke = new sst.cloudflare.Worker('DatabaseSmoke', {
-      compatibility: {
-        date: '2026-08-21',
-        flags: ['nodejs_compat', 'global_fetch_strictly_public'],
-      },
-      handler: 'apps/api/src/hyperdrive-smoke-worker.ts',
-      link: [database],
-      placement: { mode: 'smart' },
-      url: true,
-    })
     return {
       aiGatewayId: aiGateway.aiGatewayId,
       apiUrl: api.url,
-      smokeUrl: smoke.url,
     }
   },
 })

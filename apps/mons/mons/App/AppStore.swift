@@ -330,7 +330,7 @@ final class AppStore {
 
     private static func bootstrapMessage(for error: Error) -> String {
         if error is URLError {
-            return "Start the local API with pnpm dev:phone, keep this iPhone on the same network as your Mac, then try again."
+            return "Confirm the development API is running and reachable, then try again."
         }
         return error.localizedDescription
     }

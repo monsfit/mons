@@ -18,12 +18,10 @@ class Resource:
     class Database:
         id: str
         type: str
-    class DatabaseSmoke:
-        type: str
-        url: str
     class Media:
         name: str
         type: str
     class PublicConfig:
         clerkPublishableKey: str
         type: str
+

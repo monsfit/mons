@@ -4,37 +4,22 @@
 /* deno-fmt-ignore-file */
 /* biome-ignore-all lint: auto-generated */
 
-declare module "sst" {
+declare module 'sst' {
   export interface Resource {
-    "Ai": {
-      "type": "sst.cloudflare.Ai"
+    Ai: import('@cloudflare/workers-types').Ai
+    Api: import('@cloudflare/workers-types').Service
+    ClerkSecretKey: {
+      type: 'sst.sst.Secret'
+      value: string
     }
-    "Api": {
-      "type": "sst.cloudflare.Worker"
-      "url": string
-    }
-    "ClerkSecretKey": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "Database": {
-      "id": string
-      "type": "sst.cloudflare.Hyperdrive"
-    }
-    "DatabaseSmoke": {
-      "type": "sst.cloudflare.Worker"
-      "url": string
-    }
-    "Media": {
-      "name": string
-      "type": "sst.sst.Linkable"
-    }
-    "PublicConfig": {
-      "clerkPublishableKey": string
-      "type": "sst.sst.Linkable"
+    Database: import('@cloudflare/workers-types').Hyperdrive
+    Media: import('@cloudflare/workers-types').R2Bucket
+    PublicConfig: {
+      clerkPublishableKey: string
+      type: 'sst.sst.Linkable'
     }
   }
 }
 
-import "sst"
+import 'sst'
 export {}

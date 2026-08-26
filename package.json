@@ -22,8 +22,7 @@
     "db:up": "docker compose up -d postgres-dev",
     "db:up:all": "docker compose up -d postgres-dev postgres-prod",
     "db:up:prod": "docker compose up -d postgres-prod",
-    "dev": "turbo run dev --filter=@regolith/api",
-    "dev:phone": "./scripts/configure-local-ios-api.sh && \"$npm_execpath\" --filter @regolith/api dev",
+    "dev": "sst dev",
     "dev:marketing": "turbo run dev --filter=@regolith/marketing",
     "format": "oxfmt --write package.json pnpm-workspace.yaml turbo.json tsconfig.base.json apps/api apps/marketing packages",
     "format:check": "oxfmt --check package.json pnpm-workspace.yaml turbo.json tsconfig.base.json apps/api apps/marketing packages",
@@ -45,7 +44,6 @@
     "titan:typecheck": "uv run --project services/titan mypy --config-file services/titan/pyproject.toml services/titan/titan",
     "verify": "pnpm check && pnpm test:database && pnpm titan:check && pnpm generated:check && pnpm mons:check",
     "mons:build:ios": "xcodebuild build -quiet -project apps/mons/mons.xcodeproj -scheme mons -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO",
-    "mons:configure:local": "./scripts/configure-local-ios-api.sh",
     "mons:check": "pnpm mons:test:packages && pnpm mons:build:ios && pnpm mons:test",
     "mons:test:packages": "swift test --package-path apps/mons -Xswiftc -warnings-as-errors",
     "mons:test": "xcodebuild test -project apps/mons/mons.xcodeproj -scheme mons -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO"

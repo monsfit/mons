@@ -39,7 +39,9 @@ changes auditable without trusting values submitted by a client.
 Run its PostgreSQL integration tests from the repository root:
 
 ```bash
-npx pnpm@11.20.0 db:up
 npx pnpm@11.20.0 db:migrate
 npx pnpm@11.20.0 test:database
 ```
+
+Set `REGOLITH_TEST_DATABASE_URL` to a disposable PostgreSQL database before running integration
+tests. Container lifecycle belongs to the VPS runbook under `infra/vps`.

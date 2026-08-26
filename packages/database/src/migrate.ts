@@ -1,7 +1,7 @@
 import { NodeRuntime } from '@effect/platform-node'
 import { Config, Effect, Option } from 'effect'
 
-import { createDatabaseLayer } from './client.ts'
+import { createDatabaseLayer } from './core/client.ts'
 import {
   grantRuntimeDatabaseAccess,
   migrateApplicationDatabase,
