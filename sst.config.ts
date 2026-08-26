@@ -58,7 +58,7 @@ export default $config({
         date: '2026-08-23',
         flags: ['nodejs_compat', 'global_fetch_strictly_public'],
       },
-      handler: 'apps/api/src/worker.ts',
+      handler: 'services/api/src/worker.ts',
       link: [database, ai, media, clerkSecretKey, publicConfig],
       placement: { mode: 'smart' },
       url: true,

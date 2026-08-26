@@ -4,9 +4,9 @@ set -Eeuo pipefail
 readonly script_directory=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 readonly repository_directory=$(cd "${script_directory}/../.." && pwd)
 readonly compose=(docker compose --file "${repository_directory}/infra/vps/compose.yaml")
-readonly volume_name=regolith_pgbackrest_restore_drill
-readonly container_name=regolith-pgbackrest-restore-drill
-readonly image_name=regolith-postgres-prod
+readonly volume_name=mons_pgbackrest_restore_drill
+readonly container_name=mons-pgbackrest-restore-drill
+readonly image_name=mons-postgres-prod
 readonly config_path=/etc/regolith/pgbackrest/pgbackrest.conf
 
 cleanup() {
@@ -24,7 +24,7 @@ cleanup
 "${compose[@]}" up -d postgres-prod
 
 restore_point="regolith-drill-$(date -u +%Y%m%d%H%M%S)"
-docker exec -i regolith-postgres-prod-1 \
+docker exec -i mons-postgres-prod-1 \
   psql -U regolith_prod_admin -d regolith_prod -v ON_ERROR_STOP=1 -qAt \
   --set=restore_point="${restore_point}" <<'SQL' >/dev/null
 DROP SCHEMA IF EXISTS regolith_restore_drill CASCADE;
@@ -33,15 +33,15 @@ CREATE TABLE regolith_restore_drill.marker (value text PRIMARY KEY);
 INSERT INTO regolith_restore_drill.marker VALUES ('pitr-ok');
 SELECT pg_create_restore_point(:'restore_point');
 SQL
-target_time=$(docker exec regolith-postgres-prod-1 \
+target_time=$(docker exec mons-postgres-prod-1 \
   psql -U regolith_prod_admin -d regolith_prod -Atc "SELECT clock_timestamp()")
 
-docker exec regolith-postgres-prod-1 \
+docker exec mons-postgres-prod-1 \
   psql -U regolith_prod_admin -d regolith_prod -v ON_ERROR_STOP=1 -Atc \
   "SELECT pg_switch_wal()" >/dev/null
 
 for _ in $(seq 1 60); do
-  last_archived=$(docker exec regolith-postgres-prod-1 \
+  last_archived=$(docker exec mons-postgres-prod-1 \
     psql -U regolith_prod_admin -d regolith_prod -Atc \
     "SELECT last_archived_time >= '${target_time}'::timestamptz FROM pg_stat_archiver")
   [[ ${last_archived} == t ]] && break
@@ -49,7 +49,7 @@ for _ in $(seq 1 60); do
 done
 [[ ${last_archived:-f} == t ]] || { echo "WAL did not archive before timeout" >&2; exit 1; }
 
-docker exec regolith-postgres-prod-1 \
+docker exec mons-postgres-prod-1 \
   psql -U regolith_prod_admin -d regolith_prod -v ON_ERROR_STOP=1 -c \
   "DROP SCHEMA regolith_restore_drill CASCADE" >/dev/null
 
@@ -65,7 +65,7 @@ docker run --rm --user 0 \
   sh -c 'install -m 0600 -o postgres -g postgres /source/pgbackrest.conf /var/lib/postgresql/pgbackrest/pgbackrest.conf'
 
 docker run --rm --user postgres \
-  --network regolith_backup-egress \
+  --network mons_backup-egress \
   --volume "${volume_name}:/var/lib/postgresql" \
   --entrypoint pgbackrest \
   "${image_name}" \
@@ -78,7 +78,7 @@ docker run --rm --user postgres \
   restore
 
 docker run -d --name "${container_name}" \
-  --network regolith_backup-egress \
+  --network mons_backup-egress \
   --volume "${volume_name}:/var/lib/postgresql" \
   --entrypoint /usr/local/bin/docker-entrypoint.sh \
   "${image_name}" postgres >/dev/null
@@ -101,4 +101,3 @@ result=$(docker exec "${container_name}" \
 }
 
 echo "Point-in-time restore drill passed at restore point ${restore_point}"
-

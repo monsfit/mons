@@ -1,12 +1,12 @@
-# Regolith
+# Mons
 
-Regolith is a food-data and fitness application maintained as a polyglot monorepo.
+Mons is a food-data and fitness application maintained as a polyglot monorepo.
 
 ```text
 source datasets
       │
       ▼
-Titan (Python) ──► versioned JSONL + manifests ──► PostgreSQL
+Nutrition ingest (Python) ──► versioned JSONL + manifests ──► PostgreSQL
       │                                               │
       └──► generated JSON Schemas                     ▼
                                            Effect API (TypeScript)
@@ -19,20 +19,21 @@ Titan (Python) ──► versioned JSONL + manifests ──► PostgreSQL
 ## Repository layout
 
 ```text
-apps/
-  api/                 TypeScript HTTP API and generated OpenAPI document
-  marketing/           TanStack Start marketing website
-  mons/                SwiftUI application and Xcode tests
+clients/
+  ios/                 SwiftUI application and Xcode tests
+  web/                 TanStack Start marketing website
 packages/
   contracts/           Effect Schema API contracts and generated food JSON Schemas
   database/            Effect SQL migrations and repositories
 services/
-  titan/               Python normalization and PostgreSQL ingestion library
+  api/                 TypeScript HTTP API and generated OpenAPI document
+  nutrition-ingest/    Python normalization and PostgreSQL ingestion library
 data/                   Local inputs and generated snapshots; intentionally ignored
 ```
 
-See [the API guide](apps/api/README.md), [the marketing guide](apps/marketing/README.md),
-[the Titan guide](services/titan/README.md), and [data-source policy](services/titan/DATA_SOURCES.md)
+See [the API guide](services/api/README.md), [the marketing guide](clients/web/README.md),
+[the nutrition-ingest guide](services/nutrition-ingest/README.md), and
+[data-source policy](services/nutrition-ingest/DATA_SOURCES.md)
 for component-specific details.
 
 ## Requirements
@@ -52,7 +53,7 @@ Run commands from the repository root:
 ```bash
 nvm use
 pnpm install
-uv sync --project services/titan --all-extras
+uv sync --project services/nutrition-ingest --all-extras
 npx clerk@latest env pull --app app_2ydgnHRPQ7JmVCswcMHsCCx0PMZ --instance dev --file .env
 pnpm db:migrate
 pnpm db:status
@@ -161,7 +162,7 @@ standalone Node server needs remote media access during local development.
 | `pnpm mons:build:ios` | Compile the iOS app and barcode scanner path                                 |
 | `pnpm verify`         | Run every local formatting, build, test, contract, database, and Xcode check |
 
-`db:ingest` expects the manifest-backed files under `data/outputs/v2`. Titan verifies their
+`db:ingest` expects the manifest-backed files under `data/outputs/v2`. The nutrition-ingest service verifies their
 schema versions and SHA-256 hashes before loading them.
 
 ## Development guarantees
@@ -169,7 +170,7 @@ schema versions and SHA-256 hashes before loading them.
 - Dependency versions are exact and resolved by one pnpm lockfile.
 - HTTP routes, OpenAPI, request validation, errors, layers, logging, and PostgreSQL access use
   Effect 4 modules end to end; the generated contract and runtime share one declaration.
-- Titan emits stable JSONL bytes and records hashes, row counts, source hashes, rejection
+- Nutrition ingest emits stable JSONL bytes and records hashes, row counts, source hashes, rejection
   details, and field coverage in sidecar manifests.
 - PostgreSQL ingestion uses staging schemas and an atomic schema swap.
 - Raw and branded foods share one schema while remaining separate table partitions.
@@ -196,4 +197,4 @@ The former standalone Mons repository history is retained locally under
 
 Apache-2.0 covers the software only. Input datasets and derived datasets retain their
 providers' terms and must not be published until the review gate in
-[DATA_SOURCES.md](services/titan/DATA_SOURCES.md) is complete.
+[DATA_SOURCES.md](services/nutrition-ingest/DATA_SOURCES.md) is complete.

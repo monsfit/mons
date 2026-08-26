@@ -1,4 +1,4 @@
-name: regolith
+name: mons
 
 services:
   postgres-dev:
@@ -13,9 +13,9 @@ services:
     ports:
       - '100.71.253.62:5433:5432'
     volumes:
-      - regolith-postgres-dev:/var/lib/postgresql
-      - /etc/regolith/postgres/dev:/run/regolith-secrets:ro
-      - /etc/regolith/postgres/dev/tls:/run/regolith-tls:ro
+      - mons-postgres-dev:/var/lib/postgresql
+      - /etc/regolith/postgres/dev:/run/mons-secrets:ro
+      - /etc/regolith/postgres/dev/tls:/run/mons-tls:ro
     networks:
       database:
         aliases:
@@ -38,10 +38,10 @@ services:
       REGOLITH_APP_DATABASE_USER: regolith_prod_app
       REGOLITH_MIGRATION_DATABASE_USER: regolith_prod_migration
     volumes:
-      - regolith-postgres-prod:/var/lib/postgresql
-      - /etc/regolith/postgres/prod:/run/regolith-secrets:ro
-      - /etc/regolith/postgres/prod/tls:/run/regolith-tls:ro
-      - /etc/regolith/pgbackrest:/run/regolith-pgbackrest:ro
+      - mons-postgres-prod:/var/lib/postgresql
+      - /etc/regolith/postgres/prod:/run/mons-secrets:ro
+      - /etc/regolith/postgres/prod/tls:/run/mons-tls:ro
+      - /etc/regolith/pgbackrest:/run/mons-pgbackrest:ro
     networks:
       database:
         aliases:
@@ -78,5 +78,5 @@ networks:
   backup-egress:
 
 volumes:
-  regolith-postgres-dev:
-  regolith-postgres-prod:
+  mons-postgres-dev:
+  mons-postgres-prod:

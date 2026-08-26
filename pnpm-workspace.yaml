@@ -1,6 +1,6 @@
 packages:
-  - apps/api
-  - apps/marketing
+  - clients/web
+  - services/api
   - packages/*
 
 allowBuilds:

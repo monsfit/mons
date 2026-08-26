@@ -1,6 +1,6 @@
 # Data-source provenance and redistribution gate
 
-The Regolith code is Apache-2.0. Input datasets and derived outputs remain subject to each
+The Mons code is Apache-2.0. Input datasets and derived outputs remain subject to each
 provider's terms. A generated dataset is not approved for publication until every included
 source has a reviewed license/terms record marked `approved` below.
 
@@ -15,7 +15,7 @@ source has a reviewed license/terms record marked `approved` below.
 | Open Food Facts | Open Food Facts | <https://world.openfoodfacts.org/data> | Branded foods | Pending |
 
 For each input release, retain its original filename, release date, source URL, downloaded
-terms/license, and SHA-256 hash. Successful Regolith manifests record the local filename and hash.
+terms/license, and SHA-256 hash. Successful Mons manifests record the local filename and hash.
 
 Changing `Pending` to `Approved` requires recording the reviewer, review date, applicable
 terms/version, intended publication, attribution requirements, and any share-alike or

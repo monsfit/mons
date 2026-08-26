@@ -10,7 +10,7 @@ The linked Clerk instance exposes Apple and Google as its sign-in strategies, so
 prebuilt native authentication view. Sign in with Apple is declared in the app entitlements;
 Google is handled through Clerk's OAuth callback flow.
 
-It connects to the Regolith API for:
+It connects to the Mons API for:
 
 - adult onboarding that estimates TDEE and a weight-goal calorie target;
 - a dashboard for today's nutrition, weekly workouts, and weight trend;

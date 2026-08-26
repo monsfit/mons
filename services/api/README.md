@@ -1,4 +1,4 @@
-# Regolith API
+# Mons API
 
 The API exposes the active food catalog through Effect's HTTP platform and reads PostgreSQL
 through Effect SQL. Effect Schema provides runtime validation, typed errors, and the OpenAPI 3.1
@@ -84,7 +84,7 @@ routes require an inclusive `from` and exclusive `to` ISO timestamp. Weight is p
 kilograms; clients may convert it for localized display.
 
 The server applies stable application migrations before listening. Catalog ingestion remains
-owned by Titan; `db:migrate` upgrades an older local catalog with the full-text search vector
+owned by the nutrition-ingest service; `db:migrate` upgrades an older local catalog with the full-text search vector
 and GIN indexes.
 
 All `/v1` routes require a Clerk session token in the `Authorization: Bearer <token>` header.

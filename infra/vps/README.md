@@ -1,6 +1,6 @@
-# Regolith VPS infrastructure
+# Mons VPS infrastructure
 
-This directory is the version-controlled runbook for the Regolith VPS. It owns the PostgreSQL 18
+This directory is the version-controlled runbook for the Mons VPS. It owns the PostgreSQL 18
 development and production containers, the Cloudflare Tunnel connector, TLS and database-role
 provisioning, and pgBackRest backups. Run these commands from a repository checkout on the VPS,
 not as part of ordinary local application development.
