@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-readonly project_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+readonly script_directory=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+readonly repository_directory=$(cd "${script_directory}/../.." && pwd)
+readonly compose=(docker compose --file "${repository_directory}/infra/vps/compose.yaml")
 readonly volume_name=regolith_pgbackrest_restore_drill
 readonly container_name=regolith-pgbackrest-restore-drill
 readonly image_name=regolith-postgres-prod
@@ -19,8 +21,7 @@ fi
 trap cleanup EXIT
 cleanup
 
-cd "${project_dir}"
-docker compose up -d postgres-prod
+"${compose[@]}" up -d postgres-prod
 
 restore_point="regolith-drill-$(date -u +%Y%m%d%H%M%S)"
 docker exec -i regolith-postgres-prod-1 \
@@ -100,3 +101,4 @@ result=$(docker exec "${container_name}" \
 }
 
 echo "Point-in-time restore drill passed at restore point ${restore_point}"
+

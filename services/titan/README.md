@@ -10,7 +10,6 @@ Run all commands below from the monorepo root.
 
 ```bash
 uv sync --project services/titan --all-extras
-npx pnpm@11.20.0 db:up
 ```
 
 The active contract is schema `2.0.0`. Nutrients are normalized per 100 g.

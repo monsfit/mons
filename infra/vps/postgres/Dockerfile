@@ -16,3 +16,4 @@ RUN chmod 0755 \
 
 ENTRYPOINT ["docker-entrypoint-regolith"]
 CMD ["postgres"]
+
