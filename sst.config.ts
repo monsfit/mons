@@ -63,20 +63,9 @@ export default $config({
       placement: { mode: 'smart' },
       url: true,
     })
-    const smoke = new sst.cloudflare.Worker('DatabaseSmoke', {
-      compatibility: {
-        date: '2026-08-21',
-        flags: ['nodejs_compat', 'global_fetch_strictly_public'],
-      },
-      handler: 'apps/api/src/hyperdrive-smoke-worker.ts',
-      link: [database],
-      placement: { mode: 'smart' },
-      url: true,
-    })
     return {
       aiGatewayId: aiGateway.aiGatewayId,
       apiUrl: api.url,
-      smokeUrl: smoke.url,
     }
   },
 })

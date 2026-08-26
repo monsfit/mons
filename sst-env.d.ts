@@ -21,10 +21,6 @@ declare module "sst" {
       "id": string
       "type": "sst.cloudflare.Hyperdrive"
     }
-    "DatabaseSmoke": {
-      "type": "sst.cloudflare.Worker"
-      "url": string
-    }
     "Media": {
       "name": string
       "type": "sst.sst.Linkable"
