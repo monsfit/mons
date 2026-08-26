@@ -24,6 +24,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "ServiceUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableErrorEncoded"
+                }
+              }
+            }
           }
         }
       }
@@ -3801,6 +3811,25 @@
         "additionalProperties": false,
         "description": "API health status"
       },
+      "ServiceUnavailableErrorEncoded": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "service_unavailable"
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "additionalProperties": false
+      },
       "CatalogStatus": {
         "type": "object",
         "properties": {
@@ -4410,25 +4439,6 @@
             "enum": [
               "Profile access denied"
             ]
-          }
-        },
-        "required": [
-          "code",
-          "message"
-        ],
-        "additionalProperties": false
-      },
-      "ServiceUnavailableErrorEncoded": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string",
-            "enum": [
-              "service_unavailable"
-            ]
-          },
-          "message": {
-            "type": "string"
           }
         },
         "required": [
