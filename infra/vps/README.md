@@ -13,6 +13,7 @@ not as part of ordinary local application development.
 - `provision.sh` creates host secrets and certificates, starts PostgreSQL, reconciles roles, and
   initializes pgBackRest.
 - `restore-drill.sh` verifies a disposable point-in-time recovery.
+- `monitoring/` contains the independent Prometheus, Grafana, Node Exporter, and cAdvisor stack.
 
 ## First-time provisioning
 
@@ -45,3 +46,17 @@ Schedule `pnpm vps:backup` weekly with the VPS scheduler of choice. PostgreSQL c
 WAL between full backups. The restore drill uses disposable Docker resources and removes them when
 it exits. Use `docker compose -f infra/vps/compose.yaml ps|logs|down` for occasional direct container
 operations rather than maintaining aliases for every Compose command.
+
+## Monitoring
+
+Monitoring observes host and container resources without connecting to PostgreSQL or adding
+database roles. Provision Grafana's administrator password once, then start the stack:
+
+```bash
+pnpm monitoring:provision
+pnpm monitoring:up
+```
+
+Grafana is available only over Tailscale at `http://100.71.253.62:3000`. Prometheus and the
+exporters are private. Use `pnpm monitoring:logs` to inspect the stack and
+`pnpm monitoring:stop` to stop it without deleting stored metrics or dashboards.

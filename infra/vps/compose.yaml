@@ -7,7 +7,6 @@ services:
     environment:
       POSTGRES_DB: regolith_dev
       POSTGRES_USER: regolith_dev_admin
-      POSTGRES_PASSWORD_FILE: /run/regolith-secrets/admin-password
       POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
       REGOLITH_APP_DATABASE_USER: regolith_dev_app
       REGOLITH_MIGRATION_DATABASE_USER: regolith_dev_migration
@@ -35,7 +34,6 @@ services:
     environment:
       POSTGRES_DB: regolith_prod
       POSTGRES_USER: regolith_prod_admin
-      POSTGRES_PASSWORD_FILE: /run/regolith-secrets/admin-password
       POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
       REGOLITH_APP_DATABASE_USER: regolith_prod_app
       REGOLITH_MIGRATION_DATABASE_USER: regolith_prod_migration

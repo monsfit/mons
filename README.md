@@ -74,7 +74,10 @@ file. Never commit that file.
 
 The VPS owns the PostgreSQL containers, Cloudflare Tunnel connector, and backups. Their
 version-controlled configuration lives under `infra/vps`; these commands are intended to run from
-a checkout on that host:
+a checkout on that host. Application traffic follows Worker → Hyperdrive → VPC Service → Tunnel →
+PostgreSQL. A separate operator path exposes development PostgreSQL only on the VPS Tailscale
+address for migrations, ingestion, tests, and the standalone local API. Production has no
+host-published port.
 
 ```bash
 pnpm vps:provision
@@ -106,6 +109,30 @@ pnpm vps:backup
 Run a disposable point-in-time restore verification with `pnpm vps:restore-drill`. See
 `infra/vps/README.md` for the full host runbook.
 
+VPS monitoring runs separately from the application database stack:
+
+- Node Exporter reports host CPU, memory, disk, and network usage.
+- cAdvisor reports resource usage for Docker containers, including PostgreSQL.
+- Prometheus stores at most 30 days or 15 GB of metrics.
+- Grafana displays the provisioned VPS dashboard.
+
+Prometheus and both exporters remain on a private Docker network. Grafana is the only published
+port and is reachable through Tailscale at `http://100.71.253.62:3000`.
+
+Create the Grafana administrator password once, then start the stack:
+
+```bash
+pnpm monitoring:provision
+pnpm monitoring:up
+```
+
+Retrieve the initial Grafana password on the VPS with
+`sudo cat /etc/regolith/monitoring/grafana-admin-password`. Change it after the first login. The
+Prometheus datasource and VPS dashboard are provisioned from `infra/vps/monitoring`. This first version
+does not connect to PostgreSQL or add database users. Add database-level metrics only if container
+and host metrics prove insufficient. Alerts are also deferred until there is a real notification
+destination.
+
 Migrations run as the environment's migration role before an API deployment; the API runtime role
 cannot create schemas or tables, and API startup never applies migrations. CI applies every
 migration twice against PostgreSQL 18 to verify both forward execution and idempotency. Deploy the
@@ -125,6 +152,8 @@ standalone Node server needs remote media access during local development.
 | `pnpm dev:marketing`  | Run the TanStack Start marketing website on port 3001                        |
 | `pnpm db:status`      | Inspect the active PostgreSQL snapshot                                       |
 | `pnpm db:migrate`     | Migrate stable app tables and catalog full-text search                       |
+| `pnpm monitoring:up`  | Start the private VPS monitoring stack                                       |
+| `pnpm monitoring:logs`| Follow logs for Prometheus, Grafana, and all exporters                       |
 | `pnpm db:ingest`      | Atomically ingest the schema-v2 raw and branded snapshots                    |
 | `pnpm vps:backup`     | Create a full production backup from the VPS                                 |
 | `pnpm contracts`      | Regenerate raw and branded JSON Schemas                                      |
