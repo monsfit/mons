@@ -9,7 +9,6 @@ contract from the same declarative endpoint definitions.
 From the repository root:
 
 ```bash
-npx pnpm@11.20.0 db:up
 npx pnpm@11.20.0 db:migrate
 npx pnpm@11.20.0 dev
 ```

@@ -22,3 +22,4 @@ SQL
 # The image's initdb generates generic host records. Require TLS for every TCP
 # connection while retaining local Unix-socket access for container operations.
 sed -i -E 's/^host([[:space:]]+)/hostssl\1/' "${PGDATA}/pg_hba.conf"
+

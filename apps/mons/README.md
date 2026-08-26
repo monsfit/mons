@@ -73,7 +73,6 @@ The default API URL is `http://127.0.0.1:3000`, which works from the iOS Simulat
 macOS build. Start PostgreSQL and the API before launching Mons:
 
 ```bash
-npx pnpm@11.20.0 db:up
 npx pnpm@11.20.0 db:migrate
 npx pnpm@11.20.0 dev
 ```

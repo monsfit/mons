@@ -31,3 +31,4 @@ if [[ "${1:-}" == "postgres" ]]; then
 fi
 
 exec /usr/local/bin/docker-entrypoint.sh "$@"
+

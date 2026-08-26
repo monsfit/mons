@@ -3,7 +3,7 @@ name: regolith
 services:
   postgres-dev:
     build:
-      context: ./infra/postgres
+      context: ./postgres
     environment:
       POSTGRES_DB: regolith_dev
       POSTGRES_USER: regolith_dev_admin
@@ -12,7 +12,7 @@ services:
       REGOLITH_APP_DATABASE_USER: regolith_dev_app
       REGOLITH_MIGRATION_DATABASE_USER: regolith_dev_migration
     ports:
-      - "100.71.253.62:5433:5432"
+      - '100.71.253.62:5433:5432'
     volumes:
       - regolith-postgres-dev:/var/lib/postgresql
       - /etc/regolith/postgres/dev:/run/regolith-secrets:ro
@@ -23,7 +23,7 @@ services:
           - postgres-dev.internal.mons.fit
       tailscale-publish:
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
       interval: 5s
       timeout: 5s
       retries: 12
@@ -31,7 +31,7 @@ services:
 
   postgres-prod:
     build:
-      context: ./infra/postgres
+      context: ./postgres
     environment:
       POSTGRES_DB: regolith_prod
       POSTGRES_USER: regolith_prod_admin
@@ -50,7 +50,7 @@ services:
           - postgres-prod.internal.mons.fit
       backup-egress:
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
       interval: 5s
       timeout: 5s
       retries: 12

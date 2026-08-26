@@ -54,7 +54,6 @@ nvm use
 pnpm install
 uv sync --project services/titan --all-extras
 npx clerk@latest env pull --app app_2ydgnHRPQ7JmVCswcMHsCCx0PMZ --instance dev --file .env
-pnpm db:up
 pnpm db:migrate
 pnpm db:status
 pnpm dev
@@ -73,15 +72,13 @@ a reproducible local reference without vendoring framework source into this repo
 The Clerk CLI command writes the development publishable and secret keys to the ignored `.env`
 file. Never commit that file.
 
-The VPS runs separate PostgreSQL 18 development and production containers. Development is bound
-only to the VPS Tailscale address at `100.71.253.62:5433`; production has no host-published port.
-Both require TLS and SCRAM authentication, and their data persists in separate Docker volumes.
-Provision credentials and certificates before first startup, then start the desired environment:
+The VPS owns the PostgreSQL containers, Cloudflare Tunnel connector, and backups. Their
+version-controlled configuration lives under `infra/vps`; these commands are intended to run from
+a checkout on that host:
 
 ```bash
-pnpm db:provision
-pnpm db:up
-pnpm db:up:prod
+pnpm vps:provision
+pnpm vps:up
 ```
 
 On the VPS, retrieve the development application password without printing any other secret:
@@ -96,29 +93,18 @@ Cloudflare connectivity uses the shared `regolith-postgres` Tunnel. The
 `mons-postgres-dev` and `mons-postgres-prod` Workers VPC services resolve the corresponding
 Docker-internal hostnames and enforce `verify_full` against their Cloudflare Origin CA
 certificates. Hyperdrive configurations `mons-development` and `mons-production` use the
-environment-specific application roles. Start the connector alongside PostgreSQL with:
-
-```bash
-docker compose --profile cloudflare up -d
-```
+environment-specific application roles. `pnpm vps:up` starts the connector alongside PostgreSQL.
 
 The private `mons-postgres-backups` R2 bucket is reserved for production pgBackRest backups.
-Production continuously archives completed WAL segments to R2. A systemd timer creates a full
-backup every Sunday at 03:00 UTC and differential backups Monday through Saturday at 03:00 UTC;
-pgBackRest retains four full backup sets and their required WAL. Inspect or validate the repository
-with `pnpm db:backup:info` and `pnpm db:backup:check`. Install the timers only after an initial full
-backup succeeds:
+Production continuously archives completed WAL segments to R2, and pgBackRest retains four full
+backup sets and their required WAL. Schedule the single backup command weekly on the VPS:
 
 ```bash
-pnpm db:provision:backups
-pnpm db:backup:full
-./scripts/install-pgbackrest-timers.sh
+pnpm vps:backup
 ```
 
-The same installer activates a 15-minute operational check for both database containers,
-`cloudflared`, WAL archive failures, repository consistency, and backup age. Inspect it with
-`systemctl status regolith-postgres-operations-check.service`. Run a disposable point-in-time
-restore verification with `pnpm db:backup:restore-drill`.
+Run a disposable point-in-time restore verification with `pnpm vps:restore-drill`. See
+`infra/vps/README.md` for the full host runbook.
 
 Migrations run as the environment's migration role before an API deployment; the API runtime role
 cannot create schemas or tables, and API startup never applies migrations. CI applies every
@@ -140,6 +126,7 @@ standalone Node server needs remote media access during local development.
 | `pnpm db:status`      | Inspect the active PostgreSQL snapshot                                       |
 | `pnpm db:migrate`     | Migrate stable app tables and catalog full-text search                       |
 | `pnpm db:ingest`      | Atomically ingest the schema-v2 raw and branded snapshots                    |
+| `pnpm vps:backup`     | Create a full production backup from the VPS                                 |
 | `pnpm contracts`      | Regenerate raw and branded JSON Schemas                                      |
 | `pnpm openapi`        | Regenerate the OpenAPI document                                              |
 | `pnpm mons:test`      | Build and test the Mons Xcode project on macOS                               |
