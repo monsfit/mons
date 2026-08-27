@@ -5,12 +5,12 @@ no local PostgreSQL requirement and no runtime environment picker in the app.
 
 ## The four environments
 
-| Use | API URL | PostgreSQL database | Application schema | Lifetime |
-| --- | --- | --- | --- | --- |
-| Personal Live | `https://<sst-stage>.api.dev.mons.fit` | `mons_dev` | Derived from the current feature branch | While `sst dev` is running |
-| Branch Preview | `https://<branch-id>.api.dev.mons.fit` | `mons_dev` | The same schema as Personal Live | Until the branch is deleted |
-| Shared Dev | `https://api.dev.mons.fit` | `mons_dev` | `mons_app` | Permanent |
-| Production | `https://api.mons.fit` | `mons_prod` | `mons_app` | Permanent |
+| Use            | API URL                                | PostgreSQL database | Application schema                      | Lifetime                    |
+| -------------- | -------------------------------------- | ------------------- | --------------------------------------- | --------------------------- |
+| Personal Live  | `https://<sst-stage>.api.dev.mons.fit` | `mons_dev`          | Derived from the current feature branch | While `sst dev` is running  |
+| Branch Preview | `https://<branch-id>.api.dev.mons.fit` | `mons_dev`          | The same schema as Personal Live        | Until the branch is deleted |
+| Shared Dev     | `https://api.dev.mons.fit`             | `mons_dev`          | `mons_app`                              | Permanent                   |
+| Production     | `https://api.mons.fit`                 | `mons_prod`         | `mons_app`                              | Permanent                   |
 
 The catalog is shared inside each database as `mons_catalog`. Only application data is isolated by
 branch. The branch identifier is deterministic, capped to fit PostgreSQL's identifier limit, and
@@ -21,7 +21,7 @@ used consistently for its schema, preview stage, hostname, and `preview/<branch-
 Put the direct development migration-role URL in the ignored root `.env.local`:
 
 ```dotenv
-MIGRATION_DATABASE_URL=postgresql://mons_dev_migration:...@<VPS_MAGICDNS_NAME>:5433/mons_dev?sslmode=require
+MIGRATION_DATABASE_URL=postgresql://mons_dev_migration:...@<VPS_MAGICDNS_NAME>:5433/mons_dev?uselibpqcompat=true&sslmode=require
 MONS_DATABASE_RUNTIME_USER=mons_dev_app
 ```
 
@@ -101,8 +101,8 @@ Use the development migration URL on port `5433` for `preview` and `dev`. Use th
 migration URL on the Tailscale-only port `5434` for `production`:
 
 ```text
-preview/dev: postgresql://mons_dev_migration:...@<VPS_MAGICDNS_NAME>:5433/mons_dev?sslmode=require
-production:  postgresql://mons_prod_migration:...@<VPS_MAGICDNS_NAME>:5434/mons_prod?sslmode=require
+preview/dev: postgresql://mons_dev_migration:...@<VPS_MAGICDNS_NAME>:5433/mons_dev?uselibpqcompat=true&sslmode=require
+production:  postgresql://mons_prod_migration:...@<VPS_MAGICDNS_NAME>:5434/mons_prod?uselibpqcompat=true&sslmode=require
 ```
 
 The `preview` environment also needs `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` scoped to the
