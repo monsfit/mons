@@ -34,6 +34,7 @@ services:
       - /etc/regolith/monitoring/grafana-admin-password:/run/secrets/admin-password:ro
     networks:
       - monitoring
+      - tailscale-publish
     depends_on:
       - prometheus
     mem_limit: 512m
@@ -82,6 +83,7 @@ services:
 networks:
   monitoring:
     internal: true
+  tailscale-publish:
 
 volumes:
   mons-prometheus:
