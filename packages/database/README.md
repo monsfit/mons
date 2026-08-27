@@ -2,7 +2,7 @@
 
 This package contains Effect SQL PostgreSQL layers, ordered migrations, schema-decoded catalog
 queries, and application repositories used by the API. Titan owns replaceable catalog ingestion.
-This package owns the stable `regolith_app` schema.
+This package owns the stable `mons_app` schema.
 
 The repository supports:
 
@@ -22,7 +22,7 @@ The repository supports:
 - auditable meal estimates with model/prompt provenance and ordered, catalog-constrained food
   matches; calculated calories and macros are persisted separately from the model observations.
 
-Application tables are intentionally separate from the `regolith` catalog schema. Titan can
+Application tables are intentionally separate from the `mons_catalog` catalog schema. Titan can
 atomically replace the catalog without deleting user history.
 
 The reader defensively excludes incomplete or out-of-range nutrition records even if an older
@@ -43,5 +43,5 @@ npx pnpm@11.20.0 db:migrate
 npx pnpm@11.20.0 test:database
 ```
 
-Set `REGOLITH_TEST_DATABASE_URL` to a disposable PostgreSQL database before running integration
+Set `MONS_TEST_DATABASE_URL` to a disposable PostgreSQL database before running integration
 tests. Container lifecycle belongs to the VPS runbook under `infra/vps`.

@@ -4,23 +4,6 @@
 from typing import Any
 
 class Resource:
-    class Ai:
-        type: str
-    class Api:
-        type: str
-        url: str
     class App:
         name: str
         stage: str
-    class ClerkSecretKey:
-        type: str
-        value: str
-    class Database:
-        id: str
-        type: str
-    class Media:
-        name: str
-        type: str
-    class PublicConfig:
-        clerkPublishableKey: str
-        type: str

@@ -7,7 +7,7 @@ import {
   type MealLogRecord,
   type MealLogRepositoryService,
   type SaveMealLogInput,
-} from '@regolith/database'
+} from '@mons/database'
 import { Effect, Exit, Layer } from 'effect'
 
 import { MealIntelligence, type MealIntelligenceService } from './meal-intelligence.ts'
@@ -17,7 +17,7 @@ import { type R2Client, makeR2StorageLayer } from './r2-storage.ts'
 const profileId = '00000000-0000-4000-8000-000000000001'
 const estimateId = '00000000-0000-4000-8000-000000000002'
 const mealId = '00000000-0000-4000-8000-000000000003'
-const photoKey = `profiles/${profileId}/meal-estimates/${estimateId}/input.jpg`
+const photoKey = `test/profiles/${profileId}/meal-estimates/${estimateId}/input.jpg`
 const timestamp = new Date('2026-08-06T12:00:00.000Z')
 
 const mealRecord: MealLogRecord = {

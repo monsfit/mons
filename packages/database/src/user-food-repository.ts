@@ -205,7 +205,7 @@ export interface UserFoodRepositoryService {
 }
 
 export const UserFoodRepository = Context.Service<UserFoodRepositoryService>(
-  '@regolith/database/UserFoodRepository',
+  '@mons/database/UserFoodRepository',
 )
 
 const decode = <S extends Schema.Constraint>(schema: S, rows: ReadonlyArray<unknown>) =>
@@ -216,7 +216,7 @@ export const makeUserFoodRepository = (
 ) =>
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient
-    const schema = yield* validateSchemaName(options.appSchema ?? 'regolith_app')
+    const schema = yield* validateSchemaName(options.appSchema ?? 'mons_app')
     const now = options.now ?? (() => new Date())
     const customFoods = sql(`${schema}.custom_foods`)
     const portions = sql(`${schema}.custom_food_portions`)

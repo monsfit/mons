@@ -5,5 +5,5 @@ After=docker.service
 
 [Service]
 Type=oneshot
-WorkingDirectory=/home/ubuntu/projects/regolith
-ExecStart=/home/ubuntu/projects/regolith/infra/vps/check-postgres-operations.sh
+WorkingDirectory=/home/ubuntu/projects/mons
+ExecStart=/home/ubuntu/projects/mons/infra/vps/check-postgres-operations.sh

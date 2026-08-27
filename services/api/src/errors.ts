@@ -67,7 +67,7 @@ export const serviceUnavailableError = (message = 'Service temporarily unavailab
   new ServiceUnavailableError({ code: 'service_unavailable', message })
 
 export class RequestValidation extends HttpApiMiddleware.Service<RequestValidation>()(
-  '@regolith/api/RequestValidation',
+  '@mons/api/RequestValidation',
   { error: ValidationError },
 ) {}
 

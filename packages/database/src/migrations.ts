@@ -16,10 +16,40 @@ const schemaNameSchema = Schema.String.check(Schema.isPattern(/^[a-z_][a-z0-9_]{
 
 export const validateSchemaName = Schema.decodeUnknownEffect(schemaNameSchema)
 
+const renameSchema = (from: string, to: string) =>
+  Effect.gen(function* () {
+    const safeFrom = yield* validateSchemaName(from)
+    const safeTo = yield* validateSchemaName(to)
+    const sql = yield* SqlClient.SqlClient
+    const schemas = yield* sql<{ readonly name: string }>`
+      SELECT nspname AS name
+      FROM pg_namespace
+      WHERE nspname IN (${safeFrom}, ${safeTo})
+    `
+    const names = new Set(schemas.map(({ name }) => name))
+    if (names.has(safeFrom) && names.has(safeTo)) {
+      return yield* Effect.fail(
+        new Error(`Cannot rename ${safeFrom}: both ${safeFrom} and ${safeTo} exist`),
+      )
+    }
+    if (names.has(safeFrom)) {
+      yield* sql`ALTER SCHEMA ${sql(safeFrom)} RENAME TO ${sql(safeTo)}`
+      return true
+    }
+    return false
+  })
+
+/** One-time, data-preserving adoption of the Mons canonical schema names. */
+export const adoptMonsSchemaNames = Effect.gen(function* () {
+  const applicationRenamed = yield* renameSchema('regolith_app', 'mons_app')
+  const catalogRenamed = yield* renameSchema('regolith', 'mons_catalog')
+  return { applicationRenamed, catalogRenamed }
+})
+
 export const grantRuntimeDatabaseAccess = (
   runtimeRole: string,
-  appSchema = 'regolith_app',
-  catalogSchema = 'regolith',
+  appSchema = 'mons_app',
+  catalogSchema = 'mons_catalog',
 ) =>
   Effect.gen(function* () {
     const safeRole = yield* validateSchemaName(runtimeRole)
@@ -63,7 +93,7 @@ const applicationMigrationLoader = (schema: string): Migrator.Loader =>
     [8, 'meal_media_cleanup', Effect.succeed(mealMediaCleanup(schema))],
   ])
 
-export const migrateApplicationDatabase = (schema = 'regolith_app') =>
+export const migrateApplicationDatabase = (schema = 'mons_app') =>
   Effect.gen(function* () {
     const safeSchema = yield* validateSchemaName(schema)
     const sql = yield* SqlClient.SqlClient
@@ -78,7 +108,7 @@ export const migrateApplicationDatabase = (schema = 'regolith_app') =>
     }),
   )
 
-export const migrateCatalogSearch = (schema = 'regolith') =>
+export const migrateCatalogSearch = (schema = 'mons_catalog') =>
   Effect.gen(function* () {
     const safeSchema = yield* validateSchemaName(schema)
     const sql = yield* SqlClient.SqlClient

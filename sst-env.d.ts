@@ -6,29 +6,6 @@
 
 declare module "sst" {
   export interface Resource {
-    "Ai": {
-      "type": "sst.cloudflare.Ai"
-    }
-    "Api": {
-      "type": "sst.cloudflare.Worker"
-      "url": string
-    }
-    "ClerkSecretKey": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "Database": {
-      "id": string
-      "type": "sst.cloudflare.Hyperdrive"
-    }
-    "Media": {
-      "name": string
-      "type": "sst.sst.Linkable"
-    }
-    "PublicConfig": {
-      "clerkPublishableKey": string
-      "type": "sst.sst.Linkable"
-    }
   }
 }
 

@@ -1,5 +1,5 @@
 {
-  "name": "@regolith/database",
+  "name": "@mons/database",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -12,7 +12,9 @@
   "scripts": {
     "build": "tsgo -p tsconfig.build.json",
     "lint": "oxlint src --deny-warnings",
-    "migrate": "node --env-file-if-exists=../../.env src/migrate.ts",
+    "migrate": "node --env-file-if-exists=../../.env --env-file-if-exists=../../.env.local src/migrate.ts",
+    "branch:drop": "node --env-file-if-exists=../../.env --env-file-if-exists=../../.env.local src/reset-branch.ts --drop-only",
+    "branch:reset": "node --env-file-if-exists=../../.env --env-file-if-exists=../../.env.local src/reset-branch.ts",
     "test": "vitest run src",
     "typecheck": "tsgo -p tsconfig.json"
   },

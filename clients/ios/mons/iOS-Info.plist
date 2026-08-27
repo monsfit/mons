@@ -22,19 +22,10 @@
 	<true/>
 	<key>NSAccentColorName</key>
 	<string>AccentColor</string>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSAllowsLocalNetworking</key>
-		<true/>
-	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>Photograph meals and scan food barcodes for nutrition logging.</string>
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>Connect to the Mons API running on your local network.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Describe meals by voice for transcription and food matching.</string>
-	<key>REGOLITH_API_BASE_URL</key>
-	<string>$(REGOLITH_API_BASE_URL)</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

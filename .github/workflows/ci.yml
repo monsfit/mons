@@ -14,20 +14,20 @@ jobs:
       postgres:
         image: postgres:18.4-alpine
         env:
-          POSTGRES_DB: regolith
-          POSTGRES_USER: regolith
-          POSTGRES_PASSWORD: regolith_local
+          POSTGRES_DB: mons
+          POSTGRES_USER: mons
+          POSTGRES_PASSWORD: mons_local
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U regolith -d regolith"
+          --health-cmd "pg_isready -U mons -d mons"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 12
     env:
-      DATABASE_URL: postgresql://regolith:regolith_local@localhost:5432/regolith
-      REGOLITH_DATABASE_RUNTIME_USER: regolith
-      REGOLITH_TEST_DATABASE_URL: postgresql://regolith:regolith_local@localhost:5432/regolith
+      DATABASE_URL: postgresql://mons:mons_local@localhost:5432/mons
+      MONS_DATABASE_RUNTIME_USER: mons
+      MONS_TEST_DATABASE_URL: postgresql://mons:mons_local@localhost:5432/mons
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -49,18 +49,18 @@ jobs:
       postgres:
         image: postgres:18.4-alpine
         env:
-          POSTGRES_DB: regolith
-          POSTGRES_USER: regolith
-          POSTGRES_PASSWORD: regolith_local
+          POSTGRES_DB: mons
+          POSTGRES_USER: mons
+          POSTGRES_PASSWORD: mons_local
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U regolith -d regolith"
+          --health-cmd "pg_isready -U mons -d mons"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 12
     env:
-      REGOLITH_TEST_DATABASE_URL: postgresql://regolith:regolith_local@localhost:5432/regolith
+      MONS_TEST_DATABASE_URL: postgresql://mons:mons_local@localhost:5432/mons
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -82,12 +82,12 @@ jobs:
       - run: >-
           xcodebuild build -quiet
           -project clients/ios/mons.xcodeproj
-          -scheme mons
+          -scheme 'Mons Dev'
           -destination 'generic/platform=iOS Simulator'
           CODE_SIGNING_ALLOWED=NO
       - run: >-
           xcodebuild test
           -project clients/ios/mons.xcodeproj
-          -scheme mons
+          -scheme 'Mons Dev'
           -destination 'platform=macOS'
           CODE_SIGNING_ALLOWED=NO

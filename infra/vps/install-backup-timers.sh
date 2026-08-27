@@ -13,8 +13,8 @@ for unit in "${script_directory}"/systemd/*.service "${script_directory}"/system
 done
 systemctl daemon-reload
 systemctl enable --now \
-  regolith-pgbackrest-full.timer \
-  regolith-pgbackrest-diff.timer \
-  regolith-postgres-operations-check.timer
+  mons-pgbackrest-full.timer \
+  mons-pgbackrest-diff.timer \
+  mons-postgres-operations-check.timer
 
 echo "Installed and activated pgBackRest and operations-check timers"

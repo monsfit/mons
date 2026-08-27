@@ -18,11 +18,11 @@ Open <http://localhost:3001>. The API continues to use port 3000.
 ## Commands
 
 ```bash
-npx pnpm@11.20.0 --filter @regolith/marketing lint
-npx pnpm@11.20.0 --filter @regolith/marketing typecheck
-npx pnpm@11.20.0 --filter @regolith/marketing test
-npx pnpm@11.20.0 --filter @regolith/marketing build
-npx pnpm@11.20.0 --filter @regolith/marketing start
+npx pnpm@11.20.0 --filter @mons/marketing lint
+npx pnpm@11.20.0 --filter @mons/marketing typecheck
+npx pnpm@11.20.0 --filter @mons/marketing test
+npx pnpm@11.20.0 --filter @mons/marketing build
+npx pnpm@11.20.0 --filter @mons/marketing start
 ```
 
 The production build emits a Nitro Node server under `.output`. The site reuses the locally

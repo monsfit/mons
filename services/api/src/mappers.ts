@@ -1,5 +1,5 @@
-import type { FoodSummary } from '@regolith/contracts'
-import type { FoodRecord } from '@regolith/database'
+import type { FoodSummary } from '@mons/contracts'
+import type { FoodRecord } from '@mons/database'
 
 export function toFoodSummary(food: FoodRecord): FoodSummary {
   return {

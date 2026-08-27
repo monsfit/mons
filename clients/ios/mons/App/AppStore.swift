@@ -18,12 +18,12 @@ final class AppStore {
 
     private(set) var profileId: UUID
 
-    @ObservationIgnored private let api: RegolithAPIClient
+    @ObservationIgnored private let api: MonsAPIClient
     @ObservationIgnored private let calendar: Calendar
     @ObservationIgnored private let networkEnabled: Bool
 
     init(
-        api: RegolithAPIClient = RegolithAPIClient(configuration: .bundled),
+        api: MonsAPIClient = MonsAPIClient(configuration: .bundled),
         profileId: UUID = ProfileIdentity.current(),
         calendar: Calendar = .current,
         networkEnabled: Bool = true

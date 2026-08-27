@@ -69,26 +69,17 @@ not assumed to equal the development team ID.
 The project, application target, test target, scheme, Swift module, and bundle identifiers
 all use the `mons` name. Local Xcode user state and Derived Data are intentionally ignored.
 
-The default API URL is `http://127.0.0.1:3000`, which works from the iOS Simulator and the
-macOS build. Start PostgreSQL and the API before launching Mons:
+Choose the API at build time with one of the shared schemes:
 
-```bash
-npx pnpm@11.20.0 db:migrate
-npx pnpm@11.20.0 dev
-```
+- `Mons Live` targets the active personal `sst dev` stage;
+- `Mons Preview` targets the persistent preview for the current branch;
+- `Mons Dev` targets `https://api.dev.mons.fit`;
+- `Mons Prod` targets `https://api.mons.fit` with a Release build.
 
-For a physical iPhone, configure the ignored development Xcode setting and start the LAN-bound API:
-
-```bash
-npx pnpm@11.20.0 dev:phone
-```
-
-The configuration script uses the Mac's Bonjour `.local` hostname so DHCP address changes do not
-break the app. Rebuild or refresh the Xcode preview after running it. The iPhone and Mac must be on
-the same network, and macOS may ask you to allow incoming Node connections. To override discovery,
-run `npx pnpm@11.20.0 mons:configure:local -- 192.168.1.10`. The committed Debug configuration
-falls back to Simulator-safe `127.0.0.1`; the generated `Local.xcconfig` is intentionally ignored.
-Barcode scanning requires a physical device.
+The selected URL is embedded in the app, with no runtime environment switch. Use Preview or Dev
+when the installed phone build must continue working after the laptop is off. The complete flow is
+documented in [Development environments](../../docs/development-environments.md). Barcode scanning
+requires a physical device.
 
 On first launch, Mons presents a compact step-by-step onboarding flow for metabolic inputs,
 measurements, exercise frequency, normal daily activity, weight goal, and goal velocity. The

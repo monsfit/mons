@@ -1,5 +1,5 @@
-import { MealEstimateRepository, type MealEstimateRecord } from '@regolith/database'
-import type { CreateMealEstimate, MealEstimate } from '@regolith/contracts'
+import { MealEstimateRepository, type MealEstimateRecord } from '@mons/database'
+import type { CreateMealEstimate, MealEstimate } from '@mons/contracts'
 import { Context, Effect, Layer, Schema } from 'effect'
 
 import {
@@ -41,7 +41,7 @@ export interface MealEstimationService {
 }
 
 export class MealEstimation extends Context.Service<MealEstimation, MealEstimationService>()(
-  '@regolith/api/MealEstimation',
+  '@mons/api/MealEstimation',
 ) {}
 
 const decodeBase64 = Effect.fn('MealEstimation.decodeBase64')(function* (encoded: string) {

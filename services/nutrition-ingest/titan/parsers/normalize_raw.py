@@ -169,7 +169,7 @@ def dedupe_rank(row: dict[str, Any]) -> tuple[int, int]:
 
 
 def enforce_unique_names(rows: Iterable[dict[str, Any]]) -> Iterator[dict[str, Any]]:
-    with tempfile.TemporaryDirectory(prefix="regolith-name-dedupe-") as temp_dir:
+    with tempfile.TemporaryDirectory(prefix="mons-name-dedupe-") as temp_dir:
         database_path = Path(temp_dir) / "names.sqlite"
         with sqlite3.connect(database_path) as connection:
             connection.execute(

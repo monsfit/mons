@@ -12,6 +12,7 @@ import SwiftUI
 @main
 struct MonsApp: App {
     @State private var store = AppStore()
+    private let clerk: Clerk?
 
     #if DEBUG
     @State private var tabBarPOCStore = AppStore.preview
@@ -38,30 +39,41 @@ struct MonsApp: App {
     #endif
 
     init() {
-        guard ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" else {
-            return
+        let environment = ProcessInfo.processInfo.environment
+        if
+            environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1",
+            environment["XCTestConfigurationFilePath"] == nil
+        {
+            clerk = Clerk.configure(
+                publishableKey: "pk_test_YmlnLWNvdy04Mi5jbGVyay5hY2NvdW50cy5kZXYk"
+            )
+        } else {
+            clerk = nil
         }
-        Clerk.configure(publishableKey: "pk_test_YmlnLWNvdy04Mi5jbGVyay5hY2NvdW50cy5kZXYk")
     }
 
     var body: some Scene {
         WindowGroup {
-            Group {
-                #if DEBUG
-                if isTabBarPOCEnabled {
-                    ContentView(initialSelection: previewTab)
-                        .environment(tabBarPOCStore)
-                } else {
+            if let clerk {
+                Group {
+                    #if DEBUG
+                    if isTabBarPOCEnabled {
+                        ContentView(initialSelection: previewTab)
+                            .environment(tabBarPOCStore)
+                    } else {
+                        AuthenticationGateView()
+                    }
+                    #else
                     AuthenticationGateView()
+                    #endif
                 }
-                #else
-                AuthenticationGateView()
-                #endif
+                    .tint(.blue)
+                    .prefetchClerkImages()
+                    .environment(clerk)
+                    .environment(store)
+            } else {
+                EmptyView()
             }
-                .tint(.blue)
-                .prefetchClerkImages()
-                .environment(Clerk.shared)
-                .environment(store)
         }
     }
 }

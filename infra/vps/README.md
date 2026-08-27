@@ -32,12 +32,17 @@ pnpm vps:backup:install-timers
 ```
 
 Host secrets, TLS material, backup credentials, and database volumes remain outside the repository
-under `/etc/regolith` and Docker-managed storage.
+under `/etc/mons` and Docker-managed storage.
 
-Provisioning generates three passwords per environment under `/etc/regolith/postgres/<environment>`:
+For an already-provisioned host, complete [the one-time Mons name cutover](MONS_NAME_CUTOVER.md)
+before starting the updated Compose file. The database volumes are retained, but PostgreSQL roles,
+database names, Hyperdrive credentials, backup stanza, host secret path, and systemd units must be
+switched together.
+
+Provisioning generates three passwords per environment under `/etc/mons/postgres/<environment>`:
 `admin-password`, `migration-password`, and `app-password`. It retains existing non-empty passwords
 and TLS keys, making reruns safe. The pgBackRest configuration containing R2 credentials is installed
-at `/etc/regolith/pgbackrest/pgbackrest.conf` with mode `0600`.
+at `/etc/mons/pgbackrest/pgbackrest.conf` with mode `0600`.
 
 ## Operations
 
@@ -62,7 +67,7 @@ cluster: PostgreSQL does not report success until R2 has durably accepted each s
 
 Monitoring observes host, container, and PostgreSQL health. Provisioning creates a separate
 least-privilege `pg_monitor` login for each database and stores its generated password under
-`/etc/regolith/monitoring`, alongside Grafana's administrator password. The database containers
+`/etc/mons/monitoring`, alongside Grafana's administrator password. The database containers
 preload `pg_stat_statements`; provisioning enables the extension in the application and exporter
 databases. The query dashboard tracks normalized top-level statements, excludes utility commands,
 and limits each exporter scrape to 50 statements with query text truncated to 160 characters. The
@@ -73,6 +78,6 @@ pnpm monitoring:provision
 pnpm monitoring:up
 ```
 
-Grafana is available only over Tailscale at `http://100.71.253.62:3000`. Prometheus and the
+Grafana is available only over Tailscale at `http://<VPS_MAGICDNS_NAME>:3000`. Prometheus and the
 exporters are private. Use `pnpm monitoring:logs` to inspect the stack and
 `pnpm monitoring:stop` to stop it without deleting stored metrics or dashboards.

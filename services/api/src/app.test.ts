@@ -13,8 +13,8 @@ import {
   type WorkoutTemplateRecord,
   UserFoodRepository,
   type UserFoodRepositoryService,
-} from '@regolith/database'
-import type { MealEstimate } from '@regolith/contracts'
+} from '@mons/database'
+import type { MealEstimate } from '@mons/contracts'
 import { Context, Effect, Layer } from 'effect'
 import { HttpRouter } from 'effect/unstable/http'
 import { NodeHttpServer } from '@effect/platform-node'
@@ -24,7 +24,7 @@ import { RequestAuthenticator } from './auth.ts'
 import { MealEstimation } from './meal-estimation.ts'
 import { MealLogging } from './meal-logging.ts'
 
-const userId = 'user_regolith_test'
+const userId = 'user_mons_test'
 const profileId = '00000000-0000-4000-8000-000000000001'
 const food: FoodRecord = {
   brand: 'Example Brand',
@@ -222,7 +222,7 @@ const userFoods: UserFoodRepositoryService = {
 class TestWebHandler extends Context.Service<
   TestWebHandler,
   (request: Request) => Promise<Response>
->()('@regolith/api/TestWebHandler') {}
+>()('@mons/api/TestWebHandler') {}
 
 const repositoryLayer = Layer.mergeAll(
   Layer.succeed(DatabaseHealth)({ check: Effect.void }),
@@ -277,7 +277,7 @@ const request = (
   )
 const json = (response: Response) => Effect.promise(() => response.json())
 
-layer(webHandlerLayer)('Regolith Effect HTTP API', (it) => {
+layer(webHandlerLayer)('Mons Effect HTTP API', (it) => {
   it.effect('serves health and rejects missing authentication', () =>
     Effect.gen(function* () {
       const handler = yield* TestWebHandler
