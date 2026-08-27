@@ -1,7 +1,7 @@
 import Foundation
 
 enum ProfileIdentity {
-    private static let key = "regolith.profile-id"
+    private static let key = "mons.profile-id"
 
     static func current(defaults: UserDefaults = .standard) -> UUID {
         if let value = defaults.string(forKey: key), let identifier = UUID(uuidString: value) {

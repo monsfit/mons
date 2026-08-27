@@ -62,14 +62,14 @@ done
 read -r wal_last_archived wal_last_failed < <(
   "${compose[@]}" exec -T --user postgres postgres-prod \
     psql --quiet --tuples-only --no-align --field-separator=' ' \
-    --username regolith_prod_admin --dbname regolith_prod \
+    --username mons_prod_admin --dbname mons_prod \
     --command "SELECT coalesce(extract(epoch FROM last_archived_time)::bigint, 0), coalesce(extract(epoch FROM last_failed_time)::bigint, 0) FROM pg_stat_archiver"
 )
 
 backup_info=$(
   "${compose[@]}" exec -T --user postgres postgres-prod \
     pgbackrest --config=/var/lib/postgresql/pgbackrest/pgbackrest.conf \
-    --stanza=regolith-prod --output=json info
+    --stanza=mons-prod --output=json info
 ) || fail "Unable to read the pgBackRest repository"
 
 backup_status=$(jq -r '.[0].status.code' <<< "${backup_info}")
@@ -91,7 +91,7 @@ now=$(date +%s)
 
 "${compose[@]}" exec -T --user postgres postgres-prod \
   pgbackrest --config=/var/lib/postgresql/pgbackrest/pgbackrest.conf \
-  --stanza=regolith-prod check >/dev/null || fail "pgBackRest consistency check failed"
+  --stanza=mons-prod check >/dev/null || fail "pgBackRest consistency check failed"
 
 check_success=1
 publish_metrics

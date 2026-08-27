@@ -4,8 +4,8 @@ import {
   MealLogRepository,
   type MealLogRecord,
   type MealLogRepositoryError,
-} from '@regolith/database'
-import type { SaveMealLog } from '@regolith/contracts'
+} from '@mons/database'
+import type { SaveMealLog } from '@mons/contracts'
 import { Clock, Context, Effect, Layer, Schedule, Schema } from 'effect'
 import { createHash } from 'node:crypto'
 
@@ -55,7 +55,7 @@ export interface MealLoggingService {
 }
 
 export class MealLogging extends Context.Service<MealLogging, MealLoggingService>()(
-  '@regolith/api/MealLogging',
+  '@mons/api/MealLogging',
 ) {}
 
 const decodeBase64 = Effect.fn('MealLogging.decodeBase64')(function* (encoded: string) {

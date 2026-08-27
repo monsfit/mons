@@ -18,8 +18,8 @@ export const validateSchemaName = Schema.decodeUnknownEffect(schemaNameSchema)
 
 export const grantRuntimeDatabaseAccess = (
   runtimeRole: string,
-  appSchema = 'regolith_app',
-  catalogSchema = 'regolith',
+  appSchema = 'mons_app',
+  catalogSchema = 'mons',
 ) =>
   Effect.gen(function* () {
     const safeRole = yield* validateSchemaName(runtimeRole)
@@ -63,7 +63,7 @@ const applicationMigrationLoader = (schema: string): Migrator.Loader =>
     [8, 'meal_media_cleanup', Effect.succeed(mealMediaCleanup(schema))],
   ])
 
-export const migrateApplicationDatabase = (schema = 'regolith_app') =>
+export const migrateApplicationDatabase = (schema = 'mons_app') =>
   Effect.gen(function* () {
     const safeSchema = yield* validateSchemaName(schema)
     const sql = yield* SqlClient.SqlClient
@@ -78,7 +78,7 @@ export const migrateApplicationDatabase = (schema = 'regolith_app') =>
     }),
   )
 
-export const migrateCatalogSearch = (schema = 'regolith') =>
+export const migrateCatalogSearch = (schema = 'mons') =>
   Effect.gen(function* () {
     const safeSchema = yield* validateSchemaName(schema)
     const sql = yield* SqlClient.SqlClient

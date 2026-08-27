@@ -23,7 +23,7 @@ export interface AiGatewayService {
 }
 
 export class AiGateway extends Context.Service<AiGateway, AiGatewayService>()(
-  '@regolith/api/AiGateway',
+  '@mons/api/AiGateway',
 ) {}
 
 export interface AiGatewayClient {

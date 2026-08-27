@@ -31,7 +31,7 @@ const makeHandler = () => {
   } as unknown as Parameters<typeof createWorkersAI>[0])
   const config: ApiConfig = {
     aiModel: defaultAiGatewayModel,
-    appSchema: 'regolith_app',
+    appSchema: 'mons_app',
     clerkPublishableKey: resources.PublicConfig.clerkPublishableKey,
     clerkSecretKey: resources.ClerkSecretKey.value,
     databaseUrl: resources.Database.connectionString,
@@ -41,7 +41,7 @@ const makeHandler = () => {
     mealTranscriptionModel: defaultMealTranscriptionModel,
     port: 3000,
     r2: Option.none(),
-    schema: 'regolith',
+    schema: 'mons',
   }
   const application = makeApiApplication(config, {
     aiClient: makeAiSdkClient((model) => workersAi(model)),

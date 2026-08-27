@@ -29,7 +29,7 @@ fi
 
 temporary_file=$(mktemp "$configuration_file.XXXXXX")
 trap 'rm -f "$temporary_file"' EXIT
-printf 'REGOLITH_API_BASE_URL = http:/$()/%s:%s\n' "$api_host" "$api_port" > "$temporary_file"
+printf 'MONS_API_BASE_URL = http:/$()/%s:%s\n' "$api_host" "$api_port" > "$temporary_file"
 mv "$temporary_file" "$configuration_file"
 trap - EXIT
 

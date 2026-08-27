@@ -6,7 +6,7 @@ import {
   mealEstimateRepositoryLayer,
   mealLogRepositoryLayer,
   userFoodRepositoryLayer,
-} from '@regolith/database'
+} from '@mons/database'
 import { Layer, Option } from 'effect'
 import { HttpRouter } from 'effect/unstable/http'
 

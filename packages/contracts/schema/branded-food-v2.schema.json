@@ -1,5 +1,5 @@
 {
-  "$id": "urn:regolith:schema:branded-food:2.0.0",
+  "$id": "urn:mons:schema:branded-food:2.0.0",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
@@ -10,8 +10,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "g",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "g",
+      "x-mons-value-kind": "direct"
     },
     "alcohol": {
       "description": "Alcohol per 100 g",
@@ -20,8 +20,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "g",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "g",
+      "x-mons-value-kind": "direct"
     },
     "brand": {
       "description": "Product brand",
@@ -29,7 +29,7 @@
         "string",
         "null"
       ],
-      "x-regolith-value-kind": "identity"
+      "x-mons-value-kind": "identity"
     },
     "caffeine": {
       "description": "Caffeine per 100 g",
@@ -38,8 +38,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "mg",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "mg",
+      "x-mons-value-kind": "direct"
     },
     "calcium": {
       "description": "Calcium per 100 g",
@@ -48,8 +48,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "mg",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "mg",
+      "x-mons-value-kind": "direct"
     },
     "calories": {
       "description": "Food energy per 100 g",
@@ -58,8 +58,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "kcal",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "kcal",
+      "x-mons-value-kind": "direct"
     },
     "carbohydrates_available": {
       "description": "Source-reported available carbohydrate per 100 g",
@@ -68,8 +68,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "g",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "g",
+      "x-mons-value-kind": "direct"
     },
     "carbohydrates_net_calculated": {
       "description": "Calculated total carbohydrate minus dietary fibre per 100 g",
@@ -78,8 +78,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "g",
-      "x-regolith-value-kind": "derived"
+      "x-mons-unit": "g",
+      "x-mons-value-kind": "derived"
     },
     "carbohydrates_total": {
       "description": "Source-reported total carbohydrate per 100 g",
@@ -88,8 +88,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "g",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "g",
+      "x-mons-value-kind": "direct"
     },
     "choline": {
       "description": "Choline per 100 g",
@@ -98,8 +98,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "mg",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "mg",
+      "x-mons-value-kind": "direct"
     },
     "copper": {
       "description": "Copper per 100 g",
@@ -108,8 +108,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "mg",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "mg",
+      "x-mons-value-kind": "direct"
     },
     "cysteine": {
       "description": "Cysteine per 100 g",
@@ -118,8 +118,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "g",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "g",
+      "x-mons-value-kind": "direct"
     },
     "dietary_cholesterol": {
       "description": "Dietary cholesterol per 100 g",
@@ -128,8 +128,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "mg",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "mg",
+      "x-mons-value-kind": "direct"
     },
     "fiber": {
       "description": "Dietary fibre per 100 g",
@@ -138,8 +138,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "g",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "g",
+      "x-mons-value-kind": "direct"
     },
     "folate_dfe": {
       "description": "Dietary folate equivalents per 100 g",
@@ -148,8 +148,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "mcg",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "mcg",
+      "x-mons-value-kind": "direct"
     },
     "folate_total": {
       "description": "Total folate per 100 g",
@@ -158,8 +158,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "mcg",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "mcg",
+      "x-mons-value-kind": "direct"
     },
     "gtin": {
       "description": "Normalized 14-digit Global Trade Item Number",
@@ -168,7 +168,7 @@
         "string",
         "null"
       ],
-      "x-regolith-value-kind": "identity"
+      "x-mons-value-kind": "identity"
     },
     "histidine": {
       "description": "Histidine per 100 g",
@@ -177,8 +177,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "g",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "g",
+      "x-mons-value-kind": "direct"
     },
     "iron": {
       "description": "Iron per 100 g",
@@ -187,8 +187,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "mg",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "mg",
+      "x-mons-value-kind": "direct"
     },
     "isoleucine": {
       "description": "Isoleucine per 100 g",
@@ -197,8 +197,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "g",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "g",
+      "x-mons-value-kind": "direct"
     },
     "leucine": {
       "description": "Leucine per 100 g",
@@ -207,8 +207,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "g",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "g",
+      "x-mons-value-kind": "direct"
     },
     "lysine": {
       "description": "Lysine per 100 g",
@@ -217,8 +217,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "g",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "g",
+      "x-mons-value-kind": "direct"
     },
     "magnesium": {
       "description": "Magnesium per 100 g",
@@ -227,8 +227,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "mg",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "mg",
+      "x-mons-value-kind": "direct"
     },
     "manganese": {
       "description": "Manganese per 100 g",
@@ -237,8 +237,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "mg",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "mg",
+      "x-mons-value-kind": "direct"
     },
     "methionine": {
       "description": "Methionine per 100 g",
@@ -247,8 +247,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "g",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "g",
+      "x-mons-value-kind": "direct"
     },
     "monounsaturated_fat": {
       "description": "Total monounsaturated fat per 100 g",
@@ -257,14 +257,14 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "g",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "g",
+      "x-mons-value-kind": "direct"
     },
     "name": {
       "description": "Source food or product name",
       "minLength": 1,
       "type": "string",
-      "x-regolith-value-kind": "identity"
+      "x-mons-value-kind": "identity"
     },
     "omega_3_ala": {
       "description": "Alpha-linolenic acid per 100 g",
@@ -273,8 +273,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "g",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "g",
+      "x-mons-value-kind": "direct"
     },
     "omega_3_ala_epa_dha_sum": {
       "description": "ALA + EPA + DHA per 100 g, present only when all three components exist",
@@ -283,8 +283,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "g",
-      "x-regolith-value-kind": "derived"
+      "x-mons-unit": "g",
+      "x-mons-value-kind": "derived"
     },
     "omega_3_dha": {
       "description": "Docosahexaenoic acid per 100 g",
@@ -293,8 +293,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "g",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "g",
+      "x-mons-value-kind": "direct"
     },
     "omega_3_epa": {
       "description": "Eicosapentaenoic acid per 100 g",
@@ -303,8 +303,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "g",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "g",
+      "x-mons-value-kind": "direct"
     },
     "omega_3_total_reported": {
       "description": "Source-reported total omega-3 fat per 100 g",
@@ -313,8 +313,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "g",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "g",
+      "x-mons-value-kind": "direct"
     },
     "omega_6_linoleic_acid": {
       "description": "Linoleic acid per 100 g",
@@ -323,8 +323,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "g",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "g",
+      "x-mons-value-kind": "direct"
     },
     "omega_6_total_reported": {
       "description": "Source-reported total omega-6 fat per 100 g",
@@ -333,8 +333,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "g",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "g",
+      "x-mons-value-kind": "direct"
     },
     "phenylalanine": {
       "description": "Phenylalanine per 100 g",
@@ -343,8 +343,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "g",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "g",
+      "x-mons-value-kind": "direct"
     },
     "phosphorus": {
       "description": "Phosphorus per 100 g",
@@ -353,8 +353,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "mg",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "mg",
+      "x-mons-value-kind": "direct"
     },
     "polyunsaturated_fat": {
       "description": "Total polyunsaturated fat per 100 g",
@@ -363,8 +363,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "g",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "g",
+      "x-mons-value-kind": "direct"
     },
     "portions": {
       "description": "Optional household portions",
@@ -397,7 +397,7 @@
         "array",
         "null"
       ],
-      "x-regolith-value-kind": "identity"
+      "x-mons-value-kind": "identity"
     },
     "potassium": {
       "description": "Potassium per 100 g",
@@ -406,8 +406,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "mg",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "mg",
+      "x-mons-value-kind": "direct"
     },
     "protein": {
       "description": "Protein per 100 g",
@@ -416,8 +416,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "g",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "g",
+      "x-mons-value-kind": "direct"
     },
     "saturated_fat": {
       "description": "Total saturated fat per 100 g",
@@ -426,8 +426,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "g",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "g",
+      "x-mons-value-kind": "direct"
     },
     "selenium": {
       "description": "Selenium per 100 g",
@@ -436,8 +436,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "mcg",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "mcg",
+      "x-mons-value-kind": "direct"
     },
     "sodium": {
       "description": "Sodium per 100 g",
@@ -446,20 +446,20 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "mg",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "mg",
+      "x-mons-value-kind": "direct"
     },
     "source": {
       "description": "Normalized source dataset identifier",
       "minLength": 1,
       "type": "string",
-      "x-regolith-value-kind": "identity"
+      "x-mons-value-kind": "identity"
     },
     "source_id": {
       "description": "Stable identifier from the source dataset",
       "minLength": 1,
       "type": "string",
-      "x-regolith-value-kind": "identity"
+      "x-mons-value-kind": "identity"
     },
     "starch": {
       "description": "Starch per 100 g",
@@ -468,8 +468,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "g",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "g",
+      "x-mons-value-kind": "direct"
     },
     "threonine": {
       "description": "Threonine per 100 g",
@@ -478,8 +478,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "g",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "g",
+      "x-mons-value-kind": "direct"
     },
     "total_fat": {
       "description": "Total fat per 100 g",
@@ -488,8 +488,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "g",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "g",
+      "x-mons-value-kind": "direct"
     },
     "total_sugars": {
       "description": "Total sugars per 100 g",
@@ -498,8 +498,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "g",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "g",
+      "x-mons-value-kind": "direct"
     },
     "trans_fat": {
       "description": "Total trans fat per 100 g",
@@ -508,8 +508,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "g",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "g",
+      "x-mons-value-kind": "direct"
     },
     "tryptophan": {
       "description": "Tryptophan per 100 g",
@@ -518,8 +518,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "g",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "g",
+      "x-mons-value-kind": "direct"
     },
     "tyrosine": {
       "description": "Tyrosine per 100 g",
@@ -528,8 +528,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "g",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "g",
+      "x-mons-value-kind": "direct"
     },
     "valine": {
       "description": "Valine per 100 g",
@@ -538,8 +538,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "g",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "g",
+      "x-mons-value-kind": "direct"
     },
     "vitamin_a_retinol": {
       "description": "Retinol per 100 g",
@@ -548,8 +548,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "mcg",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "mcg",
+      "x-mons-value-kind": "direct"
     },
     "vitamin_b12_cobalamin": {
       "description": "Vitamin B12 per 100 g",
@@ -558,8 +558,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "mcg",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "mcg",
+      "x-mons-value-kind": "direct"
     },
     "vitamin_b1_thiamin": {
       "description": "Thiamin per 100 g",
@@ -568,8 +568,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "mg",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "mg",
+      "x-mons-value-kind": "direct"
     },
     "vitamin_b2_riboflavin": {
       "description": "Riboflavin per 100 g",
@@ -578,8 +578,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "mg",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "mg",
+      "x-mons-value-kind": "direct"
     },
     "vitamin_b3_niacin": {
       "description": "Niacin per 100 g",
@@ -588,8 +588,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "mg",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "mg",
+      "x-mons-value-kind": "direct"
     },
     "vitamin_b5_pantothenic_acid": {
       "description": "Pantothenic acid per 100 g",
@@ -598,8 +598,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "mg",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "mg",
+      "x-mons-value-kind": "direct"
     },
     "vitamin_b6": {
       "description": "Vitamin B6 per 100 g",
@@ -608,8 +608,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "mg",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "mg",
+      "x-mons-value-kind": "direct"
     },
     "vitamin_c_ascorbic_acid": {
       "description": "Vitamin C per 100 g",
@@ -618,8 +618,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "mg",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "mg",
+      "x-mons-value-kind": "direct"
     },
     "vitamin_d_calciferol": {
       "description": "Vitamin D per 100 g",
@@ -628,8 +628,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "mcg",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "mcg",
+      "x-mons-value-kind": "direct"
     },
     "vitamin_e_tocopherol": {
       "description": "Vitamin E as tocopherol per 100 g",
@@ -638,8 +638,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "mg",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "mg",
+      "x-mons-value-kind": "direct"
     },
     "vitamin_k_phylloquinone": {
       "description": "Phylloquinone per 100 g",
@@ -648,8 +648,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "mcg",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "mcg",
+      "x-mons-value-kind": "direct"
     },
     "water": {
       "description": "Water per 100 g",
@@ -658,8 +658,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "g",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "g",
+      "x-mons-value-kind": "direct"
     },
     "zinc": {
       "description": "Zinc per 100 g",
@@ -668,8 +668,8 @@
         "number",
         "null"
       ],
-      "x-regolith-unit": "mg",
-      "x-regolith-value-kind": "direct"
+      "x-mons-unit": "mg",
+      "x-mons-value-kind": "direct"
     }
   },
   "required": [
@@ -740,9 +740,9 @@
     "brand",
     "gtin"
   ],
-  "title": "Regolith normalized branded food schema 2.0.0",
+  "title": "Mons normalized branded food schema 2.0.0",
   "type": "object",
-  "x-regolith-nutrient-basis": {
+  "x-mons-nutrient-basis": {
     "amount": 100.0,
     "unit": "g"
   }

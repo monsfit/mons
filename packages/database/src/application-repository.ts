@@ -295,7 +295,7 @@ export interface ApplicationRepositoryService {
 }
 
 export const ApplicationRepository = Context.Service<ApplicationRepositoryService>(
-  '@regolith/database/ApplicationRepository',
+  '@mons/database/ApplicationRepository',
 )
 
 const decodeArray = <S extends Schema.Constraint>(schema: S, rows: ReadonlyArray<unknown>) =>
@@ -322,8 +322,8 @@ export const makeApplicationRepository = (
 ) =>
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient
-    const appSchema = yield* validateSchemaName(options.appSchema ?? 'regolith_app')
-    const catalogSchema = yield* validateSchemaName(options.catalogSchema ?? 'regolith')
+    const appSchema = yield* validateSchemaName(options.appSchema ?? 'mons_app')
+    const catalogSchema = yield* validateSchemaName(options.catalogSchema ?? 'mons')
     const now = options.now ?? (() => new Date())
     const profiles = sql(`${appSchema}.profiles`)
     const nutritionPlans = sql(`${appSchema}.nutrition_plans`)

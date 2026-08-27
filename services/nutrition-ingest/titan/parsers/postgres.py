@@ -8,12 +8,12 @@ from titan.common.postgres import ingest, status
 
 
 def register_subparser(subparsers) -> None:
-    parser = subparsers.add_parser("postgres", help="Inspect or ingest the local Regolith PostgreSQL database")
+    parser = subparsers.add_parser("postgres", help="Inspect or ingest the local Mons PostgreSQL database")
     commands = parser.add_subparsers(dest="postgres_command", required=True)
 
     status_parser = commands.add_parser("status", help="Show local database status")
     status_parser.add_argument("--database-url", help="PostgreSQL connection URL (default: DATABASE_URL or local Compose URL)")
-    status_parser.add_argument("--schema", default="regolith", help="Active schema (default: regolith)")
+    status_parser.add_argument("--schema", default="mons", help="Active schema (default: mons)")
     status_parser.set_defaults(handler=run_status)
 
     ingest_parser = commands.add_parser("ingest", help="Atomically ingest validated raw and branded JSONL")
@@ -22,7 +22,7 @@ def register_subparser(subparsers) -> None:
     ingest_parser.add_argument("--raw-manifest", type=Path)
     ingest_parser.add_argument("--branded-manifest", type=Path)
     ingest_parser.add_argument("--database-url", help="PostgreSQL connection URL (default: DATABASE_URL or local Compose URL)")
-    ingest_parser.add_argument("--schema", default="regolith", help="Active schema (default: regolith)")
+    ingest_parser.add_argument("--schema", default="mons", help="Active schema (default: mons)")
     ingest_parser.set_defaults(handler=run_ingest)
 
 

@@ -7,7 +7,7 @@ readonly compose=(docker compose --file "${repository_directory}/infra/vps/compo
 readonly volume_name=mons_pgbackrest_restore_drill
 readonly container_name=mons-pgbackrest-restore-drill
 readonly image_name=mons-postgres-prod
-readonly config_path=/etc/regolith/pgbackrest/pgbackrest.conf
+readonly config_path=/etc/mons/pgbackrest/pgbackrest.conf
 readonly metrics_directory=/var/lib/mons-monitoring/textfile
 readonly metrics_file="${metrics_directory}/postgres-restore-drill.prom"
 
@@ -46,26 +46,26 @@ cleanup
 
 "${compose[@]}" up -d postgres-prod
 
-restore_point="regolith-drill-$(date -u +%Y%m%d%H%M%S)"
+restore_point="mons-drill-$(date -u +%Y%m%d%H%M%S)"
 docker exec -i mons-postgres-prod-1 \
-  psql -U regolith_prod_admin -d regolith_prod -v ON_ERROR_STOP=1 -qAt \
+  psql -U mons_prod_admin -d mons_prod -v ON_ERROR_STOP=1 -qAt \
   --set=restore_point="${restore_point}" <<'SQL' >/dev/null
-DROP SCHEMA IF EXISTS regolith_restore_drill CASCADE;
-CREATE SCHEMA regolith_restore_drill;
-CREATE TABLE regolith_restore_drill.marker (value text PRIMARY KEY);
-INSERT INTO regolith_restore_drill.marker VALUES ('pitr-ok');
+DROP SCHEMA IF EXISTS mons_restore_drill CASCADE;
+CREATE SCHEMA mons_restore_drill;
+CREATE TABLE mons_restore_drill.marker (value text PRIMARY KEY);
+INSERT INTO mons_restore_drill.marker VALUES ('pitr-ok');
 SELECT pg_create_restore_point(:'restore_point');
 SQL
 target_time=$(docker exec mons-postgres-prod-1 \
-  psql -U regolith_prod_admin -d regolith_prod -Atc "SELECT clock_timestamp()")
+  psql -U mons_prod_admin -d mons_prod -Atc "SELECT clock_timestamp()")
 
 docker exec mons-postgres-prod-1 \
-  psql -U regolith_prod_admin -d regolith_prod -v ON_ERROR_STOP=1 -Atc \
+  psql -U mons_prod_admin -d mons_prod -v ON_ERROR_STOP=1 -Atc \
   "SELECT pg_switch_wal()" >/dev/null
 
 for _ in $(seq 1 60); do
   last_archived=$(docker exec mons-postgres-prod-1 \
-    psql -U regolith_prod_admin -d regolith_prod -Atc \
+    psql -U mons_prod_admin -d mons_prod -Atc \
     "SELECT last_archived_time >= '${target_time}'::timestamptz FROM pg_stat_archiver")
   [[ ${last_archived} == t ]] && break
   sleep 1
@@ -73,8 +73,8 @@ done
 [[ ${last_archived:-f} == t ]] || { echo "WAL did not archive before timeout" >&2; exit 1; }
 
 docker exec mons-postgres-prod-1 \
-  psql -U regolith_prod_admin -d regolith_prod -v ON_ERROR_STOP=1 -c \
-  "DROP SCHEMA regolith_restore_drill CASCADE" >/dev/null
+  psql -U mons_prod_admin -d mons_prod -v ON_ERROR_STOP=1 -c \
+  "DROP SCHEMA mons_restore_drill CASCADE" >/dev/null
 
 docker volume create "${volume_name}" >/dev/null
 docker run --rm --user 0 \
@@ -93,7 +93,7 @@ docker run --rm --user postgres \
   --entrypoint pgbackrest \
   "${image_name}" \
   --config=/var/lib/postgresql/pgbackrest/pgbackrest.conf \
-  --stanza=regolith-prod \
+  --stanza=mons-prod \
   --pg1-path=/var/lib/postgresql/18/docker \
   --type=name \
   --target="${restore_point}" \
@@ -108,7 +108,7 @@ docker run -d --name "${container_name}" \
 
 for _ in $(seq 1 60); do
   ready=$(docker exec "${container_name}" \
-    psql -U regolith_prod_admin -d regolith_prod -Atc \
+    psql -U mons_prod_admin -d mons_prod -Atc \
     "SELECT NOT pg_is_in_recovery()" 2>/dev/null || true)
   [[ ${ready} == t ]] && break
   sleep 1
@@ -116,9 +116,9 @@ done
 [[ ${ready:-} == t ]] || { docker logs "${container_name}" >&2; exit 1; }
 
 result=$(docker exec "${container_name}" \
-  psql -U regolith_prod_admin -d regolith_prod -v ON_ERROR_STOP=1 -Atc \
-  "SELECT current_database(), current_user, value FROM regolith_restore_drill.marker")
-[[ ${result} == "regolith_prod|regolith_prod_admin|pitr-ok" ]] || {
+  psql -U mons_prod_admin -d mons_prod -v ON_ERROR_STOP=1 -Atc \
+  "SELECT current_database(), current_user, value FROM mons_restore_drill.marker")
+[[ ${result} == "mons_prod|mons_prod_admin|pitr-ok" ]] || {
   echo "Unexpected restore result: ${result}" >&2
   exit 1
 }

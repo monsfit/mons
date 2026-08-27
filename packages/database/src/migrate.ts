@@ -10,13 +10,11 @@ import {
 
 const program = Effect.gen(function* () {
   const databaseUrl = yield* Config.string('DATABASE_URL').pipe(
-    Config.withDefault('postgresql://regolith:regolith_local@localhost:5432/regolith'),
+    Config.withDefault('postgresql://mons:mons_local@localhost:5432/mons'),
   )
-  const appSchema = yield* Config.string('REGOLITH_APP_SCHEMA').pipe(
-    Config.withDefault('regolith_app'),
-  )
-  const catalogSchema = yield* Config.string('REGOLITH_SCHEMA').pipe(Config.withDefault('regolith'))
-  const runtimeRole = yield* Config.option(Config.nonEmptyString('REGOLITH_DATABASE_RUNTIME_USER'))
+  const appSchema = yield* Config.string('MONS_APP_SCHEMA').pipe(Config.withDefault('mons_app'))
+  const catalogSchema = yield* Config.string('MONS_SCHEMA').pipe(Config.withDefault('mons'))
+  const runtimeRole = yield* Config.option(Config.nonEmptyString('MONS_DATABASE_RUNTIME_USER'))
   const database = createDatabaseLayer({ connectionString: databaseUrl })
 
   yield* Effect.gen(function* () {
@@ -25,7 +23,7 @@ const program = Effect.gen(function* () {
     if (Option.isSome(runtimeRole)) {
       yield* grantRuntimeDatabaseAccess(runtimeRole.value, appSchema, catalogSchema)
     }
-    yield* Effect.logInfo('Regolith database migration complete', {
+    yield* Effect.logInfo('Mons database migration complete', {
       applicationMigrations: migrations.length,
       catalogAvailable,
       runtimeAccessGranted: Option.isSome(runtimeRole),

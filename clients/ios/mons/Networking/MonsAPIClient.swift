@@ -1,6 +1,6 @@
 import Foundation
 
-actor RegolithAPIClient {
+actor MonsAPIClient {
     private let authorizationTokenProvider: any AuthorizationTokenProviding
     private let decoder: JSONDecoder
     private let encoder: JSONEncoder

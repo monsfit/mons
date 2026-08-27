@@ -88,12 +88,12 @@ pnpm vps:up
 On the VPS, retrieve the development application password without printing any other secret:
 
 ```bash
-sudo cat /etc/regolith/postgres/dev/app-password
+sudo cat /etc/mons/postgres/dev/app-password
 ```
 
 Put that value into the ignored `.env` using the URL shape in `.env.example`.
 
-Cloudflare connectivity uses the shared `regolith-postgres` Tunnel. The
+Cloudflare connectivity uses the shared `mons-postgres` Tunnel. The
 `mons-postgres-dev` and `mons-postgres-prod` Workers VPC services resolve the corresponding
 Docker-internal hostnames and enforce `verify_full` against their Cloudflare Origin CA
 certificates. Hyperdrive configurations `mons-development` and `mons-production` use the
@@ -131,7 +131,7 @@ pnpm monitoring:up
 ```
 
 Retrieve the Grafana password on the VPS with
-`sudo cat /etc/regolith/monitoring/grafana-admin-password`. Treat that file as the canonical
+`sudo cat /etc/mons/monitoring/grafana-admin-password`. Treat that file as the canonical
 password; if the persisted Grafana password drifts, reset it from the file using the host runbook.
 The Prometheus datasource and dashboards are provisioned from `infra/vps/monitoring`. Alerts are
 deferred until there is a real notification destination.
@@ -183,10 +183,10 @@ schema versions and SHA-256 hashes before loading them.
 - Catalog search and barcode responses include every available normalized nutrient and household
   gram portion, while preserving raw and branded provenance.
 - Profiles, food logs, custom foods, measured-yield recipes, weight history, workout templates, and completed workouts live in
-  `regolith_app`, outside replaceable catalog snapshots.
+  `mons_app`, outside replaceable catalog snapshots.
 - Clerk session tokens authenticate every `/v1` request. A unique `clerk_user_id` maps each Clerk
   account to a database-generated internal profile UUID, and profile routes verify ownership.
-- Adult onboarding inputs and the resulting nutrition plan live in `regolith_app`; the API
+- Adult onboarding inputs and the resulting nutrition plan live in `mons_app`; the API
   calculates RMR, TDEE, goal velocity, and the daily calorie target on the server.
 - Food logs snapshot nutrients per 100 g so historical totals survive catalog refreshes.
 - JSON Schema and OpenAPI artifacts are generated deterministically and checked in CI.

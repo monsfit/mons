@@ -107,10 +107,10 @@ importers:
       '@effect/platform-node':
         specifier: 'catalog:'
         version: 4.0.0-beta.103(effect@4.0.0-beta.103)(ioredis@5.11.1)
-      '@regolith/contracts':
+      '@mons/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@regolith/database':
+      '@mons/database':
         specifier: workspace:*
         version: link:../../packages/database
       ai:

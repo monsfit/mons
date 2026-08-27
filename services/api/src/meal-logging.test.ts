@@ -7,7 +7,7 @@ import {
   type MealLogRecord,
   type MealLogRepositoryService,
   type SaveMealLogInput,
-} from '@regolith/database'
+} from '@mons/database'
 import { Effect, Exit, Layer } from 'effect'
 
 import { MealIntelligence, type MealIntelligenceService } from './meal-intelligence.ts'

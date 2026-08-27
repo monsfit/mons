@@ -375,9 +375,9 @@
 				"INFOPLIST_FILE[sdk=iphonesimulator*]" = "mons/iOS-Info.plist";
 				INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsLocalNetworking = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Photograph meals and scan food barcodes for nutrition logging.";
-				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Connect to the Regolith API running on your local network.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Connect to the Mons API running on your local network.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Describe meals by voice for transcription and food matching.";
-				INFOPLIST_KEY_REGOLITH_API_BASE_URL = "$(REGOLITH_API_BASE_URL)";
+				INFOPLIST_KEY_MONS_API_BASE_URL = "$(MONS_API_BASE_URL)";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -429,7 +429,7 @@
 				"INFOPLIST_FILE[sdk=iphoneos*]" = "mons/iOS-Info.plist";
 				"INFOPLIST_FILE[sdk=iphonesimulator*]" = "mons/iOS-Info.plist";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Photograph meals and scan food barcodes for nutrition logging.";
-				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Connect to the Regolith API running on your local network.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Connect to the Mons API running on your local network.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Describe meals by voice for transcription and food matching.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;

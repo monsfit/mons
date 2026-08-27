@@ -169,7 +169,7 @@
   "templating": {
     "list": [
       { "current": { "text": "prod", "value": "prod" }, "datasource": { "type": "prometheus", "uid": "prometheus" }, "definition": "label_values(pg_up, environment)", "includeAll": false, "label": "Environment", "name": "environment", "query": { "query": "label_values(pg_up, environment)", "refId": "PrometheusVariableQueryEditor-Environment" }, "refresh": 1, "type": "query" },
-      { "current": { "text": "regolith_prod", "value": "regolith_prod" }, "datasource": { "type": "prometheus", "uid": "prometheus" }, "definition": "label_values(pg_stat_database_numbackends{environment=\"$environment\",datname!~\"template.*|postgres\"}, datname)", "includeAll": true, "allValue": ".*", "label": "Database", "name": "database", "query": { "query": "label_values(pg_stat_database_numbackends{environment=\"$environment\",datname!~\"template.*|postgres\"}, datname)", "refId": "PrometheusVariableQueryEditor-Database" }, "refresh": 1, "type": "query" }
+      { "current": { "text": "mons_prod", "value": "mons_prod" }, "datasource": { "type": "prometheus", "uid": "prometheus" }, "definition": "label_values(pg_stat_database_numbackends{environment=\"$environment\",datname!~\"template.*|postgres\"}, datname)", "includeAll": true, "allValue": ".*", "label": "Database", "name": "database", "query": { "query": "label_values(pg_stat_database_numbackends{environment=\"$environment\",datname!~\"template.*|postgres\"}, datname)", "refId": "PrometheusVariableQueryEditor-Database" }, "refresh": 1, "type": "query" }
     ]
   },
   "time": { "from": "now-6h", "to": "now" },

@@ -1,5 +1,5 @@
 {
-  "name": "@regolith/api",
+  "name": "@mons/api",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -20,8 +20,8 @@
     "@aws-sdk/client-s3": "catalog:",
     "@clerk/backend": "catalog:",
     "@effect/platform-node": "catalog:",
-    "@regolith/contracts": "workspace:*",
-    "@regolith/database": "workspace:*",
+    "@mons/contracts": "workspace:*",
+    "@mons/database": "workspace:*",
     "ai": "catalog:",
     "effect": "catalog:",
     "pg": "catalog:",

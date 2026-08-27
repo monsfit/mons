@@ -6,7 +6,7 @@ import type {
   WeightLogEntry,
   Workout,
   WorkoutTemplate,
-} from '@regolith/contracts'
+} from '@mons/contracts'
 import type {
   CustomFoodRecord,
   FoodLogEntryRecord,
@@ -16,7 +16,7 @@ import type {
   WeightLogEntryRecord,
   WorkoutRecord,
   WorkoutTemplateRecord,
-} from '@regolith/database'
+} from '@mons/database'
 
 function scaled(value: number | null, quantityGrams: number): number | null {
   if (value === null) {

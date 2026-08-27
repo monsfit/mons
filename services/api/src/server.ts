@@ -20,7 +20,7 @@ const program = Effect.gen(function* () {
       'R2 storage is not configured; core API routes are available, but meal media is disabled',
     )
   }
-  yield* Effect.logInfo('Regolith API starting', { host: config.host, port: config.port })
+  yield* Effect.logInfo('Mons API starting', { host: config.host, port: config.port })
   return yield* Layer.launch(server)
 })
 

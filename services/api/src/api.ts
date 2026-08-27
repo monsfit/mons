@@ -45,7 +45,7 @@ import {
   workoutTemplatePathSchema,
   workoutTemplateResponseSchema,
   workoutTemplateSchema,
-} from '@regolith/contracts'
+} from '@mons/contracts'
 import {
   HttpApi,
   HttpApiEndpoint,
@@ -280,10 +280,10 @@ const application = HttpApiGroup.make('application')
   .middleware(RequestValidation)
   .middleware(Authentication)
 
-export const RegolithApi = HttpApi.make('regolith')
+export const MonsApi = HttpApi.make('mons')
   .add(system)
   .add(catalog)
   .add(application)
-  .annotate(OpenApi.Title, 'Regolith API')
+  .annotate(OpenApi.Title, 'Mons API')
   .annotate(OpenApi.Version, '0.1.0')
-  .annotate(OpenApi.Description, 'Regolith nutrition and workout API')
+  .annotate(OpenApi.Description, 'Mons nutrition and workout API')

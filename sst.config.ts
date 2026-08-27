@@ -1,7 +1,7 @@
 export default $config({
   app(input) {
     return {
-      name: 'regolith',
+      name: 'mons',
       home: 'cloudflare',
       protect: input?.stage === 'production',
       removal: input?.stage === 'production' ? 'retain' : 'remove',
