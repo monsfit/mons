@@ -1,18 +1,26 @@
 import { expect, layer } from '@effect/vitest'
 import {
-  ApplicationRepository,
-  type ApplicationRepositoryService,
   CatalogReader,
   type CatalogReaderService,
   DatabaseHealth,
   type FoodLogEntryRecord,
   type FoodRecord,
+  LegacyFoodLogRepository,
+  type LegacyFoodLogRepositoryService,
+  LibraryRepository,
+  type LibraryRepositoryService,
   type NutritionPlanRecord,
+  NutritionPlanRepository,
+  type NutritionPlanRepositoryService,
+  ProfileRepository,
+  type ProfileRepositoryService,
   type WeightLogEntryRecord,
+  WeightRepository,
+  type WeightRepositoryService,
   type WorkoutRecord,
+  WorkoutRepository,
+  type WorkoutRepositoryService,
   type WorkoutTemplateRecord,
-  UserFoodRepository,
-  type UserFoodRepositoryService,
 } from '@regolith/database'
 import type { MealEstimate } from '@regolith/contracts'
 import { Context, Effect, Layer } from 'effect'
@@ -20,9 +28,15 @@ import { HttpRouter } from 'effect/unstable/http'
 import { NodeHttpServer } from '@effect/platform-node'
 
 import { apiLayer } from './app.ts'
-import { RequestAuthenticator } from './auth.ts'
-import { MealEstimation } from './meal-estimation.ts'
-import { MealLogging } from './meal-logging.ts'
+import { RequestAuthenticator } from './core/auth.ts'
+import { catalogServiceLayer } from './features/catalog.ts'
+import { libraryServiceLayer } from './features/library.ts'
+import { legacyFoodLogServiceLayer, MealEstimation, MealLogging } from './features/meals.ts'
+import { nutritionServiceLayer } from './features/nutrition.ts'
+import { profileAccessServiceLayer, profileServiceLayer } from './features/profile.ts'
+import { systemServiceLayer } from './features/system.ts'
+import { weightServiceLayer } from './features/weight.ts'
+import { workoutServiceLayer } from './features/workouts.ts'
 
 const userId = 'user_regolith_test'
 const profileId = '00000000-0000-4000-8000-000000000001'
@@ -189,27 +203,22 @@ const catalog: CatalogReaderService = {
   }),
   search: () => Effect.succeed([food]),
 }
-const application: ApplicationRepositoryService = {
-  deleteFoodLogEntry: () => Effect.succeed(true),
-  deleteWeightLogEntry: () => Effect.succeed(true),
-  deleteWorkout: () => Effect.succeed(true),
-  deleteWorkoutTemplate: () => Effect.succeed(true),
-  ensureProfile: () => Effect.void,
-  ensureProfileForClerkUser: () => Effect.succeed(profileId),
-  getNutritionPlan: () => Effect.succeed(nutritionPlan),
-  listFoodLog: () => Effect.succeed([foodLog]),
-  listWorkouts: () => Effect.succeed([workout]),
-  listWorkoutTemplates: () => Effect.succeed([template]),
-  listWeightLog: () => Effect.succeed([weight]),
-  profileBelongsToClerkUser: (candidate, candidateUser) =>
+const profiles: ProfileRepositoryService = {
+  belongsToClerkUser: (candidate, candidateUser) =>
     Effect.succeed(candidate === profileId && candidateUser === userId),
-  saveFoodLogEntry: () => Effect.succeed(foodLog),
-  saveNutritionPlan: () => Effect.succeed(nutritionPlan),
-  saveWeightLogEntry: () => Effect.succeed(weight),
-  saveWorkout: () => Effect.succeed(workout),
-  saveWorkoutTemplate: () => Effect.succeed(template),
+  ensure: () => Effect.void,
+  ensureForClerkUser: () => Effect.succeed(profileId),
 }
-const userFoods: UserFoodRepositoryService = {
+const nutrition: NutritionPlanRepositoryService = {
+  findByProfileId: () => Effect.succeed(nutritionPlan),
+  save: () => Effect.succeed(nutritionPlan),
+}
+const legacyFoodLog: LegacyFoodLogRepositoryService = {
+  delete: () => Effect.succeed(true),
+  list: () => Effect.succeed([foodLog]),
+  save: () => Effect.succeed(foodLog),
+}
+const library: LibraryRepositoryService = {
   deleteCustomFood: () => Effect.succeed(true),
   deleteRecipe: () => Effect.succeed(true),
   findCustomFoodByBarcode: () => Effect.succeed(undefined),
@@ -218,17 +227,50 @@ const userFoods: UserFoodRepositoryService = {
   saveCustomFood: () => Effect.die(new Error('Not exercised by this fixture')),
   saveRecipe: () => Effect.die(new Error('Not exercised by this fixture')),
 }
+const weights: WeightRepositoryService = {
+  delete: () => Effect.succeed(true),
+  list: () => Effect.succeed([weight]),
+  save: () => Effect.succeed(weight),
+}
+const workouts: WorkoutRepositoryService = {
+  delete: () => Effect.succeed(true),
+  deleteTemplate: () => Effect.succeed(true),
+  list: () => Effect.succeed([workout]),
+  listTemplates: () => Effect.succeed([template]),
+  save: () => Effect.succeed(workout),
+  saveTemplate: () => Effect.succeed(template),
+}
 
 class TestWebHandler extends Context.Service<
   TestWebHandler,
   (request: Request) => Promise<Response>
 >()('@regolith/api/TestWebHandler') {}
 
-const repositoryLayer = Layer.mergeAll(
+const repositories = Layer.mergeAll(
   Layer.succeed(DatabaseHealth)({ check: Effect.void }),
   Layer.succeed(CatalogReader)(catalog),
-  Layer.succeed(ApplicationRepository)(application),
-  Layer.succeed(UserFoodRepository)(userFoods),
+  Layer.succeed(ProfileRepository)(profiles),
+  Layer.succeed(NutritionPlanRepository)(nutrition),
+  Layer.succeed(LegacyFoodLogRepository)(legacyFoodLog),
+  Layer.succeed(LibraryRepository)(library),
+  Layer.succeed(WeightRepository)(weights),
+  Layer.succeed(WorkoutRepository)(workouts),
+)
+const profileAccess = profileAccessServiceLayer.pipe(Layer.provide(repositories))
+const featureServices = Layer.mergeAll(
+  systemServiceLayer,
+  catalogServiceLayer,
+  profileServiceLayer,
+  nutritionServiceLayer,
+  legacyFoodLogServiceLayer,
+  libraryServiceLayer,
+  weightServiceLayer,
+  workoutServiceLayer,
+).pipe(Layer.provide(Layer.mergeAll(repositories, profileAccess)))
+const requestServices = Layer.mergeAll(
+  repositories,
+  profileAccess,
+  featureServices,
   Layer.succeed(MealEstimation)({
     create: () => Effect.succeed(mealEstimate),
     findById: (_profileId, estimateId) =>
@@ -251,7 +293,7 @@ const authenticationLayer = Layer.succeed(RequestAuthenticator)({
 })
 const testApplication = apiLayer.pipe(
   Layer.provide(authenticationLayer),
-  HttpRouter.provideRequest(repositoryLayer),
+  HttpRouter.provideRequest(requestServices),
   Layer.provide(NodeHttpServer.layerHttpServices),
 )
 const webHandlerLayer = Layer.effect(
@@ -376,16 +418,16 @@ layer(webHandlerLayer)('Regolith Effect HTTP API', (it) => {
       const handler = yield* TestWebHandler
       const plan = yield* request(handler, `/v1/profiles/${profileId}/nutrition-plan`)
       expect(yield* json(plan)).toMatchObject({ plan: { calorieTargetKcal: 1460 } })
-      const weights = yield* request(
+      const weightResponse = yield* request(
         handler,
         `/v1/profiles/${profileId}/weight-log?from=2026-08-01T00%3A00%3A00.000Z&to=2026-09-01T00%3A00%3A00.000Z`,
       )
-      expect(yield* json(weights)).toMatchObject({ entries: [{ weightKg: 56.7 }] })
-      const workouts = yield* request(
+      expect(yield* json(weightResponse)).toMatchObject({ entries: [{ weightKg: 56.7 }] })
+      const workoutResponse = yield* request(
         handler,
         `/v1/profiles/${profileId}/workouts?from=2026-08-01T00%3A00%3A00.000Z&to=2026-09-01T00%3A00%3A00.000Z`,
       )
-      expect(yield* json(workouts)).toMatchObject({
+      expect(yield* json(workoutResponse)).toMatchObject({
         workouts: [{ sets: [{ title: 'Bench Press' }] }],
       })
       const templates = yield* request(handler, `/v1/profiles/${profileId}/workout-templates`)

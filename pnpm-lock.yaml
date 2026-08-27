@@ -126,6 +126,9 @@ importers:
         specifier: 4.0.0
         version: 4.0.0(@ai-sdk/provider@4.0.5)(ai@7.0.51(zod@4.4.3))
     devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^5.20260823.1
+        version: 5.20260823.1
       '@effect/vitest':
         specifier: 'catalog:'
         version: 4.0.0-beta.103(effect@4.0.0-beta.103)(vitest@4.1.10(@types/node@24.13.3)(vite@8.2.0(@types/node@24.13.3)(jiti@2.7.0)(yaml@2.9.0)))
@@ -485,6 +488,9 @@ packages:
         optional: true
       react-dom:
         optional: true
+
+  '@cloudflare/workers-types@5.20260823.1':
+    resolution: {integrity: sha512-HdBVDR/gecQ5QwB+DZ9kB5yjNZLS85fe8bMB2K/k0xmCvaoMlAFrQQGLaCBYR00j+i9aTkQzwfrPInVZwlMPwQ==}
 
   '@effect/platform-node-shared@4.0.0-beta.103':
     resolution: {integrity: sha512-0aCZMBid5ifqmY55TkfCDLaGTIM8qu3bNFUW7qL9vh/7jFOkaIAMX2MA8muG4deqW17XWxawddWu4v0fK+UW3g==}
@@ -2765,6 +2771,8 @@ snapshots:
     optionalDependencies:
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
+
+  '@cloudflare/workers-types@5.20260823.1': {}
 
   '@effect/platform-node-shared@4.0.0-beta.103(effect@4.0.0-beta.103)':
     dependencies:

@@ -69,25 +69,14 @@ not assumed to equal the development team ID.
 The project, application target, test target, scheme, Swift module, and bundle identifiers
 all use the `mons` name. Local Xcode user state and Derived Data are intentionally ignored.
 
-The default API URL is `http://127.0.0.1:3000`, which works from the iOS Simulator and the
-macOS build. Start PostgreSQL and the API before launching Mons:
+Configure the development API URL for the SST development Worker, then start the API before
+launching Mons:
 
 ```bash
 npx pnpm@11.20.0 db:migrate
 npx pnpm@11.20.0 dev
 ```
 
-For a physical iPhone, configure the ignored development Xcode setting and start the LAN-bound API:
-
-```bash
-npx pnpm@11.20.0 dev:phone
-```
-
-The configuration script uses the Mac's Bonjour `.local` hostname so DHCP address changes do not
-break the app. Rebuild or refresh the Xcode preview after running it. The iPhone and Mac must be on
-the same network, and macOS may ask you to allow incoming Node connections. To override discovery,
-run `npx pnpm@11.20.0 mons:configure:local -- 192.168.1.10`. The committed Debug configuration
-falls back to Simulator-safe `127.0.0.1`; the generated `Local.xcconfig` is intentionally ignored.
 Barcode scanning requires a physical device.
 
 On first launch, Mons presents a compact step-by-step onboarding flow for metabolic inputs,

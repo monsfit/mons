@@ -1,27 +1,8 @@
 export {
-  ApplicationRepository,
-  applicationRepositoryLayer,
-  makeApplicationRepository,
-  RepositoryInvariantError,
-  RepositoryOwnershipError,
-} from './application-repository.ts'
-export type {
-  ApplicationRepositoryError,
-  ApplicationRepositoryService,
-  CreateFoodLogEntryInput,
-  FoodLogEntryRecord,
-  NutritionPlanRecord,
-  SaveWeightLogEntryInput,
-  SaveWorkoutInput,
-  SaveWorkoutTemplateInput,
-  WeightLogEntryRecord,
-  WorkoutRecord,
-  WorkoutSetInput,
-  WorkoutTemplateExerciseInput,
-  WorkoutTemplateRecord,
-  WorkoutTemplateSetInput,
-} from './application-repository.ts'
-export { CatalogReader, catalogReaderLayer, makeCatalogReader } from './catalog-repository.ts'
+  CatalogReader,
+  catalogReaderLayer,
+  makeCatalogReader,
+} from './features/catalog/repository.ts'
 export type {
   CatalogReaderService,
   CatalogSnapshotRecord,
@@ -29,9 +10,77 @@ export type {
   FoodPortionRecord,
   FoodRecord,
   FoodSearchOptions,
-} from './catalog-repository.ts'
-export { createDatabaseLayer, DatabaseHealth, databaseHealthLayer } from './client.ts'
-export type { DatabaseHealthService, DatabaseOptions } from './client.ts'
+} from './features/catalog/repository.ts'
+export { createDatabaseLayer, DatabaseHealth, databaseHealthLayer } from './core/client.ts'
+export type { DatabaseHealthService, DatabaseOptions } from './core/client.ts'
+export { RepositoryInvariantError, RepositoryOwnershipError } from './core/repository.ts'
+export type { RepositoryError } from './core/repository.ts'
+export {
+  LibraryInvariantError,
+  LibraryOwnershipError,
+  LibraryRepository,
+  libraryRepositoryLayer,
+  makeLibraryRepository,
+} from './features/library/repository.ts'
+export type {
+  CustomFoodRecord,
+  LibraryRepositoryError,
+  LibraryRepositoryService,
+  RecipeRecord,
+  SaveCustomFoodInput,
+  SaveRecipeInput,
+} from './features/library/repository.ts'
+export {
+  LegacyFoodLogRepository,
+  legacyFoodLogRepositoryLayer,
+  makeLegacyFoodLogRepository,
+} from './features/meals/legacy-food-log-repository.ts'
+export type {
+  CreateFoodLogEntryInput,
+  FoodLogEntryRecord,
+  LegacyFoodLogRepositoryService,
+} from './features/meals/legacy-food-log-repository.ts'
+export {
+  makeNutritionPlanRepository,
+  NutritionPlanRepository,
+  nutritionPlanRepositoryLayer,
+} from './features/nutrition/repository.ts'
+export type {
+  NutritionPlanRecord,
+  NutritionPlanRepositoryService,
+  SaveNutritionPlanRecordInput,
+} from './features/nutrition/repository.ts'
+export {
+  makeProfileRepository,
+  ProfileRepository,
+  profileRepositoryLayer,
+} from './features/profile/repository.ts'
+export type { ProfileRepositoryService } from './features/profile/repository.ts'
+export {
+  makeWeightRepository,
+  WeightRepository,
+  weightRepositoryLayer,
+} from './features/weight/repository.ts'
+export type {
+  SaveWeightLogEntryInput,
+  WeightLogEntryRecord,
+  WeightRepositoryService,
+} from './features/weight/repository.ts'
+export {
+  makeWorkoutRepository,
+  WorkoutRepository,
+  workoutRepositoryLayer,
+} from './features/workouts/repository.ts'
+export type {
+  SaveWorkoutInput,
+  SaveWorkoutTemplateInput,
+  WorkoutRecord,
+  WorkoutRepositoryService,
+  WorkoutSetInput,
+  WorkoutTemplateExerciseInput,
+  WorkoutTemplateRecord,
+  WorkoutTemplateSetInput,
+} from './features/workouts/repository.ts'
 export {
   makeMealLogRepository,
   mealLogRepositoryLayer,
@@ -39,7 +88,7 @@ export {
   MealLogNotFoundError,
   MealLogOwnershipError,
   MealLogRepository,
-} from './meal-log-repository.ts'
+} from './features/meals/meal-log-repository.ts'
 export type {
   MealLogEntryRow,
   MealLogItemInput,
@@ -48,14 +97,14 @@ export type {
   MealLogRepositoryService,
   MealLogRow,
   SaveMealLogInput,
-} from './meal-log-repository.ts'
+} from './features/meals/meal-log-repository.ts'
 export {
   MealEstimateRepository,
   makeMealEstimateRepository,
   mealEstimateRepositoryLayer,
   MealEstimateInvariantError,
   MealEstimateOwnershipError,
-} from './meal-estimate-repository.ts'
+} from './features/meals/meal-estimate-repository.ts'
 export type {
   MealEstimateItemRow,
   MealEstimateRecord,
@@ -63,33 +112,13 @@ export type {
   MealEstimateRepositoryService,
   MealEstimateRow,
   SaveMealEstimateInput,
-} from './meal-estimate-repository.ts'
+} from './features/meals/meal-estimate-repository.ts'
 export {
   grantRuntimeDatabaseAccess,
   migrateApplicationDatabase,
   migrateCatalogSearch,
   validateSchemaName,
 } from './migrations.ts'
-export { calculateNutritionPlan } from './nutrition-plan.ts'
-export { calculateRecipeNutrition } from './recipe-nutrition.ts'
-export type {
-  NutritionValues,
-  RecipeNutrition,
-  WeightedNutritionValues,
-} from './recipe-nutrition.ts'
-export {
-  UserFoodRepository,
-  makeUserFoodRepository,
-  userFoodRepositoryLayer,
-} from './user-food-repository.ts'
-export type {
-  CustomFoodRecord,
-  RecipeRecord,
-  SaveCustomFoodInput,
-  SaveRecipeInput,
-  UserFoodRepositoryService,
-} from './user-food-repository.ts'
-export type { NutritionPlanCalculation, NutritionPlanInput } from './nutrition-plan.ts'
 export type {
   DailyActivity,
   DatasetKind,

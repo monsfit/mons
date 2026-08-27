@@ -38,6 +38,8 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Validate SST provider setup
+        run: pnpm sst:check
       - run: pnpm check
       - run: pnpm db:migrate
       - run: pnpm db:migrate
@@ -91,3 +93,47 @@ jobs:
           -scheme mons
           -destination 'platform=macOS'
           CODE_SIGNING_ALLOWED=NO
+
+  deploy-dev:
+    needs: [typescript, python, mons]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
+    concurrency: deploy-dev
+    environment:
+      name: dev
+      url: https://api.dev.mons.fit
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.20.0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm deploy:dev
+
+  deploy-production:
+    needs: [typescript, python, mons]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    concurrency: deploy-production
+    environment:
+      name: prod
+      url: https://api.mons.fit
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.20.0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm deploy:production

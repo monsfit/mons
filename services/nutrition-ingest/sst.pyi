@@ -24,3 +24,4 @@ class Resource:
     class PublicConfig:
         clerkPublishableKey: str
         type: str
+

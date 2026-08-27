@@ -16,12 +16,20 @@ export default $config({
       dev: '8c533f1b36d644fab96b3ebe4cb5bc08',
       production: '0d5ed6f6c3c94a6c8efca2deb51ea2ea',
     } as const
-    if ($app.stage !== 'dev' && $app.stage !== 'production') {
-      throw new Error(`Unsupported stage: ${$app.stage}`)
-    }
+    // `sst dev` intentionally uses SST's personal stage by default. Personal
+    // stages share the development database while keeping their Worker and AI
+    // Gateway isolated. The explicit `dev` stage remains the shared deployment
+    // target used by `sst deploy --stage dev`.
+    const databaseStage = $app.stage === 'production' ? 'production' : 'dev'
+    const apiDomain =
+      $app.stage === 'production'
+        ? 'api.mons.fit'
+        : $app.stage === 'dev'
+          ? 'api.dev.mons.fit'
+          : undefined
 
     const database = sst.cloudflare.Hyperdrive.get('Database', {
-      hyperdriveId: hyperdriveIds[$app.stage],
+      hyperdriveId: hyperdriveIds[databaseStage],
     })
     const media = new sst.Linkable('Media', {
       include: [
@@ -61,7 +69,8 @@ export default $config({
       handler: 'services/api/src/worker.ts',
       link: [database, ai, media, clerkSecretKey, publicConfig],
       placement: { mode: 'smart' },
-      url: true,
+      domain: apiDomain,
+      url: apiDomain === undefined,
     })
     return {
       aiGatewayId: aiGateway.aiGatewayId,

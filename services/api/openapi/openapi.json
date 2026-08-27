@@ -291,9 +291,9 @@
     "/v1/profile": {
       "put": {
         "tags": [
-          "application"
+          "profile"
         ],
-        "operationId": "application.ensureProfile",
+        "operationId": "profile.ensureProfile",
         "parameters": [],
         "security": [
           {
@@ -354,9 +354,9 @@
     "/v1/profiles/{profileId}/nutrition-plan": {
       "get": {
         "tags": [
-          "application"
+          "nutrition"
         ],
-        "operationId": "application.getNutritionPlan",
+        "operationId": "nutrition.getNutritionPlan",
         "parameters": [
           {
             "name": "profileId",
@@ -467,9 +467,9 @@
       },
       "put": {
         "tags": [
-          "application"
+          "nutrition"
         ],
-        "operationId": "application.saveNutritionPlan",
+        "operationId": "nutrition.saveNutritionPlan",
         "parameters": [
           {
             "name": "profileId",
@@ -592,9 +592,9 @@
     "/v1/profiles/{profileId}/food-log": {
       "get": {
         "tags": [
-          "application"
+          "meals"
         ],
-        "operationId": "application.listFoodLog",
+        "operationId": "meals.listFoodLog",
         "parameters": [
           {
             "name": "profileId",
@@ -723,9 +723,9 @@
       },
       "post": {
         "tags": [
-          "application"
+          "meals"
         ],
-        "operationId": "application.saveFoodLogEntry",
+        "operationId": "meals.saveFoodLogEntry",
         "parameters": [
           {
             "name": "profileId",
@@ -831,9 +831,9 @@
     "/v1/profiles/{profileId}/food-log/{entryId}": {
       "delete": {
         "tags": [
-          "application"
+          "meals"
         ],
-        "operationId": "application.deleteFoodLogEntry",
+        "operationId": "meals.deleteFoodLogEntry",
         "parameters": [
           {
             "name": "entryId",
@@ -936,9 +936,9 @@
     "/v1/profiles/{profileId}/meal-logs": {
       "get": {
         "tags": [
-          "application"
+          "meals"
         ],
-        "operationId": "application.listMealLogs",
+        "operationId": "meals.listMealLogs",
         "parameters": [
           {
             "name": "profileId",
@@ -1067,9 +1067,9 @@
       },
       "post": {
         "tags": [
-          "application"
+          "meals"
         ],
-        "operationId": "application.saveMealLog",
+        "operationId": "meals.saveMealLog",
         "parameters": [
           {
             "name": "profileId",
@@ -1175,9 +1175,9 @@
     "/v1/profiles/{profileId}/meal-logs/{mealId}": {
       "put": {
         "tags": [
-          "application"
+          "meals"
         ],
-        "operationId": "application.updateMealLog",
+        "operationId": "meals.updateMealLog",
         "parameters": [
           {
             "name": "mealId",
@@ -1295,9 +1295,9 @@
       },
       "delete": {
         "tags": [
-          "application"
+          "meals"
         ],
-        "operationId": "application.deleteMealLog",
+        "operationId": "meals.deleteMealLog",
         "parameters": [
           {
             "name": "mealId",
@@ -1400,9 +1400,9 @@
     "/v1/profiles/{profileId}/meal-logs/{mealId}/photo": {
       "get": {
         "tags": [
-          "application"
+          "meals"
         ],
-        "operationId": "application.getMealPhoto",
+        "operationId": "meals.getMealPhoto",
         "parameters": [
           {
             "name": "mealId",
@@ -1512,9 +1512,9 @@
     "/v1/profiles/{profileId}/meal-descriptions": {
       "post": {
         "tags": [
-          "application"
+          "meals"
         ],
-        "operationId": "application.describeMeal",
+        "operationId": "meals.describeMeal",
         "parameters": [
           {
             "name": "profileId",
@@ -1634,12 +1634,352 @@
         }
       }
     },
+    "/v1/profiles/{profileId}/meal-estimates": {
+      "post": {
+        "tags": [
+          "meals"
+        ],
+        "operationId": "meals.createMealEstimate",
+        "parameters": [
+          {
+            "name": "profileId",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "allOf": [
+                {
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+                  "format": "uuid"
+                }
+              ]
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "MealEstimate",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MealEstimate"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ValidationError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ValidationErrorEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ValidationErrorEncoded"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/UnauthorizedErrorEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/UnauthorizedErrorEncoded"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ForbiddenError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenErrorEncoded"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundErrorEncoded"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "InternalApiError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalApiErrorEncoded"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "ServiceUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableErrorEncoded"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMealEstimate"
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/v1/profiles/{profileId}/meal-estimates/{estimateId}": {
+      "get": {
+        "tags": [
+          "meals"
+        ],
+        "operationId": "meals.getMealEstimate",
+        "parameters": [
+          {
+            "name": "estimateId",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "allOf": [
+                {
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+                  "format": "uuid"
+                }
+              ]
+            },
+            "required": true
+          },
+          {
+            "name": "profileId",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "allOf": [
+                {
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+                  "format": "uuid"
+                }
+              ]
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "MealEstimate",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MealEstimate_1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ValidationError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorEncoded"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/UnauthorizedErrorEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/UnauthorizedErrorEncoded"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ForbiddenError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenErrorEncoded"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundErrorEncoded"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "InternalApiError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalApiErrorEncoded"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "meals"
+        ],
+        "operationId": "meals.discardMealEstimate",
+        "parameters": [
+          {
+            "name": "estimateId",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "allOf": [
+                {
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+                  "format": "uuid"
+                }
+              ]
+            },
+            "required": true
+          },
+          {
+            "name": "profileId",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "allOf": [
+                {
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+                  "format": "uuid"
+                }
+              ]
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "<No Content>"
+          },
+          "400": {
+            "description": "ValidationError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorEncoded"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/UnauthorizedErrorEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/UnauthorizedErrorEncoded"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ForbiddenError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenErrorEncoded"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundErrorEncoded"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "InternalApiError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalApiErrorEncoded"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/profiles/{profileId}/custom-foods": {
       "get": {
         "tags": [
-          "application"
+          "library"
         ],
-        "operationId": "application.listCustomFoods",
+        "operationId": "library.listCustomFoods",
         "parameters": [
           {
             "name": "profileId",
@@ -1752,9 +2092,9 @@
     "/v1/profiles/{profileId}/custom-foods/{foodId}": {
       "put": {
         "tags": [
-          "application"
+          "library"
         ],
-        "operationId": "application.saveCustomFood",
+        "operationId": "library.saveCustomFood",
         "parameters": [
           {
             "name": "foodId",
@@ -1889,9 +2229,9 @@
       },
       "delete": {
         "tags": [
-          "application"
+          "library"
         ],
-        "operationId": "application.deleteCustomFood",
+        "operationId": "library.deleteCustomFood",
         "parameters": [
           {
             "name": "foodId",
@@ -1994,9 +2334,9 @@
     "/v1/profiles/{profileId}/recipes": {
       "get": {
         "tags": [
-          "application"
+          "library"
         ],
-        "operationId": "application.listRecipes",
+        "operationId": "library.listRecipes",
         "parameters": [
           {
             "name": "profileId",
@@ -2109,9 +2449,9 @@
     "/v1/profiles/{profileId}/recipes/{recipeId}": {
       "put": {
         "tags": [
-          "application"
+          "library"
         ],
-        "operationId": "application.saveRecipe",
+        "operationId": "library.saveRecipe",
         "parameters": [
           {
             "name": "profileId",
@@ -2246,9 +2586,9 @@
       },
       "delete": {
         "tags": [
-          "application"
+          "library"
         ],
-        "operationId": "application.deleteRecipe",
+        "operationId": "library.deleteRecipe",
         "parameters": [
           {
             "name": "profileId",
@@ -2351,9 +2691,9 @@
     "/v1/profiles/{profileId}/weight-log": {
       "get": {
         "tags": [
-          "application"
+          "weight"
         ],
-        "operationId": "application.listWeightLog",
+        "operationId": "weight.listWeightLog",
         "parameters": [
           {
             "name": "profileId",
@@ -2482,9 +2822,9 @@
       },
       "post": {
         "tags": [
-          "application"
+          "weight"
         ],
-        "operationId": "application.saveWeightLogEntry",
+        "operationId": "weight.saveWeightLogEntry",
         "parameters": [
           {
             "name": "profileId",
@@ -2607,9 +2947,9 @@
     "/v1/profiles/{profileId}/weight-log/{entryId}": {
       "delete": {
         "tags": [
-          "application"
+          "weight"
         ],
-        "operationId": "application.deleteWeightLogEntry",
+        "operationId": "weight.deleteWeightLogEntry",
         "parameters": [
           {
             "name": "entryId",
@@ -2712,9 +3052,9 @@
     "/v1/profiles/{profileId}/workouts": {
       "get": {
         "tags": [
-          "application"
+          "workouts"
         ],
-        "operationId": "application.listWorkouts",
+        "operationId": "workouts.listWorkouts",
         "parameters": [
           {
             "name": "profileId",
@@ -2845,9 +3185,9 @@
     "/v1/profiles/{profileId}/workouts/{sessionId}": {
       "put": {
         "tags": [
-          "application"
+          "workouts"
         ],
-        "operationId": "application.saveWorkout",
+        "operationId": "workouts.saveWorkout",
         "parameters": [
           {
             "name": "profileId",
@@ -2982,9 +3322,9 @@
       },
       "delete": {
         "tags": [
-          "application"
+          "workouts"
         ],
-        "operationId": "application.deleteWorkout",
+        "operationId": "workouts.deleteWorkout",
         "parameters": [
           {
             "name": "profileId",
@@ -3087,9 +3427,9 @@
     "/v1/profiles/{profileId}/workout-templates": {
       "get": {
         "tags": [
-          "application"
+          "workouts"
         ],
-        "operationId": "application.listWorkoutTemplates",
+        "operationId": "workouts.listWorkoutTemplates",
         "parameters": [
           {
             "name": "profileId",
@@ -3202,9 +3542,9 @@
     "/v1/profiles/{profileId}/workout-templates/{templateId}": {
       "put": {
         "tags": [
-          "application"
+          "workouts"
         ],
-        "operationId": "application.saveWorkoutTemplate",
+        "operationId": "workouts.saveWorkoutTemplate",
         "parameters": [
           {
             "name": "profileId",
@@ -3339,9 +3679,9 @@
       },
       "delete": {
         "tags": [
-          "application"
+          "workouts"
         ],
-        "operationId": "application.deleteWorkoutTemplate",
+        "operationId": "workouts.deleteWorkoutTemplate",
         "parameters": [
           {
             "name": "profileId",
@@ -3359,346 +3699,6 @@
           },
           {
             "name": "templateId",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "allOf": [
-                {
-                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-                  "format": "uuid"
-                }
-              ]
-            },
-            "required": true
-          }
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "<No Content>"
-          },
-          "400": {
-            "description": "ValidationError",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationErrorEncoded"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "UnauthorizedError",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/UnauthorizedErrorEncoded"
-                    },
-                    {
-                      "$ref": "#/components/schemas/UnauthorizedErrorEncoded"
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "ForbiddenError",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ForbiddenErrorEncoded"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "NotFoundError",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NotFoundErrorEncoded"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "InternalApiError",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalApiErrorEncoded"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/profiles/{profileId}/meal-estimates": {
-      "post": {
-        "tags": [
-          "application"
-        ],
-        "operationId": "application.createMealEstimate",
-        "parameters": [
-          {
-            "name": "profileId",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "allOf": [
-                {
-                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-                  "format": "uuid"
-                }
-              ]
-            },
-            "required": true
-          }
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "MealEstimate",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MealEstimate"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "ValidationError",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/ValidationErrorEncoded"
-                    },
-                    {
-                      "$ref": "#/components/schemas/ValidationErrorEncoded"
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "UnauthorizedError",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/UnauthorizedErrorEncoded"
-                    },
-                    {
-                      "$ref": "#/components/schemas/UnauthorizedErrorEncoded"
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "ForbiddenError",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ForbiddenErrorEncoded"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "NotFoundError",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NotFoundErrorEncoded"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "InternalApiError",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalApiErrorEncoded"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "ServiceUnavailableError",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ServiceUnavailableErrorEncoded"
-                }
-              }
-            }
-          }
-        },
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateMealEstimate"
-              }
-            }
-          },
-          "required": true
-        }
-      }
-    },
-    "/v1/profiles/{profileId}/meal-estimates/{estimateId}": {
-      "get": {
-        "tags": [
-          "application"
-        ],
-        "operationId": "application.getMealEstimate",
-        "parameters": [
-          {
-            "name": "estimateId",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "allOf": [
-                {
-                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-                  "format": "uuid"
-                }
-              ]
-            },
-            "required": true
-          },
-          {
-            "name": "profileId",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "allOf": [
-                {
-                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-                  "format": "uuid"
-                }
-              ]
-            },
-            "required": true
-          }
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "MealEstimate",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MealEstimate_1"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "ValidationError",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationErrorEncoded"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "UnauthorizedError",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/UnauthorizedErrorEncoded"
-                    },
-                    {
-                      "$ref": "#/components/schemas/UnauthorizedErrorEncoded"
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "ForbiddenError",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ForbiddenErrorEncoded"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "NotFoundError",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NotFoundErrorEncoded"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "InternalApiError",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalApiErrorEncoded"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "application"
-        ],
-        "operationId": "application.discardMealEstimate",
-        "parameters": [
-          {
-            "name": "estimateId",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "allOf": [
-                {
-                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-                  "format": "uuid"
-                }
-              ]
-            },
-            "required": true
-          },
-          {
-            "name": "profileId",
             "in": "path",
             "schema": {
               "type": "string",
@@ -5516,6 +5516,585 @@
         ],
         "additionalProperties": false
       },
+      "CreateTextMealEstimate": {
+        "type": "object",
+        "properties": {
+          "estimateId": {
+            "type": "string",
+            "allOf": [
+              {
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+                "format": "uuid"
+              }
+            ]
+          },
+          "retainMedia": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": "string",
+            "allOf": [
+              {
+                "minLength": 2
+              },
+              {
+                "maxLength": 10000
+              }
+            ]
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "text"
+            ]
+          }
+        },
+        "required": [
+          "estimateId",
+          "description",
+          "kind"
+        ],
+        "additionalProperties": false
+      },
+      "CreatePhotoMealEstimate": {
+        "type": "object",
+        "properties": {
+          "estimateId": {
+            "type": "string",
+            "allOf": [
+              {
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+                "format": "uuid"
+              }
+            ]
+          },
+          "retainMedia": {
+            "type": "boolean"
+          },
+          "dataBase64": {
+            "type": "string",
+            "allOf": [
+              {
+                "minLength": 4
+              },
+              {
+                "maxLength": 40000000
+              }
+            ]
+          },
+          "description": {
+            "type": "string",
+            "allOf": [
+              {
+                "minLength": 2
+              },
+              {
+                "maxLength": 10000
+              }
+            ]
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "photo"
+            ]
+          },
+          "mediaType": {
+            "type": "string",
+            "enum": [
+              "image/jpeg",
+              "image/png",
+              "image/webp"
+            ]
+          }
+        },
+        "required": [
+          "estimateId",
+          "dataBase64",
+          "kind",
+          "mediaType"
+        ],
+        "additionalProperties": false
+      },
+      "CreateVoiceMealEstimate": {
+        "type": "object",
+        "properties": {
+          "estimateId": {
+            "type": "string",
+            "allOf": [
+              {
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+                "format": "uuid"
+              }
+            ]
+          },
+          "retainMedia": {
+            "type": "boolean"
+          },
+          "dataBase64": {
+            "type": "string",
+            "allOf": [
+              {
+                "minLength": 4
+              },
+              {
+                "maxLength": 40000000
+              }
+            ]
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "voice"
+            ]
+          },
+          "mediaType": {
+            "type": "string",
+            "enum": [
+              "audio/m4a",
+              "audio/mp4",
+              "audio/mpeg",
+              "audio/wav",
+              "audio/webm"
+            ]
+          }
+        },
+        "required": [
+          "estimateId",
+          "dataBase64",
+          "kind",
+          "mediaType"
+        ],
+        "additionalProperties": false
+      },
+      "CreateMealEstimate": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/CreateTextMealEstimate"
+          },
+          {
+            "$ref": "#/components/schemas/CreatePhotoMealEstimate"
+          },
+          {
+            "$ref": "#/components/schemas/CreateVoiceMealEstimate"
+          }
+        ]
+      },
+      "MealEstimateItem": {
+        "type": "object",
+        "properties": {
+          "calories": {
+            "type": "number",
+            "allOf": [
+              {
+                "minimum": 0
+              }
+            ]
+          },
+          "carbohydrates": {
+            "type": "number",
+            "allOf": [
+              {
+                "minimum": 0
+              }
+            ]
+          },
+          "protein": {
+            "type": "number",
+            "allOf": [
+              {
+                "minimum": 0
+              }
+            ]
+          },
+          "totalFat": {
+            "type": "number",
+            "allOf": [
+              {
+                "minimum": 0
+              }
+            ]
+          },
+          "amountGrams": {
+            "type": "number",
+            "allOf": [
+              {
+                "minimum": 0.1,
+                "maximum": 100000
+              }
+            ]
+          },
+          "confidence": {
+            "type": "number",
+            "allOf": [
+              {
+                "minimum": 0,
+                "maximum": 1
+              }
+            ]
+          },
+          "description": {
+            "type": "string",
+            "allOf": [
+              {
+                "minLength": 1
+              },
+              {
+                "maxLength": 200
+              }
+            ]
+          },
+          "evidence": {
+            "type": "string",
+            "allOf": [
+              {
+                "maxLength": 1000
+              }
+            ]
+          },
+          "foodId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "type": "string",
+            "allOf": [
+              {
+                "minLength": 1
+              },
+              {
+                "maxLength": 200
+              }
+            ]
+          },
+          "ordinal": {
+            "type": "integer",
+            "allOf": [
+              {
+                "minimum": 0,
+                "maximum": 500
+              }
+            ]
+          },
+          "resolved": {
+            "type": "boolean"
+          },
+          "sourceKind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "raw",
+                  "branded",
+                  "custom",
+                  "recipe"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "calories",
+          "carbohydrates",
+          "protein",
+          "totalFat",
+          "amountGrams",
+          "confidence",
+          "description",
+          "evidence",
+          "foodId",
+          "name",
+          "ordinal",
+          "resolved",
+          "sourceKind"
+        ],
+        "additionalProperties": false
+      },
+      "Arrays_1": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/MealEstimateItem"
+        },
+        "allOf": [
+          {
+            "maxItems": 500
+          }
+        ]
+      },
+      "Arrays_2": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "allOf": [
+            {
+              "minLength": 1
+            },
+            {
+              "maxLength": 200
+            }
+          ]
+        },
+        "allOf": [
+          {
+            "maxItems": 500
+          }
+        ]
+      },
+      "MealEstimate": {
+        "type": "object",
+        "properties": {
+          "calories": {
+            "type": "number",
+            "allOf": [
+              {
+                "minimum": 0
+              }
+            ]
+          },
+          "carbohydrates": {
+            "type": "number",
+            "allOf": [
+              {
+                "minimum": 0
+              }
+            ]
+          },
+          "protein": {
+            "type": "number",
+            "allOf": [
+              {
+                "minimum": 0
+              }
+            ]
+          },
+          "totalFat": {
+            "type": "number",
+            "allOf": [
+              {
+                "minimum": 0
+              }
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "description": {
+            "type": "string",
+            "allOf": [
+              {
+                "maxLength": 20000
+              }
+            ]
+          },
+          "estimateId": {
+            "type": "string",
+            "allOf": [
+              {
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+                "format": "uuid"
+              }
+            ]
+          },
+          "inputKind": {
+            "type": "string",
+            "enum": [
+              "text",
+              "photo",
+              "voice"
+            ]
+          },
+          "items": {
+            "$ref": "#/components/schemas/Arrays_1"
+          },
+          "mediaRetained": {
+            "type": "boolean"
+          },
+          "overallConfidence": {
+            "type": "number",
+            "allOf": [
+              {
+                "minimum": 0,
+                "maximum": 1
+              }
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "completed",
+              "failed"
+            ]
+          },
+          "transcript": {
+            "anyOf": [
+              {
+                "type": "string",
+                "allOf": [
+                  {
+                    "maxLength": 20000
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "unresolvedItems": {
+            "$ref": "#/components/schemas/Arrays_2"
+          }
+        },
+        "required": [
+          "calories",
+          "carbohydrates",
+          "protein",
+          "totalFat",
+          "createdAt",
+          "description",
+          "estimateId",
+          "inputKind",
+          "items",
+          "mediaRetained",
+          "overallConfidence",
+          "status",
+          "transcript",
+          "unresolvedItems"
+        ],
+        "additionalProperties": false
+      },
+      "MealEstimate_1": {
+        "type": "object",
+        "properties": {
+          "calories": {
+            "type": "number",
+            "allOf": [
+              {
+                "minimum": 0
+              }
+            ]
+          },
+          "carbohydrates": {
+            "type": "number",
+            "allOf": [
+              {
+                "minimum": 0
+              }
+            ]
+          },
+          "protein": {
+            "type": "number",
+            "allOf": [
+              {
+                "minimum": 0
+              }
+            ]
+          },
+          "totalFat": {
+            "type": "number",
+            "allOf": [
+              {
+                "minimum": 0
+              }
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "description": {
+            "type": "string",
+            "allOf": [
+              {
+                "maxLength": 20000
+              }
+            ]
+          },
+          "estimateId": {
+            "type": "string",
+            "allOf": [
+              {
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+                "format": "uuid"
+              }
+            ]
+          },
+          "inputKind": {
+            "type": "string",
+            "enum": [
+              "text",
+              "photo",
+              "voice"
+            ]
+          },
+          "items": {
+            "$ref": "#/components/schemas/Arrays_1"
+          },
+          "mediaRetained": {
+            "type": "boolean"
+          },
+          "overallConfidence": {
+            "type": "number",
+            "allOf": [
+              {
+                "minimum": 0,
+                "maximum": 1
+              }
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "completed",
+              "failed"
+            ]
+          },
+          "transcript": {
+            "anyOf": [
+              {
+                "type": "string",
+                "allOf": [
+                  {
+                    "maxLength": 20000
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "unresolvedItems": {
+            "$ref": "#/components/schemas/Arrays_2"
+          }
+        },
+        "required": [
+          "calories",
+          "carbohydrates",
+          "protein",
+          "totalFat",
+          "createdAt",
+          "description",
+          "estimateId",
+          "inputKind",
+          "items",
+          "mediaRetained",
+          "overallConfidence",
+          "status",
+          "transcript",
+          "unresolvedItems"
+        ],
+        "additionalProperties": false
+      },
       "CustomFood": {
         "type": "object",
         "properties": {
@@ -6046,7 +6625,7 @@
         ],
         "additionalProperties": false
       },
-      "Arrays_1": {
+      "Arrays_3": {
         "type": "array",
         "items": {
           "$ref": "#/components/schemas/FreeformRecipeIngredient"
@@ -6186,7 +6765,7 @@
         ],
         "additionalProperties": false
       },
-      "Arrays_2": {
+      "Arrays_4": {
         "type": "array",
         "items": {
           "$ref": "#/components/schemas/RecipeIngredient"
@@ -6201,7 +6780,7 @@
         "type": "object",
         "properties": {
           "freeformIngredients": {
-            "$ref": "#/components/schemas/Arrays_1"
+            "$ref": "#/components/schemas/Arrays_3"
           },
           "imageDataBase64": {
             "anyOf": [
@@ -6219,7 +6798,7 @@
             ]
           },
           "ingredients": {
-            "$ref": "#/components/schemas/Arrays_2"
+            "$ref": "#/components/schemas/Arrays_4"
           },
           "name": {
             "type": "string",
@@ -6390,7 +6969,7 @@
         "type": "object",
         "properties": {
           "freeformIngredients": {
-            "$ref": "#/components/schemas/Arrays_1"
+            "$ref": "#/components/schemas/Arrays_3"
           },
           "imageDataBase64": {
             "anyOf": [
@@ -6408,7 +6987,7 @@
             ]
           },
           "ingredients": {
-            "$ref": "#/components/schemas/Arrays_2"
+            "$ref": "#/components/schemas/Arrays_4"
           },
           "name": {
             "type": "string",
@@ -6990,7 +7569,7 @@
         ],
         "additionalProperties": false
       },
-      "Arrays_3": {
+      "Arrays_5": {
         "type": "array",
         "items": {
           "$ref": "#/components/schemas/WorkoutTemplateExercise"
@@ -7008,7 +7587,7 @@
         "type": "object",
         "properties": {
           "exercises": {
-            "$ref": "#/components/schemas/Arrays_3"
+            "$ref": "#/components/schemas/Arrays_5"
           },
           "name": {
             "type": "string",
@@ -7057,7 +7636,7 @@
         "type": "object",
         "properties": {
           "exercises": {
-            "$ref": "#/components/schemas/Arrays_3"
+            "$ref": "#/components/schemas/Arrays_5"
           },
           "name": {
             "type": "string",
@@ -7086,585 +7665,6 @@
           "templateId"
         ],
         "additionalProperties": false
-      },
-      "CreateTextMealEstimate": {
-        "type": "object",
-        "properties": {
-          "estimateId": {
-            "type": "string",
-            "allOf": [
-              {
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-                "format": "uuid"
-              }
-            ]
-          },
-          "retainMedia": {
-            "type": "boolean"
-          },
-          "description": {
-            "type": "string",
-            "allOf": [
-              {
-                "minLength": 2
-              },
-              {
-                "maxLength": 10000
-              }
-            ]
-          },
-          "kind": {
-            "type": "string",
-            "enum": [
-              "text"
-            ]
-          }
-        },
-        "required": [
-          "estimateId",
-          "description",
-          "kind"
-        ],
-        "additionalProperties": false
-      },
-      "CreatePhotoMealEstimate": {
-        "type": "object",
-        "properties": {
-          "estimateId": {
-            "type": "string",
-            "allOf": [
-              {
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-                "format": "uuid"
-              }
-            ]
-          },
-          "retainMedia": {
-            "type": "boolean"
-          },
-          "dataBase64": {
-            "type": "string",
-            "allOf": [
-              {
-                "minLength": 4
-              },
-              {
-                "maxLength": 40000000
-              }
-            ]
-          },
-          "description": {
-            "type": "string",
-            "allOf": [
-              {
-                "minLength": 2
-              },
-              {
-                "maxLength": 10000
-              }
-            ]
-          },
-          "kind": {
-            "type": "string",
-            "enum": [
-              "photo"
-            ]
-          },
-          "mediaType": {
-            "type": "string",
-            "enum": [
-              "image/jpeg",
-              "image/png",
-              "image/webp"
-            ]
-          }
-        },
-        "required": [
-          "estimateId",
-          "dataBase64",
-          "kind",
-          "mediaType"
-        ],
-        "additionalProperties": false
-      },
-      "CreateVoiceMealEstimate": {
-        "type": "object",
-        "properties": {
-          "estimateId": {
-            "type": "string",
-            "allOf": [
-              {
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-                "format": "uuid"
-              }
-            ]
-          },
-          "retainMedia": {
-            "type": "boolean"
-          },
-          "dataBase64": {
-            "type": "string",
-            "allOf": [
-              {
-                "minLength": 4
-              },
-              {
-                "maxLength": 40000000
-              }
-            ]
-          },
-          "kind": {
-            "type": "string",
-            "enum": [
-              "voice"
-            ]
-          },
-          "mediaType": {
-            "type": "string",
-            "enum": [
-              "audio/m4a",
-              "audio/mp4",
-              "audio/mpeg",
-              "audio/wav",
-              "audio/webm"
-            ]
-          }
-        },
-        "required": [
-          "estimateId",
-          "dataBase64",
-          "kind",
-          "mediaType"
-        ],
-        "additionalProperties": false
-      },
-      "CreateMealEstimate": {
-        "anyOf": [
-          {
-            "$ref": "#/components/schemas/CreateTextMealEstimate"
-          },
-          {
-            "$ref": "#/components/schemas/CreatePhotoMealEstimate"
-          },
-          {
-            "$ref": "#/components/schemas/CreateVoiceMealEstimate"
-          }
-        ]
-      },
-      "MealEstimateItem": {
-        "type": "object",
-        "properties": {
-          "calories": {
-            "type": "number",
-            "allOf": [
-              {
-                "minimum": 0
-              }
-            ]
-          },
-          "carbohydrates": {
-            "type": "number",
-            "allOf": [
-              {
-                "minimum": 0
-              }
-            ]
-          },
-          "protein": {
-            "type": "number",
-            "allOf": [
-              {
-                "minimum": 0
-              }
-            ]
-          },
-          "totalFat": {
-            "type": "number",
-            "allOf": [
-              {
-                "minimum": 0
-              }
-            ]
-          },
-          "amountGrams": {
-            "type": "number",
-            "allOf": [
-              {
-                "minimum": 0.1,
-                "maximum": 100000
-              }
-            ]
-          },
-          "confidence": {
-            "type": "number",
-            "allOf": [
-              {
-                "minimum": 0,
-                "maximum": 1
-              }
-            ]
-          },
-          "description": {
-            "type": "string",
-            "allOf": [
-              {
-                "minLength": 1
-              },
-              {
-                "maxLength": 200
-              }
-            ]
-          },
-          "evidence": {
-            "type": "string",
-            "allOf": [
-              {
-                "maxLength": 1000
-              }
-            ]
-          },
-          "foodId": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "name": {
-            "type": "string",
-            "allOf": [
-              {
-                "minLength": 1
-              },
-              {
-                "maxLength": 200
-              }
-            ]
-          },
-          "ordinal": {
-            "type": "integer",
-            "allOf": [
-              {
-                "minimum": 0,
-                "maximum": 500
-              }
-            ]
-          },
-          "resolved": {
-            "type": "boolean"
-          },
-          "sourceKind": {
-            "anyOf": [
-              {
-                "type": "string",
-                "enum": [
-                  "raw",
-                  "branded",
-                  "custom",
-                  "recipe"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "required": [
-          "calories",
-          "carbohydrates",
-          "protein",
-          "totalFat",
-          "amountGrams",
-          "confidence",
-          "description",
-          "evidence",
-          "foodId",
-          "name",
-          "ordinal",
-          "resolved",
-          "sourceKind"
-        ],
-        "additionalProperties": false
-      },
-      "Arrays_4": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/MealEstimateItem"
-        },
-        "allOf": [
-          {
-            "maxItems": 500
-          }
-        ]
-      },
-      "Arrays_5": {
-        "type": "array",
-        "items": {
-          "type": "string",
-          "allOf": [
-            {
-              "minLength": 1
-            },
-            {
-              "maxLength": 200
-            }
-          ]
-        },
-        "allOf": [
-          {
-            "maxItems": 500
-          }
-        ]
-      },
-      "MealEstimate": {
-        "type": "object",
-        "properties": {
-          "calories": {
-            "type": "number",
-            "allOf": [
-              {
-                "minimum": 0
-              }
-            ]
-          },
-          "carbohydrates": {
-            "type": "number",
-            "allOf": [
-              {
-                "minimum": 0
-              }
-            ]
-          },
-          "protein": {
-            "type": "number",
-            "allOf": [
-              {
-                "minimum": 0
-              }
-            ]
-          },
-          "totalFat": {
-            "type": "number",
-            "allOf": [
-              {
-                "minimum": 0
-              }
-            ]
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "description": {
-            "type": "string",
-            "allOf": [
-              {
-                "maxLength": 20000
-              }
-            ]
-          },
-          "estimateId": {
-            "type": "string",
-            "allOf": [
-              {
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-                "format": "uuid"
-              }
-            ]
-          },
-          "inputKind": {
-            "type": "string",
-            "enum": [
-              "text",
-              "photo",
-              "voice"
-            ]
-          },
-          "items": {
-            "$ref": "#/components/schemas/Arrays_4"
-          },
-          "mediaRetained": {
-            "type": "boolean"
-          },
-          "overallConfidence": {
-            "type": "number",
-            "allOf": [
-              {
-                "minimum": 0,
-                "maximum": 1
-              }
-            ]
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "completed",
-              "failed"
-            ]
-          },
-          "transcript": {
-            "anyOf": [
-              {
-                "type": "string",
-                "allOf": [
-                  {
-                    "maxLength": 20000
-                  }
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "unresolvedItems": {
-            "$ref": "#/components/schemas/Arrays_5"
-          }
-        },
-        "required": [
-          "calories",
-          "carbohydrates",
-          "protein",
-          "totalFat",
-          "createdAt",
-          "description",
-          "estimateId",
-          "inputKind",
-          "items",
-          "mediaRetained",
-          "overallConfidence",
-          "status",
-          "transcript",
-          "unresolvedItems"
-        ],
-        "additionalProperties": false
-      },
-      "MealEstimate_1": {
-        "type": "object",
-        "properties": {
-          "calories": {
-            "type": "number",
-            "allOf": [
-              {
-                "minimum": 0
-              }
-            ]
-          },
-          "carbohydrates": {
-            "type": "number",
-            "allOf": [
-              {
-                "minimum": 0
-              }
-            ]
-          },
-          "protein": {
-            "type": "number",
-            "allOf": [
-              {
-                "minimum": 0
-              }
-            ]
-          },
-          "totalFat": {
-            "type": "number",
-            "allOf": [
-              {
-                "minimum": 0
-              }
-            ]
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "description": {
-            "type": "string",
-            "allOf": [
-              {
-                "maxLength": 20000
-              }
-            ]
-          },
-          "estimateId": {
-            "type": "string",
-            "allOf": [
-              {
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-                "format": "uuid"
-              }
-            ]
-          },
-          "inputKind": {
-            "type": "string",
-            "enum": [
-              "text",
-              "photo",
-              "voice"
-            ]
-          },
-          "items": {
-            "$ref": "#/components/schemas/Arrays_4"
-          },
-          "mediaRetained": {
-            "type": "boolean"
-          },
-          "overallConfidence": {
-            "type": "number",
-            "allOf": [
-              {
-                "minimum": 0,
-                "maximum": 1
-              }
-            ]
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "completed",
-              "failed"
-            ]
-          },
-          "transcript": {
-            "anyOf": [
-              {
-                "type": "string",
-                "allOf": [
-                  {
-                    "maxLength": 20000
-                  }
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "unresolvedItems": {
-            "$ref": "#/components/schemas/Arrays_5"
-          }
-        },
-        "required": [
-          "calories",
-          "carbohydrates",
-          "protein",
-          "totalFat",
-          "createdAt",
-          "description",
-          "estimateId",
-          "inputKind",
-          "items",
-          "mediaRetained",
-          "overallConfidence",
-          "status",
-          "transcript",
-          "unresolvedItems"
-        ],
-        "additionalProperties": false
       }
     },
     "securitySchemes": {
@@ -7683,7 +7683,22 @@
       "name": "catalog"
     },
     {
-      "name": "application"
+      "name": "profile"
+    },
+    {
+      "name": "nutrition"
+    },
+    {
+      "name": "meals"
+    },
+    {
+      "name": "library"
+    },
+    {
+      "name": "weight"
+    },
+    {
+      "name": "workouts"
     }
   ]
 }

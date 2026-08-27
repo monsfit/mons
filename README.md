@@ -60,8 +60,8 @@ pnpm db:status
 pnpm dev
 ```
 
-The API starts at <http://localhost:3000>. OpenAPI JSON is served at `/openapi.json`, and
-interactive API documentation is served at `/docs`.
+SST prints the development Cloudflare Worker URL when the API is ready. OpenAPI JSON is served at
+`/openapi.json`, and interactive API documentation is served at `/docs`.
 
 Run `pnpm dev:marketing` in a second terminal to start the marketing website at
 <http://localhost:3001>.
@@ -77,8 +77,7 @@ The VPS owns the PostgreSQL containers, Cloudflare Tunnel connector, and backups
 version-controlled configuration lives under `infra/vps`; these commands are intended to run from
 a checkout on that host. Application traffic follows Worker → Hyperdrive → VPC Service → Tunnel →
 PostgreSQL. A separate operator path exposes development PostgreSQL only on the VPS Tailscale
-address for migrations, ingestion, tests, and the standalone local API. Production has no
-host-published port.
+address for migrations, ingestion, and tests. Production has no host-published port.
 
 ```bash
 pnpm vps:provision
@@ -136,19 +135,22 @@ destination.
 
 Migrations run as the environment's migration role before an API deployment; the API runtime role
 cannot create schemas or tables, and API startup never applies migrations. CI applies every
-migration twice against PostgreSQL 18 to verify both forward execution and idempotency. Production
-uses `pnpm deploy:production` only after its migration job succeeds.
+migration twice against PostgreSQL 18 to verify both forward execution and idempotency. Deploy the
+development API with `pnpm deploy:dev` and verify its `/health` response. Production uses
+`pnpm deploy:production` only after its migration job succeeds.
 
 SST provisions the stage-specific Cloudflare AI Gateway and links the existing `mons` R2 bucket as
-the native `Media` binding. Deployed Workers therefore need neither an AI provider token nor R2
-access keys. The S3-compatible R2 variables in `.env.example` are optional and apply only when the
-standalone Node server needs remote media access during local development.
+the native `Media` binding. The Worker therefore needs neither an AI provider token nor R2 access
+keys. CI runs `pnpm sst:check` against an isolated `ci` stage to verify that SST and its providers
+initialize without exposing Cloudflare credentials to pull-request code. Once every CI job passes,
+pushes to `dev` deploy the shared development stage automatically. Pushes to `main` wait for approval
+through the protected `prod` GitHub environment before deploying production.
 
 ## Common commands
 
-| Command                           | Purpose                                                                      |
-| --------------------------------- | ---------------------------------------------------------------------------- |
-| `pnpm dev`            | Run the API in watch mode through the Oxc TypeScript runner                  |
+| Command               | Purpose                                                                      |
+| --------------------- | ---------------------------------------------------------------------------- |
+| `pnpm dev`            | Run the Cloudflare API through SST live development                          |
 | `pnpm dev:marketing`  | Run the TanStack Start marketing website on port 3001                        |
 | `pnpm db:status`      | Inspect the active PostgreSQL snapshot                                       |
 | `pnpm db:migrate`     | Migrate stable app tables and catalog full-text search                       |
@@ -158,6 +160,7 @@ standalone Node server needs remote media access during local development.
 | `pnpm vps:backup`     | Create a full production backup from the VPS                                 |
 | `pnpm contracts`      | Regenerate raw and branded JSON Schemas                                      |
 | `pnpm openapi`        | Regenerate the OpenAPI document                                              |
+| `pnpm sst:check`      | Validate the local SST and provider setup without deploying                  |
 | `pnpm mons:test`      | Build and test the Mons Xcode project on macOS                               |
 | `pnpm mons:build:ios` | Compile the iOS app and barcode scanner path                                 |
 | `pnpm verify`         | Run every local formatting, build, test, contract, database, and Xcode check |
