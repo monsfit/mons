@@ -39,6 +39,7 @@
     "verify": "pnpm check && pnpm test:database && pnpm nutrition:check && pnpm generated:check && pnpm mons:check",
     "mons:build:ios": "xcodebuild build -quiet -project clients/ios/mons.xcodeproj -scheme mons -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO",
     "mons:configure:local": "./scripts/configure-local-ios-api.sh",
+    "mons:configure:sst": "node ./scripts/configure-sst-ios-api.mjs",
     "mons:check": "pnpm mons:test:packages && pnpm mons:build:ios && pnpm mons:test",
     "mons:test:packages": "swift test --package-path clients/ios -Xswiftc -warnings-as-errors",
     "mons:test": "xcodebuild test -project clients/ios/mons.xcodeproj -scheme mons -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO",

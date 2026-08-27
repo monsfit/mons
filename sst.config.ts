@@ -12,16 +12,13 @@ export default $config({
   },
   async run() {
     const accountId = '59724eca0ed8946b29fdf2319593fd1b'
-    const hyperdriveIds = {
-      dev: '8c533f1b36d644fab96b3ebe4cb5bc08',
-      production: '0d5ed6f6c3c94a6c8efca2deb51ea2ea',
-    } as const
-    if ($app.stage !== 'dev' && $app.stage !== 'production') {
-      throw new Error(`Unsupported stage: ${$app.stage}`)
-    }
+    const hyperdriveId =
+      $app.stage === 'production'
+        ? '0d5ed6f6c3c94a6c8efca2deb51ea2ea'
+        : '8c533f1b36d644fab96b3ebe4cb5bc08'
 
     const database = sst.cloudflare.Hyperdrive.get('Database', {
-      hyperdriveId: hyperdriveIds[$app.stage],
+      hyperdriveId,
     })
     const media = new sst.Linkable('Media', {
       include: [
