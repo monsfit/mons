@@ -105,6 +105,7 @@ backup sets and their required WAL. Schedule the single backup command weekly on
 
 ```bash
 pnpm vps:backup
+pnpm vps:backup:install-timers
 ```
 
 Run a disposable point-in-time restore verification with `pnpm vps:restore-drill`. See
@@ -114,6 +115,8 @@ VPS monitoring runs separately from the application database stack:
 
 - Node Exporter reports host CPU, memory, disk, and network usage.
 - cAdvisor reports resource usage for Docker containers, including PostgreSQL.
+- PostgreSQL exporters report connections, transactions, cache behavior, locks, and database size
+  using dedicated `pg_monitor` roles.
 - Prometheus stores at most 30 days or 15 GB of metrics.
 - Grafana displays the provisioned VPS dashboard.
 
@@ -127,12 +130,11 @@ pnpm monitoring:provision
 pnpm monitoring:up
 ```
 
-Retrieve the initial Grafana password on the VPS with
-`sudo cat /etc/regolith/monitoring/grafana-admin-password`. Change it after the first login. The
-Prometheus datasource and VPS dashboard are provisioned from `infra/vps/monitoring`. This first version
-does not connect to PostgreSQL or add database users. Add database-level metrics only if container
-and host metrics prove insufficient. Alerts are also deferred until there is a real notification
-destination.
+Retrieve the Grafana password on the VPS with
+`sudo cat /etc/regolith/monitoring/grafana-admin-password`. Treat that file as the canonical
+password; if the persisted Grafana password drifts, reset it from the file using the host runbook.
+The Prometheus datasource and dashboards are provisioned from `infra/vps/monitoring`. Alerts are
+deferred until there is a real notification destination.
 
 Migrations run as the environment's migration role before an API deployment; the API runtime role
 cannot create schemas or tables, and API startup never applies migrations. CI applies every

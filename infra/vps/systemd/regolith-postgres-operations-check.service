@@ -1,0 +1,9 @@
+[Unit]
+Description=Mons PostgreSQL operational health check
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/ubuntu/projects/regolith
+ExecStart=/home/ubuntu/projects/regolith/infra/vps/check-postgres-operations.sh

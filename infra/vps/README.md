@@ -13,7 +13,11 @@ not as part of ordinary local application development.
 - `provision.sh` creates host secrets and certificates, starts PostgreSQL, reconciles roles, and
   initializes pgBackRest.
 - `restore-drill.sh` verifies a disposable point-in-time recovery.
-- `monitoring/` contains the independent Prometheus, Grafana, Node Exporter, and cAdvisor stack.
+- `check-postgres-operations.sh` validates database, WAL archive, and backup health and publishes
+  Prometheus textfile metrics.
+- `install-backup-timers.sh` installs the version-controlled backup and health-check systemd units.
+- `monitoring/` contains the independent Prometheus, Grafana, Node Exporter, cAdvisor, and
+  PostgreSQL exporter stack.
 
 ## First-time provisioning
 
@@ -24,6 +28,7 @@ Provide `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_DEFAULT_ACCOUNT_ID`, `R2_BACKUP_ACCE
 pnpm vps:provision
 pnpm vps:up
 pnpm vps:backup
+pnpm vps:backup:install-timers
 ```
 
 Host secrets, TLS material, backup credentials, and database volumes remain outside the repository
@@ -43,14 +48,22 @@ pnpm vps:restore-drill
 ```
 
 Schedule `pnpm vps:backup` weekly with the VPS scheduler of choice. PostgreSQL continuously archives
-WAL between full backups. The restore drill uses disposable Docker resources and removes them when
-it exits. Use `docker compose -f infra/vps/compose.yaml ps|logs|down` for occasional direct container
-operations rather than maintaining aliases for every Compose command.
+WAL between full backups. The installed timers run a weekly full backup, daily differential backups,
+and a health check every 15 minutes. The restore drill uses disposable Docker resources and removes
+them when it exits. Use `docker compose -f infra/vps/compose.yaml ps|logs|down` for occasional direct
+container operations rather than maintaining aliases for every Compose command.
+
+The R2 repository retains four full backup sets and their required WAL. Zstandard compression,
+object bundling, and block incremental storage reduce transfer time, object count, and the size of
+subsequent differential backups. Synchronous WAL archiving is intentional for this low-volume
+cluster: PostgreSQL does not report success until R2 has durably accepted each segment.
 
 ## Monitoring
 
-Monitoring observes host and container resources without connecting to PostgreSQL or adding
-database roles. Provision Grafana's administrator password once, then start the stack:
+Monitoring observes host, container, and PostgreSQL health. Provisioning creates a separate
+least-privilege `pg_monitor` login for each database and stores its generated password under
+`/etc/regolith/monitoring`, alongside Grafana's administrator password. The database containers
+must be running before provisioning:
 
 ```bash
 pnpm monitoring:provision

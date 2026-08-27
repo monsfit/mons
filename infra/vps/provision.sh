@@ -80,6 +80,14 @@ install -m 0600 "${backup_config}" /etc/regolith/pgbackrest/pgbackrest.conf
 cd "${repository_directory}"
 "${compose[@]}" up -d --wait postgres-dev postgres-prod
 
+# The PostgreSQL entrypoint copies pgBackRest configuration into the data volume at container
+# startup. Refresh that copy on every provisioning run so rotated R2 credentials take effect
+# without requiring a database restart.
+"${compose[@]}" exec -T --user root postgres-prod \
+  install -m 0600 -o postgres -g postgres \
+  /run/mons-pgbackrest/pgbackrest.conf \
+  /var/lib/postgresql/pgbackrest/pgbackrest.conf
+
 for environment in dev prod; do
   app_password=$(< "${secret_root}/${environment}/app-password")
   migration_password=$(< "${secret_root}/${environment}/migration-password")
