@@ -21,6 +21,12 @@ export default $config({
     // Gateway isolated. The explicit `dev` stage remains the shared deployment
     // target used by `sst deploy --stage dev`.
     const databaseStage = $app.stage === 'production' ? 'production' : 'dev'
+    const apiDomain =
+      $app.stage === 'production'
+        ? 'api.mons.fit'
+        : $app.stage === 'dev'
+          ? 'api.dev.mons.fit'
+          : undefined
 
     const database = sst.cloudflare.Hyperdrive.get('Database', {
       hyperdriveId: hyperdriveIds[databaseStage],
@@ -63,7 +69,8 @@ export default $config({
       handler: 'services/api/src/worker.ts',
       link: [database, ai, media, clerkSecretKey, publicConfig],
       placement: { mode: 'smart' },
-      url: true,
+      domain: apiDomain,
+      url: apiDomain === undefined,
     })
     return {
       aiGatewayId: aiGateway.aiGatewayId,

@@ -18,6 +18,7 @@
     "lint": "turbo run lint",
     "openapi": "pnpm --filter @regolith/api openapi",
     "openapi:check": "pnpm --filter @regolith/api openapi:check",
+    "sst:check": "sst install --stage ci",
     "deploy:dev": "sst deploy --stage dev",
     "deploy:production": "sst deploy --stage production",
     "prepare": "./scripts/prepare-effect.sh",

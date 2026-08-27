@@ -141,7 +141,10 @@ development API with `pnpm deploy:dev` and verify its `/health` response. Produc
 
 SST provisions the stage-specific Cloudflare AI Gateway and links the existing `mons` R2 bucket as
 the native `Media` binding. The Worker therefore needs neither an AI provider token nor R2 access
-keys.
+keys. CI runs `pnpm sst:check` against an isolated `ci` stage to verify that SST and its providers
+initialize without exposing Cloudflare credentials to pull-request code. Once every CI job passes,
+pushes to `dev` deploy the shared development stage automatically. Pushes to `main` wait for approval
+through the protected `prod` GitHub environment before deploying production.
 
 ## Common commands
 
@@ -157,6 +160,7 @@ keys.
 | `pnpm vps:backup`     | Create a full production backup from the VPS                                 |
 | `pnpm contracts`      | Regenerate raw and branded JSON Schemas                                      |
 | `pnpm openapi`        | Regenerate the OpenAPI document                                              |
+| `pnpm sst:check`      | Validate the local SST and provider setup without deploying                  |
 | `pnpm mons:test`      | Build and test the Mons Xcode project on macOS                               |
 | `pnpm mons:build:ios` | Compile the iOS app and barcode scanner path                                 |
 | `pnpm verify`         | Run every local formatting, build, test, contract, database, and Xcode check |
