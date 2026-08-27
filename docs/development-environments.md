@@ -106,9 +106,17 @@ production:  postgresql://mons_prod_migration:...@<VPS_MAGICDNS_NAME>:5434/mons_
 ```
 
 The `preview` environment also needs `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` scoped to the
-`mons` bucket for branch cleanup. Add `TS_OAUTH_CLIENT_ID` and `TS_AUDIENCE` as repository secrets;
-the Tailscale identity must be allowed to request `tag:ci` and reach `tag:database` only on these
-PostgreSQL ports.
+`mons` bucket for branch cleanup. Add `TS_OAUTH_CLIENT_ID` and `TS_AUDIENCE` as repository secrets.
+Create the Tailscale workload identity with the GitHub issuer and this subject:
+
+```text
+repo:monsfit@321544628/mons@1166968122:environment:*
+```
+
+Give it Auth keys write access for `tag:ci`. The numeric values are GitHub's stable public
+organization and repository IDs; including them prevents a renamed or recreated repository from
+assuming this identity. Tailnet policy should allow `tag:ci` to reach `tag:database` only on the
+PostgreSQL ports above.
 Protect the `production` environment with required approval.
 
 Finally, configure the Clerk secret as an SST fallback secret so new personal and preview stages do
