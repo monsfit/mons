@@ -96,7 +96,7 @@ importers:
         specifier: 'catalog:'
         version: 2.10.8
 
-  apps/api:
+  services/api:
     dependencies:
       '@aws-sdk/client-s3':
         specifier: 'catalog:'
@@ -148,7 +148,7 @@ importers:
         specifier: 'catalog:'
         version: 4.1.10(@types/node@24.13.3)(vite@8.2.0(@types/node@24.13.3)(jiti@2.7.0)(yaml@2.9.0))
 
-  apps/marketing:
+  clients/web:
     dependencies:
       '@tanstack/react-router':
         specifier: 'catalog:'

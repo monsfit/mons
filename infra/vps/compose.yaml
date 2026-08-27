@@ -1,0 +1,82 @@
+name: mons
+
+services:
+  postgres-dev:
+    build:
+      context: ./postgres
+    environment:
+      POSTGRES_DB: regolith_dev
+      POSTGRES_USER: regolith_dev_admin
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
+      REGOLITH_APP_DATABASE_USER: regolith_dev_app
+      REGOLITH_MIGRATION_DATABASE_USER: regolith_dev_migration
+    ports:
+      - '100.71.253.62:5433:5432'
+    volumes:
+      - mons-postgres-dev:/var/lib/postgresql
+      - /etc/regolith/postgres/dev:/run/mons-secrets:ro
+      - /etc/regolith/postgres/dev/tls:/run/mons-tls:ro
+    networks:
+      database:
+        aliases:
+          - postgres-dev.internal.mons.fit
+      tailscale-publish:
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  postgres-prod:
+    build:
+      context: ./postgres
+    environment:
+      POSTGRES_DB: regolith_prod
+      POSTGRES_USER: regolith_prod_admin
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
+      REGOLITH_APP_DATABASE_USER: regolith_prod_app
+      REGOLITH_MIGRATION_DATABASE_USER: regolith_prod_migration
+    volumes:
+      - mons-postgres-prod:/var/lib/postgresql
+      - /etc/regolith/postgres/prod:/run/mons-secrets:ro
+      - /etc/regolith/postgres/prod/tls:/run/mons-tls:ro
+      - /etc/regolith/pgbackrest:/run/mons-pgbackrest:ro
+    networks:
+      database:
+        aliases:
+          - postgres-prod.internal.mons.fit
+      backup-egress:
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  cloudflared:
+    image: cloudflare/cloudflared:2026.8.0
+    command: tunnel --no-autoupdate run --token-file /run/secrets/tunnel-token
+    profiles: [cloudflare]
+    depends_on:
+      postgres-dev:
+        condition: service_healthy
+      postgres-prod:
+        condition: service_healthy
+    volumes:
+      - /etc/regolith/cloudflared/tunnel-token:/run/secrets/tunnel-token:ro
+    networks:
+      - database
+      - cloudflare-egress
+    restart: unless-stopped
+
+networks:
+  database:
+    internal: true
+  tailscale-publish:
+  cloudflare-egress:
+  backup-egress:
+
+volumes:
+  mons-postgres-dev:
+  mons-postgres-prod:

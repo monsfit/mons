@@ -1,8 +1,8 @@
-# Regolith agent guidance
+# Mons agent guidance
 
 ## Mons iOS application
 
-When changing `apps/mons`, use the project-local skills under `.agents/skills`:
+When changing `clients/ios`, use the project-local skills under `.agents/skills`:
 
 - `swiftui-ui-patterns` and `swiftui-view-refactor` for SwiftUI feature work;
 - `swift-concurrency-expert` for async code, actors, and shared state;
@@ -15,4 +15,3 @@ Keep one major Swift type per file, use deterministic fixtures, and preserve the
 ```bash
 npx pnpm@11.20.0 mons:check
 ```
-

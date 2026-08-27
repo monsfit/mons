@@ -1,0 +1,54 @@
+[project]
+name = "nutrition-ingest"
+version = "0.2.0"
+description = "Normalize multiple food composition databases into a shared JSONL schema."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "openpyxl>=3.1.5",
+]
+
+[project.optional-dependencies]
+branded = ["pyarrow>=23.0.0"]
+postgres = ["psycopg[binary]>=3.2.0"]
+all = ["pyarrow>=23.0.0", "psycopg[binary]>=3.2.0"]
+
+[project.scripts]
+nutrition-ingest = "titan.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["titan*"]
+exclude = ["data*", "tests*"]
+
+[dependency-groups]
+dev = [
+    "coverage[toml]>=7.6",
+    "mypy>=1.14",
+    "ruff>=0.9",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501", "B904", "B905", "UP042"]
+
+[tool.mypy]
+python_version = "3.11"
+check_untyped_defs = true
+warn_unused_ignores = true
+ignore_missing_imports = true
+disable_error_code = ["import-untyped"]
+exclude = ["data/"]
+
+[tool.coverage.run]
+source = ["titan"]
+
+[tool.coverage.report]
+skip_empty = true

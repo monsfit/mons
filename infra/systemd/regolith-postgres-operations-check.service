@@ -1,9 +1,0 @@
-[Unit]
-Description=Regolith PostgreSQL operational health check
-Requires=docker.service
-After=docker.service
-
-[Service]
-Type=oneshot
-WorkingDirectory=/home/ubuntu/projects/regolith
-ExecStart=/home/ubuntu/projects/regolith/scripts/check-postgres-operations.sh
