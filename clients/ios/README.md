@@ -77,17 +77,21 @@ npx pnpm@11.20.0 db:migrate
 npx pnpm@11.20.0 dev
 ```
 
-To use the API running in your personal SST stage, start SST and then configure Xcode from a
-second terminal after the deployment is ready:
+To use the API running in your personal SST stage, start SST:
 
 ```bash
 pnpm sst dev
-pnpm mons:configure:sst
 ```
 
-The configurator reads the active personal stage URL from `.sst/outputs.json` and writes the
-ignored `Local.xcconfig`. Rebuild the app after running it. The generated HTTPS Worker URL works
-from both the Simulator and a physical iPhone; it is distinct from the shared `dev` API.
+Copy the reported `apiUrl` into the ignored `clients/ios/Configuration/Local.xcconfig`, escaping
+the URL for xcconfig syntax:
+
+```xcconfig
+MONS_API_BASE_URL = https:/$()/<personal-worker-host>/
+```
+
+Rebuild the app after changing it. The personal HTTPS Worker URL works from both the Simulator and
+a physical iPhone; it is distinct from the shared `dev` API and normally remains stable.
 
 For a physical iPhone, configure the ignored development Xcode setting and start the LAN-bound API:
 
