@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
+    "build:api": "turbo run build --filter=@regolith/api",
     "check": "pnpm format:check && turbo run lint typecheck test build",
     "contracts": "pnpm nutrition schema",
     "contracts:check": "pnpm nutrition schema --check",
@@ -19,8 +20,8 @@
     "openapi": "pnpm --filter @regolith/api openapi",
     "openapi:check": "pnpm --filter @regolith/api openapi:check",
     "sst:check": "sst install --stage ci",
-    "deploy:dev": "sst deploy --stage dev",
-    "deploy:production": "sst deploy --stage production",
+    "deploy:dev": "pnpm build:api && sst deploy --stage dev",
+    "deploy:production": "pnpm build:api && sst deploy --stage production",
     "prepare": "./scripts/prepare-effect.sh",
     "test": "turbo run test",
     "test:database": "REGOLITH_TEST_DATABASE_URL=${DATABASE_URL:-postgresql://regolith:regolith_local@localhost:5432/regolith} pnpm --filter @regolith/database test",
