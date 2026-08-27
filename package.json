@@ -26,6 +26,7 @@
     "test:database": "REGOLITH_TEST_DATABASE_URL=${DATABASE_URL:-postgresql://regolith:regolith_local@localhost:5432/regolith} pnpm --filter @regolith/database test",
     "typecheck": "turbo run typecheck",
     "vps:backup": "docker compose -f infra/vps/compose.yaml exec -T --user postgres postgres-prod pgbackrest --config=/var/lib/postgresql/pgbackrest/pgbackrest.conf --stanza=regolith-prod --type=full backup",
+    "vps:backup:install-timers": "./infra/vps/install-backup-timers.sh",
     "vps:provision": "./infra/vps/provision.sh",
     "vps:restore-drill": "./infra/vps/restore-drill.sh",
     "vps:up": "docker compose -f infra/vps/compose.yaml --profile cloudflare up -d --wait",

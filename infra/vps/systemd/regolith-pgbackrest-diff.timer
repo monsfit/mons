@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily Mons production PostgreSQL differential backup
+
+[Timer]
+OnCalendar=Mon..Sat *-*-* 03:00:00 UTC
+Persistent=true
+Unit=regolith-pgbackrest-diff.service
+
+[Install]
+WantedBy=timers.target

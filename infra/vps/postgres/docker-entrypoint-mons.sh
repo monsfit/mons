@@ -27,7 +27,11 @@ if [[ "${1:-}" == "postgres" ]]; then
     -c ssl_cert_file=/var/lib/postgresql/tls/server.crt \
     -c ssl_key_file=/var/lib/postgresql/tls/server.key \
     -c ssl_min_protocol_version=TLSv1.2 \
-    -c password_encryption=scram-sha-256
+    -c password_encryption=scram-sha-256 \
+    -c shared_preload_libraries=pg_stat_statements \
+    -c compute_query_id=on \
+    -c pg_stat_statements.track=top \
+    -c pg_stat_statements.track_utility=off
 fi
 
 exec /usr/local/bin/docker-entrypoint.sh "$@"

@@ -8,10 +8,33 @@ readonly volume_name=mons_pgbackrest_restore_drill
 readonly container_name=mons-pgbackrest-restore-drill
 readonly image_name=mons-postgres-prod
 readonly config_path=/etc/regolith/pgbackrest/pgbackrest.conf
+readonly metrics_directory=/var/lib/mons-monitoring/textfile
+readonly metrics_file="${metrics_directory}/postgres-restore-drill.prom"
+
+drill_success=0
+
+publish_metric() {
+  install -d -m 0755 "${metrics_directory}"
+  local metrics_tmp
+  metrics_tmp=$(mktemp "${metrics_directory}/postgres-restore-drill.prom.XXXXXX")
+  cat > "${metrics_tmp}" <<EOF
+# HELP mons_backup_restore_drill_success Whether the latest point-in-time restore drill passed.
+# TYPE mons_backup_restore_drill_success gauge
+mons_backup_restore_drill_success ${drill_success}
+# HELP mons_backup_restore_drill_timestamp_seconds Unix timestamp of the latest restore-drill attempt.
+# TYPE mons_backup_restore_drill_timestamp_seconds gauge
+mons_backup_restore_drill_timestamp_seconds $(date +%s)
+EOF
+  chmod 0644 "${metrics_tmp}"
+  mv -f "${metrics_tmp}" "${metrics_file}"
+}
 
 cleanup() {
+  local status=$?
   docker rm --force "${container_name}" >/dev/null 2>&1 || true
   docker volume rm "${volume_name}" >/dev/null 2>&1 || true
+  publish_metric
+  return "${status}"
 }
 
 if [[ ${EUID} -ne 0 ]]; then
@@ -100,4 +123,5 @@ result=$(docker exec "${container_name}" \
   exit 1
 }
 
+drill_success=1
 echo "Point-in-time restore drill passed at restore point ${restore_point}"

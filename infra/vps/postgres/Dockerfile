@@ -3,7 +3,7 @@ FROM postgres:18.4-bookworm
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
       ca-certificates \
-      pgbackrest=2.59.0-1.pgdg12+1 \
+      pgbackrest=2.59.1-1.pgdg12+1 \
     && pgbackrest version \
     && rm -rf /var/lib/apt/lists/*
 

@@ -47,11 +47,13 @@ services:
       - --path.procfs=/host/proc
       - --path.sysfs=/host/sys
       - --path.rootfs=/host/root
+      - --collector.textfile.directory=/var/lib/node-exporter/textfile
       - --collector.filesystem.mount-points-exclude=^/(dev|proc|sys|var/lib/docker/.+|var/lib/containers/storage/.+)($|/)
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /:/host/root:ro,rslave
+      - /var/lib/mons-monitoring/textfile:/var/lib/node-exporter/textfile:ro
     networks:
       - monitoring
     pid: host
@@ -80,9 +82,52 @@ services:
     cpus: 0.5
     restart: unless-stopped
 
+  postgres-exporter-dev:
+    image: ghcr.io/prometheus-community/postgres-exporter:v0.20.1
+    command:
+      - --collector.stat_statements
+      - --collector.stat_statements.include_query
+      - --collector.stat_statements.limit=50
+      - --collector.stat_statements.query_length=160
+    environment:
+      DATA_SOURCE_URI: postgres-dev:5432/postgres?sslmode=require
+      DATA_SOURCE_USER: regolith_dev_monitoring
+      DATA_SOURCE_PASS_FILE: /run/secrets/postgres-password
+    volumes:
+      - /etc/regolith/monitoring/postgres-dev-password:/run/secrets/postgres-password:ro
+    networks:
+      - monitoring
+      - database
+    mem_limit: 128m
+    cpus: 0.25
+    restart: unless-stopped
+
+  postgres-exporter-prod:
+    image: ghcr.io/prometheus-community/postgres-exporter:v0.20.1
+    command:
+      - --collector.stat_statements
+      - --collector.stat_statements.include_query
+      - --collector.stat_statements.limit=50
+      - --collector.stat_statements.query_length=160
+    environment:
+      DATA_SOURCE_URI: postgres-prod:5432/postgres?sslmode=require
+      DATA_SOURCE_USER: regolith_prod_monitoring
+      DATA_SOURCE_PASS_FILE: /run/secrets/postgres-password
+    volumes:
+      - /etc/regolith/monitoring/postgres-prod-password:/run/secrets/postgres-password:ro
+    networks:
+      - monitoring
+      - database
+    mem_limit: 128m
+    cpus: 0.25
+    restart: unless-stopped
+
 networks:
   monitoring:
     internal: true
+  database:
+    external: true
+    name: mons_database
   tailscale-publish:
 
 volumes:
