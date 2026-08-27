@@ -1,6 +1,6 @@
 [global]
 repo1-type=s3
-repo1-path=/regolith-prod
+repo1-path=/mons-prod
 repo1-s3-bucket=mons-postgres-backups
 repo1-s3-endpoint=@ACCOUNT_ID@.r2.cloudflarestorage.com
 repo1-s3-region=auto
@@ -16,7 +16,7 @@ start-fast=y
 process-max=2
 log-level-console=info
 
-[regolith-prod]
+[mons-prod]
 pg1-path=/var/lib/postgresql/18/docker
 pg1-port=5432
-pg1-user=regolith_prod_admin
+pg1-user=mons_prod_admin

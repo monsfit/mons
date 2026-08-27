@@ -26,7 +26,7 @@ class SourceIntegrationTests(unittest.TestCase):
     def setUpClass(cls):
         cls.repo_root = Path(__file__).resolve().parents[3]
         cls.inputs_dir = cls.repo_root / "data" / "inputs"
-        cls._temp_dir_ctx = tempfile.TemporaryDirectory(prefix="regolith-integration-")
+        cls._temp_dir_ctx = tempfile.TemporaryDirectory(prefix="mons-integration-")
         cls.temp_dir = Path(cls._temp_dir_ctx.name)
 
     @classmethod

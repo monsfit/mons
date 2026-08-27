@@ -6,7 +6,7 @@ import {
   mealEstimateRepositoryLayer,
   mealLogRepositoryLayer,
   userFoodRepositoryLayer,
-} from '@regolith/database'
+} from '@mons/database'
 import { Layer, Option } from 'effect'
 import { HttpRouter } from 'effect/unstable/http'
 
@@ -16,7 +16,7 @@ import { clerkAuthenticatorLayer } from './auth.ts'
 import type { ApiConfig } from './config.ts'
 import { makeMealEstimationLayer } from './meal-estimation.ts'
 import { type MealAiClient, makeMealIntelligenceLayer } from './meal-intelligence.ts'
-import { mealLoggingLayer } from './meal-logging.ts'
+import { makeMealLoggingLayer } from './meal-logging.ts'
 import { R2Storage, r2StorageLayer, r2StorageUnavailableLayer } from './r2-storage.ts'
 
 export interface ApiRuntimeOptions {
@@ -65,7 +65,7 @@ export const makeApiApplication = (config: ApiConfig, options: ApiRuntimeOptions
     resolutionModel: config.mealResolutionModel,
     transcriptionModel: config.mealTranscriptionModel,
   }).pipe(Layer.provide(Layer.mergeAll(repositories, mealIntelligence)))
-  const mealLogging = mealLoggingLayer.pipe(
+  const mealLogging = makeMealLoggingLayer({ storagePrefix: config.storagePrefix ?? 'local' }).pipe(
     Layer.provide(Layer.mergeAll(repositories, storage, mealIntelligence)),
   )
   // HttpRouter.provideRequest builds and releases this layer inside every request

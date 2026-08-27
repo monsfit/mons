@@ -3,7 +3,7 @@ import {
   MealEstimateRepository,
   type MealEstimateRepositoryService,
   type SaveMealEstimateInput,
-} from '@regolith/database'
+} from '@mons/database'
 import { Effect, Layer } from 'effect'
 
 import {

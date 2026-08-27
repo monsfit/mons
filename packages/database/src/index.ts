@@ -65,6 +65,7 @@ export type {
   SaveMealEstimateInput,
 } from './meal-estimate-repository.ts'
 export {
+  adoptMonsSchemaNames,
   grantRuntimeDatabaseAccess,
   migrateApplicationDatabase,
   migrateCatalogSearch,

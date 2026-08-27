@@ -1,5 +1,5 @@
 {
-  "name": "@regolith/contracts",
+  "name": "@mons/contracts",
   "version": "0.1.0",
   "private": true,
   "type": "module",

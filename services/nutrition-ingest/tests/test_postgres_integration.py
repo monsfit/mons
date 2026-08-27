@@ -27,13 +27,13 @@ def food(source_id: str, *, branded: bool) -> dict:
 
 
 @unittest.skipUnless(
-    os.environ.get("REGOLITH_TEST_DATABASE_URL"),
-    "REGOLITH_TEST_DATABASE_URL is required for Postgres integration tests",
+    os.environ.get("MONS_TEST_DATABASE_URL"),
+    "MONS_TEST_DATABASE_URL is required for Postgres integration tests",
 )
 class PostgresIntegrationTests(unittest.TestCase):
     def test_ingest_and_atomic_failure(self):
-        database_url = os.environ["REGOLITH_TEST_DATABASE_URL"]
-        test_schema = f"regolith_test_{os.getpid()}"
+        database_url = os.environ["MONS_TEST_DATABASE_URL"]
+        test_schema = f"mons_test_{os.getpid()}"
 
         import psycopg
 
@@ -43,7 +43,7 @@ class PostgresIntegrationTests(unittest.TestCase):
 
         drop_test_schema()
         self.addCleanup(drop_test_schema)
-        with tempfile.TemporaryDirectory(prefix="regolith-postgres-test-") as directory:
+        with tempfile.TemporaryDirectory(prefix="mons-postgres-test-") as directory:
             root = Path(directory)
             raw = root / "raw-foods.jsonl"
             branded = root / "branded-foods.jsonl"

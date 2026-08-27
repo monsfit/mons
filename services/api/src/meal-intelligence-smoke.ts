@@ -1,9 +1,5 @@
 import { NodeFileSystem, NodeRuntime } from '@effect/platform-node'
-import {
-  catalogReaderLayer,
-  createDatabaseLayer,
-  userFoodRepositoryLayer,
-} from '@regolith/database'
+import { catalogReaderLayer, createDatabaseLayer, userFoodRepositoryLayer } from '@mons/database'
 import { Config, Effect, FileSystem, Layer } from 'effect'
 
 import {
@@ -16,12 +12,12 @@ import {
 
 const program = Effect.gen(function* () {
   const databaseUrl = yield* Config.string('DATABASE_URL').pipe(
-    Config.withDefault('postgresql://regolith:regolith_local@localhost:5432/regolith'),
+    Config.withDefault('postgresql://mons:mons_local@localhost:5432/mons'),
   )
-  const catalogSchema = yield* Config.string('REGOLITH_SCHEMA').pipe(Config.withDefault('regolith'))
-  const appSchema = yield* Config.string('REGOLITH_APP_SCHEMA').pipe(
-    Config.withDefault('regolith_app'),
+  const catalogSchema = yield* Config.string('MONS_CATALOG_SCHEMA').pipe(
+    Config.withDefault('mons_catalog'),
   )
+  const appSchema = yield* Config.string('MONS_APP_SCHEMA').pipe(Config.withDefault('mons_app'))
   const observationModel = yield* mealObservationModelConfig
   const resolutionModel = yield* mealResolutionModelConfig
   const transcriptionModel = yield* mealTranscriptionModelConfig

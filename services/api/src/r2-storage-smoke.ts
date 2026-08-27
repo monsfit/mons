@@ -9,8 +9,8 @@ import {
   r2StorageLayer,
 } from './r2-storage.ts'
 
-const key = '_regolith/smoke/r2-storage.txt'
-const expected = 'regolith-r2-smoke-v1'
+const key = '_mons/smoke/r2-storage.txt'
+const expected = 'mons-r2-smoke-v1'
 const expectedBytes = new TextEncoder().encode(expected)
 
 const verifyR2 = Effect.fn('verifyR2')(function* () {

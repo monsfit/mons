@@ -22,8 +22,8 @@ class SchemaContractTests(unittest.TestCase):
             self.assertEqual(branded["properties"]["gtin"]["pattern"], "^[0-9]{14}$")
             self.assertIn("brand", branded["required"])
             self.assertEqual(raw["properties"]["protein"]["minimum"], 0)
-            self.assertEqual(raw["properties"]["protein"]["x-regolith-unit"], "g")
-            self.assertEqual(raw["x-regolith-nutrient-basis"], {"amount": 100.0, "unit": "g"})
+            self.assertEqual(raw["properties"]["protein"]["x-mons-unit"], "g")
+            self.assertEqual(raw["x-mons-nutrient-basis"], {"amount": 100.0, "unit": "g"})
             self.assertEqual(raw["properties"]["name"]["type"], "string")
 
 

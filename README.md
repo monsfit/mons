@@ -39,7 +39,6 @@ for component-specific details.
 ## Requirements
 
 - Node.js 24 or newer
-- Docker Desktop
 - Python 3.11 or newer and `uv`
 - Xcode 26 for the Mons app
 
@@ -55,13 +54,13 @@ nvm use
 pnpm install
 uv sync --project services/nutrition-ingest --all-extras
 npx clerk@latest env pull --app app_2ydgnHRPQ7JmVCswcMHsCCx0PMZ --instance dev --file .env
-pnpm db:migrate
-pnpm db:status
 pnpm dev
 ```
 
-The API starts at <http://localhost:3000>. OpenAPI JSON is served at `/openapi.json`, and
-interactive API documentation is served at `/docs`.
+Normal development is remote-first: `pnpm dev` is exactly `sst dev`. It automatically migrates an
+isolated schema in the development database and exposes the personal stage at
+`https://<stage>.api.dev.mons.fit`. See [the development environment flow](docs/development-environments.md)
+for branch previews, schema resets, iPhone schemes, CI secrets, and cleanup.
 
 Run `pnpm dev:marketing` in a second terminal to start the marketing website at
 <http://localhost:3001>.
@@ -76,9 +75,9 @@ file. Never commit that file.
 The VPS owns the PostgreSQL containers, Cloudflare Tunnel connector, and backups. Their
 version-controlled configuration lives under `infra/vps`; these commands are intended to run from
 a checkout on that host. Application traffic follows Worker → Hyperdrive → VPC Service → Tunnel →
-PostgreSQL. A separate operator path exposes development PostgreSQL only on the VPS Tailscale
-address for migrations, ingestion, tests, and the standalone local API. Production has no
-host-published port.
+PostgreSQL. A separate operator path exposes localhost-bound PostgreSQL through Tailscale Serve and
+the VPS's private MagicDNS name: development uses port `5433`, and production uses port `5434` for
+deployment migrations. Tailscale policy should restrict production access to CI and operators.
 
 ```bash
 pnpm vps:provision
@@ -88,12 +87,12 @@ pnpm vps:up
 On the VPS, retrieve the development application password without printing any other secret:
 
 ```bash
-sudo cat /etc/regolith/postgres/dev/app-password
+sudo cat /etc/mons/postgres/dev/app-password
 ```
 
 Put that value into the ignored `.env` using the URL shape in `.env.example`.
 
-Cloudflare connectivity uses the shared `regolith-postgres` Tunnel. The
+Cloudflare connectivity uses the shared `mons-postgres` Tunnel. The
 `mons-postgres-dev` and `mons-postgres-prod` Workers VPC services resolve the corresponding
 Docker-internal hostnames and enforce `verify_full` against their Cloudflare Origin CA
 certificates. Hyperdrive configurations `mons-development` and `mons-production` use the
@@ -120,8 +119,8 @@ VPS monitoring runs separately from the application database stack:
 - Prometheus stores at most 30 days or 15 GB of metrics.
 - Grafana displays the provisioned VPS dashboard.
 
-Prometheus and both exporters remain on a private Docker network. Grafana is the only published
-port and is reachable through Tailscale at `http://100.71.253.62:3000`.
+Prometheus and both exporters remain on a private Docker network. Grafana is reachable only through
+Tailscale at `http://<VPS_MAGICDNS_NAME>:3000`.
 
 Create the Grafana administrator password once, then start the stack:
 
@@ -131,7 +130,7 @@ pnpm monitoring:up
 ```
 
 Retrieve the Grafana password on the VPS with
-`sudo cat /etc/regolith/monitoring/grafana-admin-password`. Treat that file as the canonical
+`sudo cat /etc/mons/monitoring/grafana-admin-password`. Treat that file as the canonical
 password; if the persisted Grafana password drifts, reset it from the file using the host runbook.
 The Prometheus datasource and dashboards are provisioned from `infra/vps/monitoring`. Alerts are
 deferred until there is a real notification destination.
@@ -150,10 +149,11 @@ standalone Node server needs remote media access during local development.
 
 | Command                           | Purpose                                                                      |
 | --------------------------------- | ---------------------------------------------------------------------------- |
-| `pnpm dev`            | Run the API in watch mode through the Oxc TypeScript runner                  |
+| `pnpm dev`            | Run `sst dev` with an automatically migrated branch schema                  |
 | `pnpm dev:marketing`  | Run the TanStack Start marketing website on port 3001                        |
 | `pnpm db:status`      | Inspect the active PostgreSQL snapshot                                       |
 | `pnpm db:migrate`     | Migrate stable app tables and catalog full-text search                       |
+| `pnpm db:branch:reset`| Recreate and migrate only the current feature branch schema                  |
 | `pnpm monitoring:up`  | Start the private VPS monitoring stack                                       |
 | `pnpm monitoring:logs`| Follow logs for Prometheus, Grafana, and all exporters                       |
 | `pnpm db:ingest`      | Atomically ingest the schema-v2 raw and branded snapshots                    |
@@ -183,10 +183,10 @@ schema versions and SHA-256 hashes before loading them.
 - Catalog search and barcode responses include every available normalized nutrient and household
   gram portion, while preserving raw and branded provenance.
 - Profiles, food logs, custom foods, measured-yield recipes, weight history, workout templates, and completed workouts live in
-  `regolith_app`, outside replaceable catalog snapshots.
+  `mons_app`, outside replaceable catalog snapshots.
 - Clerk session tokens authenticate every `/v1` request. A unique `clerk_user_id` maps each Clerk
   account to a database-generated internal profile UUID, and profile routes verify ownership.
-- Adult onboarding inputs and the resulting nutrition plan live in `regolith_app`; the API
+- Adult onboarding inputs and the resulting nutrition plan live in `mons_app`; the API
   calculates RMR, TDEE, goal velocity, and the daily calorie target on the server.
 - Food logs snapshot nutrients per 100 g so historical totals survive catalog refreshes.
 - JSON Schema and OpenAPI artifacts are generated deterministically and checked in CI.

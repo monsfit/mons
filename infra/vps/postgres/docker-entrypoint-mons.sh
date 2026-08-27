@@ -19,7 +19,7 @@ if [[ "${1:-}" == "postgres" ]]; then
       /var/lib/postgresql/pgbackrest/pgbackrest.conf
     set -- "$@" \
       -c archive_mode=on \
-      -c "archive_command=pgbackrest --config=/var/lib/postgresql/pgbackrest/pgbackrest.conf --stanza=regolith-prod archive-push %p"
+      -c "archive_command=pgbackrest --config=/var/lib/postgresql/pgbackrest/pgbackrest.conf --stanza=mons-prod archive-push %p"
   fi
 
   set -- "$@" \

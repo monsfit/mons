@@ -148,19 +148,19 @@ def json_schema(extra_fields: Sequence[FieldDefinition] = ()) -> dict[str, Any]:
         else:
             properties[definition.name] = {"type": ["number", "null"], "minimum": 0}
         properties[definition.name]["description"] = definition.description
-        properties[definition.name]["x-regolith-value-kind"] = definition.value_kind
+        properties[definition.name]["x-mons-value-kind"] = definition.value_kind
         if definition.unit is not None:
-            properties[definition.name]["x-regolith-unit"] = definition.unit
+            properties[definition.name]["x-mons-unit"] = definition.unit
 
     return {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": f"urn:regolith:schema:raw-food:{SCHEMA_VERSION}",
-        "title": f"Regolith normalized food schema {SCHEMA_VERSION}",
+        "$id": f"urn:mons:schema:raw-food:{SCHEMA_VERSION}",
+        "title": f"Mons normalized food schema {SCHEMA_VERSION}",
         "type": "object",
         "additionalProperties": False,
         "required": required,
         "properties": properties,
-        "x-regolith-nutrient-basis": {
+        "x-mons-nutrient-basis": {
             "amount": NUTRIENT_BASIS_AMOUNT,
             "unit": NUTRIENT_BASIS_UNIT,
         },
@@ -173,6 +173,6 @@ def raw_food_json_schema() -> dict[str, Any]:
 
 def branded_food_json_schema() -> dict[str, Any]:
     schema = json_schema(BRANDED_FIELD_DEFINITIONS)
-    schema["$id"] = f"urn:regolith:schema:branded-food:{SCHEMA_VERSION}"
-    schema["title"] = f"Regolith normalized branded food schema {SCHEMA_VERSION}"
+    schema["$id"] = f"urn:mons:schema:branded-food:{SCHEMA_VERSION}"
+    schema["title"] = f"Mons normalized branded food schema {SCHEMA_VERSION}"
     return schema

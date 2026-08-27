@@ -15,24 +15,24 @@ npx pnpm@11.20.0 dev
 
 The service uses these environment variables:
 
-| Variable                            | Default                                                        |
-| ----------------------------------- | -------------------------------------------------------------- |
-| `DATABASE_URL`                      | `postgresql://regolith:regolith_local@localhost:5432/regolith` |
-| `CLERK_PUBLISHABLE_KEY`             | required; pull with the Clerk CLI                              |
-| `CLERK_SECRET_KEY`                  | required; pull with the Clerk CLI                              |
-| `REGOLITH_SCHEMA`                   | `regolith`                                                     |
-| `REGOLITH_APP_SCHEMA`               | `regolith_app`                                                 |
-| `API_PORT`                          | `3000`                                                         |
-| `API_HOST`                          | `0.0.0.0`                                                      |
-| `AI_GATEWAY_API_KEY`                | required only when an AI operation runs                        |
-| `AI_GATEWAY_MODEL`                  | `google/gemini-3.7-flash`                                      |
-| `AI_GATEWAY_MEAL_OBSERVATION_MODEL` | `google/gemini-3.7-flash`                                      |
-| `AI_GATEWAY_MEAL_RESOLUTION_MODEL`  | `google/gemini-3.7-flash`                                      |
-| `AI_GATEWAY_TRANSCRIPTION_MODEL`    | `google/gemini-3.7-flash`                                      |
-| `R2_ACCOUNT_ID`                     | optional Cloudflare account ID                                 |
-| `R2_ACCESS_KEY_ID`                  | optional R2 S3 access-key ID                                   |
-| `R2_SECRET_ACCESS_KEY`              | optional R2 S3 secret access key                               |
-| `R2_BUCKET_NAME`                    | `mons`                                                         |
+| Variable                            | Default                                            |
+| ----------------------------------- | -------------------------------------------------- |
+| `DATABASE_URL`                      | `postgresql://mons:mons_local@localhost:5432/mons` |
+| `CLERK_PUBLISHABLE_KEY`             | required; pull with the Clerk CLI                  |
+| `CLERK_SECRET_KEY`                  | required; pull with the Clerk CLI                  |
+| `MONS_SCHEMA`                       | `mons`                                             |
+| `MONS_APP_SCHEMA`                   | `mons_app`                                         |
+| `API_PORT`                          | `3000`                                             |
+| `API_HOST`                          | `0.0.0.0`                                          |
+| `AI_GATEWAY_API_KEY`                | required only when an AI operation runs            |
+| `AI_GATEWAY_MODEL`                  | `google/gemini-3.7-flash`                          |
+| `AI_GATEWAY_MEAL_OBSERVATION_MODEL` | `google/gemini-3.7-flash`                          |
+| `AI_GATEWAY_MEAL_RESOLUTION_MODEL`  | `google/gemini-3.7-flash`                          |
+| `AI_GATEWAY_TRANSCRIPTION_MODEL`    | `google/gemini-3.7-flash`                          |
+| `R2_ACCOUNT_ID`                     | optional Cloudflare account ID                     |
+| `R2_ACCESS_KEY_ID`                  | optional R2 S3 access-key ID                       |
+| `R2_SECRET_ACCESS_KEY`              | optional R2 S3 secret access key                   |
+| `R2_BUCKET_NAME`                    | `mons`                                             |
 
 Standalone Node development uses Vercel AI Gateway as a hosted model router, but it is not deployed
 to Vercel. `AI_GATEWAY_API_KEY` is read from the process environment by the AI SDK. The Cloudflare
@@ -114,11 +114,11 @@ intended for adults and is an estimate, not medical guidance.
 ## Development
 
 ```bash
-npx pnpm@11.20.0 --filter @regolith/api test
-npx pnpm@11.20.0 --filter @regolith/api typecheck
-npx pnpm@11.20.0 --filter @regolith/api ai:smoke
-npx pnpm@11.20.0 --filter @regolith/api meal:smoke
-npx pnpm@11.20.0 --filter @regolith/api r2:smoke
+npx pnpm@11.20.0 --filter @mons/api test
+npx pnpm@11.20.0 --filter @mons/api typecheck
+npx pnpm@11.20.0 --filter @mons/api ai:smoke
+npx pnpm@11.20.0 --filter @mons/api meal:smoke
+npx pnpm@11.20.0 --filter @mons/api r2:smoke
 npx pnpm@11.20.0 openapi
 ```
 

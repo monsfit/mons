@@ -10,10 +10,10 @@ import { MealLogRepository, mealLogRepositoryLayer } from './meal-log-repository
 import { migrateApplicationDatabase } from './migrations.ts'
 import { UserFoodRepository, userFoodRepositoryLayer } from './user-food-repository.ts'
 
-const databaseUrl = process.env.REGOLITH_TEST_DATABASE_URL
+const databaseUrl = process.env.MONS_TEST_DATABASE_URL
 const integration = databaseUrl === undefined ? describe.skip : describe
-const schema = 'regolith_effect_test'
-const appSchema = 'regolith_app_effect_test'
+const schema = 'mons_catalog_effect_test'
+const appSchema = 'mons_app_effect_test'
 
 const fixtureLayer = Layer.effectDiscard(
   Effect.acquireRelease(
@@ -102,7 +102,7 @@ const fixtureLayer = Layer.effectDiscard(
 )
 
 const databaseLayer = createDatabaseLayer({
-  connectionString: databaseUrl ?? 'postgresql://regolith:regolith_local@localhost:5432/regolith',
+  connectionString: databaseUrl ?? 'postgresql://mons:mons_local@localhost:5432/mons',
 })
 const repositoryLayers = Layer.mergeAll(
   catalogReaderLayer(schema),

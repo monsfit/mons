@@ -984,7 +984,7 @@ def merge_rows_with_usda_priority(
     usda_rows: Iterable[dict[str, Any]],
     off_rows: Iterable[dict[str, Any]],
 ) -> Iterator[dict[str, Any]]:
-    with tempfile.TemporaryDirectory(prefix="regolith-gtin-dedupe-") as temp_dir:
+    with tempfile.TemporaryDirectory(prefix="mons-gtin-dedupe-") as temp_dir:
         database = Path(temp_dir) / "gtins.sqlite"
         with sqlite3.connect(database) as connection:
             connection.execute("CREATE TABLE seen_gtins (gtin TEXT PRIMARY KEY)")
@@ -1011,7 +1011,7 @@ def enforce_unique_keys(
         yield from rows
         return
 
-    with tempfile.TemporaryDirectory(prefix="regolith-gtin-unique-") as temp_dir:
+    with tempfile.TemporaryDirectory(prefix="mons-gtin-unique-") as temp_dir:
         database = Path(temp_dir) / "gtins.sqlite"
         with sqlite3.connect(database) as connection:
             connection.execute("CREATE TABLE seen_gtins (gtin TEXT PRIMARY KEY)")

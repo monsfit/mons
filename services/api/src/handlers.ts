@@ -5,9 +5,9 @@ import {
   CatalogReader,
   DatabaseHealth,
   UserFoodRepository,
-} from '@regolith/database'
+} from '@mons/database'
 
-import { RegolithApi } from './api.ts'
+import { MonsApi } from './api.ts'
 import { CurrentIdentity } from './auth.ts'
 import {
   InternalApiError,
@@ -56,7 +56,7 @@ const withProfile = <A, E, R>(profileId: string, effect: Effect.Effect<A, E, R>)
     return yield* effect
   })
 
-export const systemHandlers = HttpApiBuilder.group(RegolithApi, 'system', (handlers) =>
+export const systemHandlers = HttpApiBuilder.group(MonsApi, 'system', (handlers) =>
   handlers.handle('health', () =>
     Effect.gen(function* () {
       const database = yield* DatabaseHealth
@@ -69,7 +69,7 @@ export const systemHandlers = HttpApiBuilder.group(RegolithApi, 'system', (handl
   ),
 )
 
-export const catalogHandlers = HttpApiBuilder.group(RegolithApi, 'catalog', (handlers) =>
+export const catalogHandlers = HttpApiBuilder.group(MonsApi, 'catalog', (handlers) =>
   handlers
     .handle('catalogStatus', () =>
       Effect.gen(function* () {
@@ -109,7 +109,7 @@ export const catalogHandlers = HttpApiBuilder.group(RegolithApi, 'catalog', (han
     ),
 )
 
-export const applicationHandlers = HttpApiBuilder.group(RegolithApi, 'application', (handlers) =>
+export const applicationHandlers = HttpApiBuilder.group(MonsApi, 'application', (handlers) =>
   handlers.handleAll({
     ensureProfile: () =>
       Effect.gen(function* () {

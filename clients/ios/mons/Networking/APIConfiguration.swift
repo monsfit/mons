@@ -4,25 +4,25 @@ struct APIConfiguration: Sendable {
     let baseURL: URL
 
     static var bundled: APIConfiguration {
-        let environmentURL = normalized(
-            ProcessInfo.processInfo.environment["REGOLITH_API_BASE_URL"]
-        )
-        let bundledURL = normalized(
-            Bundle.main.object(forInfoDictionaryKey: "REGOLITH_API_BASE_URL") as? String
-        )
-        let value = environmentURL ?? bundledURL ?? defaultBaseURL
-        guard let url = URL(string: value) else {
-            preconditionFailure("REGOLITH_API_BASE_URL must be a valid URL")
+        guard
+            let value = normalized(apiEnvironment["MONS_API_BASE_URL"] as? String),
+            let url = URL(string: value)
+        else {
+            preconditionFailure("The bundled MONS_API_BASE_URL must be a valid URL")
         }
         return APIConfiguration(baseURL: url)
     }
 
-    private static var defaultBaseURL: String {
-        #if DEBUG
-        "http://127.0.0.1:3000"
-        #else
-        preconditionFailure("A production REGOLITH_API_BASE_URL must be configured")
-        #endif
+    private static var apiEnvironment: [String: Any] {
+        guard
+            let url = Bundle.main.url(forResource: "MonsAPIEnvironment", withExtension: "plist"),
+            let data = try? Data(contentsOf: url),
+            let value = try? PropertyListSerialization.propertyList(from: data, format: nil),
+            let environment = value as? [String: Any]
+        else {
+            return [:]
+        }
+        return environment
     }
 
     private static func normalized(_ value: String?) -> String? {

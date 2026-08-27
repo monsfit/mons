@@ -1,7 +1,7 @@
 export default $config({
   app(input) {
     return {
-      name: 'regolith',
+      name: 'mons',
       home: 'cloudflare',
       protect: input?.stage === 'production',
       removal: input?.stage === 'production' ? 'retain' : 'remove',
@@ -11,17 +11,37 @@ export default $config({
     }
   },
   async run() {
-    const accountId = '59724eca0ed8946b29fdf2319593fd1b'
-    const hyperdriveIds = {
-      dev: '8c533f1b36d644fab96b3ebe4cb5bc08',
-      production: '0d5ed6f6c3c94a6c8efca2deb51ea2ea',
-    } as const
-    if ($app.stage !== 'dev' && $app.stage !== 'production') {
-      throw new Error(`Unsupported stage: ${$app.stage}`)
+    const { execFileSync } = await import('node:child_process')
+    const { deploymentIdentity } = await import('./packages/database/src/deployment.ts')
+    const currentBranch = () => {
+      const fromEnvironment = process.env.GITHUB_HEAD_REF || process.env.GITHUB_REF_NAME
+      if (fromEnvironment) return fromEnvironment
+      try {
+        return (
+          execFileSync('git', ['branch', '--show-current'], { encoding: 'utf8' }).trim() ||
+          undefined
+        )
+      } catch {
+        return undefined
+      }
     }
+    const accountId = '59724eca0ed8946b29fdf2319593fd1b'
+    const deployment = deploymentIdentity({ stage: $app.stage, branch: currentBranch() })
+    const hyperdriveId =
+      deployment.database === 'production'
+        ? '0d5ed6f6c3c94a6c8efca2deb51ea2ea'
+        : '8c533f1b36d644fab96b3ebe4cb5bc08'
 
     const database = sst.cloudflare.Hyperdrive.get('Database', {
-      hyperdriveId: hyperdriveIds[$app.stage],
+      hyperdriveId,
+    })
+    const databaseConfig = new sst.Linkable('DatabaseConfig', {
+      properties: {
+        appSchema: deployment.appSchema,
+        catalogSchema: deployment.catalogSchema,
+        r2Prefix: deployment.r2Prefix,
+        scope: deployment.scope,
+      },
     })
     const media = new sst.Linkable('Media', {
       include: [
@@ -58,14 +78,31 @@ export default $config({
         date: '2026-08-23',
         flags: ['nodejs_compat', 'global_fetch_strictly_public'],
       },
+      domain: deployment.apiDomain,
       handler: 'services/api/src/worker.ts',
-      link: [database, ai, media, clerkSecretKey, publicConfig],
+      link: [database, databaseConfig, ai, media, clerkSecretKey, publicConfig],
       placement: { mode: 'smart' },
       url: true,
     })
+    new sst.x.DevCommand('DatabaseMigration', {
+      dev: {
+        autostart: true,
+        command: 'pnpm db:migrate',
+        title: 'Database migration',
+      },
+      environment: {
+        MONS_APP_SCHEMA: deployment.appSchema,
+        MONS_CATALOG_SCHEMA: deployment.catalogSchema,
+        MONS_STORAGE_PREFIX: deployment.r2Prefix,
+      },
+    })
     return {
       aiGatewayId: aiGateway.aiGatewayId,
-      apiUrl: api.url,
+      apiUrl: `https://${deployment.apiDomain}`,
+      appSchema: deployment.appSchema,
+      branchId: deployment.branchId,
+      r2Prefix: deployment.r2Prefix,
+      workerUrl: api.url,
     }
   },
 })

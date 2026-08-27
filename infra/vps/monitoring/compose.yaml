@@ -26,12 +26,12 @@ services:
       GF_SERVER_HTTP_ADDR: 0.0.0.0
       GF_USERS_ALLOW_SIGN_UP: "false"
     ports:
-      - "100.71.253.62:3000:3000"
+      - "127.0.0.1:3000:3000"
     volumes:
       - mons-grafana:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
-      - /etc/regolith/monitoring/grafana-admin-password:/run/secrets/admin-password:ro
+      - /etc/mons/monitoring/grafana-admin-password:/run/secrets/admin-password:ro
     networks:
       - monitoring
       - tailscale-publish
@@ -91,10 +91,10 @@ services:
       - --collector.stat_statements.query_length=160
     environment:
       DATA_SOURCE_URI: postgres-dev:5432/postgres?sslmode=require
-      DATA_SOURCE_USER: regolith_dev_monitoring
+      DATA_SOURCE_USER: mons_dev_monitoring
       DATA_SOURCE_PASS_FILE: /run/secrets/postgres-password
     volumes:
-      - /etc/regolith/monitoring/postgres-dev-password:/run/secrets/postgres-password:ro
+      - /etc/mons/monitoring/postgres-dev-password:/run/secrets/postgres-password:ro
     networks:
       - monitoring
       - database
@@ -111,10 +111,10 @@ services:
       - --collector.stat_statements.query_length=160
     environment:
       DATA_SOURCE_URI: postgres-prod:5432/postgres?sslmode=require
-      DATA_SOURCE_USER: regolith_prod_monitoring
+      DATA_SOURCE_USER: mons_prod_monitoring
       DATA_SOURCE_PASS_FILE: /run/secrets/postgres-password
     volumes:
-      - /etc/regolith/monitoring/postgres-prod-password:/run/secrets/postgres-password:ro
+      - /etc/mons/monitoring/postgres-prod-password:/run/secrets/postgres-password:ro
     networks:
       - monitoring
       - database

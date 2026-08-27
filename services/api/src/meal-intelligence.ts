@@ -12,8 +12,8 @@ import {
   type CustomFoodRecord,
   type FoodRecord,
   type RecipeRecord,
-} from '@regolith/database'
-import type { FoodSourceKind, MealEstimateItem } from '@regolith/contracts'
+} from '@mons/database'
+import type { FoodSourceKind, MealEstimateItem } from '@mons/contracts'
 import { Config, Context, Effect, Layer, Schema } from 'effect'
 
 const confidenceSchema = Schema.Finite.check(Schema.isBetween({ minimum: 0, maximum: 1 }))
@@ -352,7 +352,7 @@ export interface MealIntelligenceService {
 }
 
 export class MealIntelligence extends Context.Service<MealIntelligence, MealIntelligenceService>()(
-  '@regolith/api/MealIntelligence',
+  '@mons/api/MealIntelligence',
 ) {}
 
 const completeNutrition = (

@@ -19,6 +19,12 @@ const resources = Resource as unknown as {
   readonly App: { readonly stage: string }
   readonly ClerkSecretKey: { readonly value: string }
   readonly Database: { readonly connectionString: string }
+  readonly DatabaseConfig: {
+    readonly appSchema: string
+    readonly catalogSchema: string
+    readonly r2Prefix: string
+    readonly scope: string
+  }
   readonly Media: R2BucketBinding & { readonly name: string }
   readonly PublicConfig: { readonly clerkPublishableKey: string }
 }
@@ -31,7 +37,7 @@ const makeHandler = () => {
   } as unknown as Parameters<typeof createWorkersAI>[0])
   const config: ApiConfig = {
     aiModel: defaultAiGatewayModel,
-    appSchema: 'regolith_app',
+    appSchema: resources.DatabaseConfig.appSchema,
     clerkPublishableKey: resources.PublicConfig.clerkPublishableKey,
     clerkSecretKey: resources.ClerkSecretKey.value,
     databaseUrl: resources.Database.connectionString,
@@ -41,7 +47,8 @@ const makeHandler = () => {
     mealTranscriptionModel: defaultMealTranscriptionModel,
     port: 3000,
     r2: Option.none(),
-    schema: 'regolith',
+    schema: resources.DatabaseConfig.catalogSchema,
+    storagePrefix: resources.DatabaseConfig.r2Prefix,
   }
   const application = makeApiApplication(config, {
     aiClient: makeAiSdkClient((model) => workersAi(model)),

@@ -1,5 +1,5 @@
 import { assert, describe, it } from '@effect/vitest'
-import { MealLogOwnershipError, MealLogNotFoundError } from '@regolith/database'
+import { MealLogOwnershipError, MealLogNotFoundError } from '@mons/database'
 
 import { InvalidMealMedia, MealEstimationError } from './meal-estimation.ts'
 import { InvalidMealPhoto } from './meal-logging.ts'
