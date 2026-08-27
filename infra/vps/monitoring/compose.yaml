@@ -84,6 +84,11 @@ services:
 
   postgres-exporter-dev:
     image: ghcr.io/prometheus-community/postgres-exporter:v0.20.1
+    command:
+      - --collector.stat_statements
+      - --collector.stat_statements.include_query
+      - --collector.stat_statements.limit=50
+      - --collector.stat_statements.query_length=160
     environment:
       DATA_SOURCE_URI: postgres-dev:5432/postgres?sslmode=require
       DATA_SOURCE_USER: regolith_dev_monitoring
@@ -99,6 +104,11 @@ services:
 
   postgres-exporter-prod:
     image: ghcr.io/prometheus-community/postgres-exporter:v0.20.1
+    command:
+      - --collector.stat_statements
+      - --collector.stat_statements.include_query
+      - --collector.stat_statements.limit=50
+      - --collector.stat_statements.query_length=160
     environment:
       DATA_SOURCE_URI: postgres-prod:5432/postgres?sslmode=require
       DATA_SOURCE_USER: regolith_prod_monitoring

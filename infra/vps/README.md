@@ -63,7 +63,10 @@ cluster: PostgreSQL does not report success until R2 has durably accepted each s
 Monitoring observes host, container, and PostgreSQL health. Provisioning creates a separate
 least-privilege `pg_monitor` login for each database and stores its generated password under
 `/etc/regolith/monitoring`, alongside Grafana's administrator password. The database containers
-must be running before provisioning:
+preload `pg_stat_statements`; provisioning enables the extension in the application and exporter
+databases. The query dashboard tracks normalized top-level statements, excludes utility commands,
+and limits each exporter scrape to 50 statements with query text truncated to 160 characters. The
+database containers must be running before provisioning:
 
 ```bash
 pnpm monitoring:provision

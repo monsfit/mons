@@ -41,6 +41,14 @@ SELECT format('ALTER ROLE %I LOGIN PASSWORD %L', :'monitoring_user', :'monitorin
 SELECT format('GRANT CONNECT ON DATABASE %I TO %I', current_database(), :'monitoring_user') \gexec
 SELECT format('GRANT pg_monitor TO %I', :'monitoring_user') \gexec
 SQL
+
+  for database in postgres "regolith_${environment}"; do
+    "${postgres_compose[@]}" exec -T --user postgres "postgres-${environment}" psql \
+      --username "regolith_${environment}_admin" \
+      --dbname "${database}" \
+      --set=ON_ERROR_STOP=1 \
+      --command 'CREATE EXTENSION IF NOT EXISTS pg_stat_statements'
+  done
 done
 
 echo "Grafana and PostgreSQL monitoring credentials provisioned under ${secret_root}"

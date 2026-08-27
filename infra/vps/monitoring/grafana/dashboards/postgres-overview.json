@@ -125,6 +125,42 @@
       "targets": [{ "expr": "mons_backup_restore_drill_success", "refId": "A" }],
       "title": "Latest restore drill",
       "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "s", "min": 0 }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 26 },
+      "id": 13,
+      "targets": [{ "expr": "topk(10, sum by (environment, queryid) (rate(pg_stat_statements_seconds_total{environment=\"$environment\",datname=~\"$database\"}[5m]))) * on (environment, queryid) group_left(query) max by (environment, queryid, query) (pg_stat_statements_query_id{environment=\"$environment\"})", "legendFormat": "{{query}}" }],
+      "title": "Top queries by execution time / second",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "s", "min": 0 }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 26 },
+      "id": 14,
+      "targets": [{ "expr": "topk(10, sum by (environment, queryid) (rate(pg_stat_statements_seconds_total{environment=\"$environment\",datname=~\"$database\"}[5m])) / clamp_min(sum by (environment, queryid) (rate(pg_stat_statements_calls_total{environment=\"$environment\",datname=~\"$database\"}[5m])), 0.000001)) * on (environment, queryid) group_left(query) max by (environment, queryid, query) (pg_stat_statements_query_id{environment=\"$environment\"})", "legendFormat": "{{query}}" }],
+      "title": "Top queries by mean execution time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "ops", "min": 0 }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 34 },
+      "id": 15,
+      "targets": [{ "expr": "topk(10, sum by (environment, queryid) (rate(pg_stat_statements_calls_total{environment=\"$environment\",datname=~\"$database\"}[5m]))) * on (environment, queryid) group_left(query) max by (environment, queryid, query) (pg_stat_statements_query_id{environment=\"$environment\"})", "legendFormat": "{{query}}" }],
+      "title": "Top queries by calls / second",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "rows/s", "min": 0 }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 34 },
+      "id": 16,
+      "targets": [{ "expr": "topk(10, sum by (environment, queryid) (rate(pg_stat_statements_rows_total{environment=\"$environment\",datname=~\"$database\"}[5m]))) * on (environment, queryid) group_left(query) max by (environment, queryid, query) (pg_stat_statements_query_id{environment=\"$environment\"})", "legendFormat": "{{query}}" }],
+      "title": "Top queries by rows / second",
+      "type": "timeseries"
     }
   ],
   "refresh": "30s",
