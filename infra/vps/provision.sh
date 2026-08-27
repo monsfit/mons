@@ -86,7 +86,7 @@ fi
 install -m 0600 "${backup_config}" /etc/mons/pgbackrest/pgbackrest.conf
 
 cd "${repository_directory}"
-"${compose[@]}" up -d --wait postgres-dev postgres-prod
+"${compose[@]}" up -d --wait --build postgres-dev postgres-prod
 
 # Publish only through the tailnet. The backing ports remain bound to localhost,
 # so neither PostgreSQL environment is reachable from the public network or LAN.
