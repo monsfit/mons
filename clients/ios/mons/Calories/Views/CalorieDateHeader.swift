@@ -1,28 +1,17 @@
 import SwiftUI
 
-struct CalorieTimelineHeader: View {
+struct CalorieDateHeader: View {
     @Binding var selectedDate: Date
 
     let maximumDate: Date
-    let days: [CalorieDayData]
-
     let calendar: Calendar
 
     var body: some View {
-        VStack(spacing: 16) {
-            DateNavigationRow(
-                selectedDate: $selectedDate,
-                maximumDate: maximumDate,
-                calendar: calendar
-            )
-
-            WeekCalorieStrip(
-                selectedDate: $selectedDate,
-                maximumDate: maximumDate,
-                days: days,
-                calendar: calendar
-            )
-        }
+        CalorieDateLens(
+            selectedDate: $selectedDate,
+            maximumDate: maximumDate,
+            calendar: calendar
+        )
         .padding(.horizontal, MonsSpacing.large)
         .padding(.bottom, 12)
         .background {
@@ -45,12 +34,11 @@ struct CalorieTimelineHeader: View {
 }
 
 #Preview {
-    @Previewable @State var selectedDate = Date.now
+    @Previewable @State var selectedDate = CalorieSampleData.previewReferenceDate
 
-    CalorieTimelineHeader(
+    CalorieDateHeader(
         selectedDate: $selectedDate,
-        maximumDate: .now,
-        days: CalorieSampleData.days(referenceDate: .now, calendar: .current),
+        maximumDate: CalorieSampleData.previewReferenceDate,
         calendar: .current
     )
 }

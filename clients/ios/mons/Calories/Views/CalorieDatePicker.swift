@@ -39,11 +39,11 @@ struct CalorieDatePicker: View {
 }
 
 #Preview {
-    @Previewable @State var selectedDate = Date.now
+    @Previewable @State var selectedDate = CalorieSampleData.previewReferenceDate
 
     CalorieDatePicker(
         selectedDate: $selectedDate,
-        maximumDate: .now,
+        maximumDate: CalorieSampleData.previewReferenceDate,
         calendar: .current
     )
 }

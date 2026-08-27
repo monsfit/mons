@@ -1,6 +1,8 @@
 import Foundation
 
 enum CalorieSampleData {
+    static let previewReferenceDate = Date(timeIntervalSince1970: 1_787_140_800)
+
     static func days(referenceDate: Date, calendar: Calendar) -> [CalorieDayData] {
         let today = calendar.startOfDay(for: referenceDate)
 
