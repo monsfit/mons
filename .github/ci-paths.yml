@@ -1,0 +1,70 @@
+# These filters route work to the right toolchain. TypeScript package selection
+# remains dependency-aware through Turborepo's --affected flag.
+ci:
+  - '.github/ci-paths.yml'
+  - '.github/workflows/ci.yml'
+
+typescript:
+  - '.github/ci-paths.yml'
+  - '.github/workflows/ci.yml'
+  - 'clients/web/**'
+  - 'services/api/**'
+  - 'packages/**'
+  - 'package.json'
+  - 'pnpm-lock.yaml'
+  - 'pnpm-workspace.yaml'
+  - 'turbo.json'
+  - 'tsconfig.base.json'
+  - 'sst.config.ts'
+  - 'sst-env.d.ts'
+  - 'scripts/prepare-effect.sh'
+
+postgres:
+  - '.github/ci-paths.yml'
+  - '.github/workflows/ci.yml'
+  - 'services/api/**'
+  - 'packages/contracts/**'
+  - 'packages/database/**'
+  - 'package.json'
+  - 'pnpm-lock.yaml'
+  - 'pnpm-workspace.yaml'
+  - 'turbo.json'
+  - 'tsconfig.base.json'
+
+database:
+  - '.github/ci-paths.yml'
+  - '.github/workflows/ci.yml'
+  - 'packages/database/**'
+  - 'package.json'
+  - 'pnpm-lock.yaml'
+  - 'pnpm-workspace.yaml'
+
+api:
+  - '.github/ci-paths.yml'
+  - '.github/workflows/ci.yml'
+  - 'services/api/**'
+  - 'packages/contracts/**'
+
+python:
+  - '.github/ci-paths.yml'
+  - '.github/workflows/ci.yml'
+  - 'services/nutrition-ingest/**'
+  - 'packages/contracts/schema/**'
+  - 'uv.lock'
+
+python_postgres:
+  - '.github/ci-paths.yml'
+  - '.github/workflows/ci.yml'
+  - 'services/nutrition-ingest/**'
+  - 'uv.lock'
+
+mons:
+  - '.github/ci-paths.yml'
+  - '.github/workflows/ci.yml'
+  - 'clients/ios/**'
+  - 'scripts/generate-ios-api-plist.sh'
+
+infrastructure:
+  - '.github/ci-paths.yml'
+  - '.github/workflows/ci.yml'
+  - 'infra/vps/**'

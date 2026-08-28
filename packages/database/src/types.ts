@@ -7,37 +7,6 @@ export type WeightGoal = 'lose' | 'maintain' | 'gain'
 export type MealCategory = 'breakfast' | 'lunch' | 'dinner' | 'snack'
 export type WorkoutKind = 'strength' | 'cardio'
 
-export interface FoodTable {
-  readonly brand: string | null
-  readonly calories: number | null
-  readonly carbohydrates_total: number | null
-  readonly dataset_kind: DatasetKind
-  readonly food_id: string
-  readonly gtin: string | null
-  readonly ingestion_run_id: string
-  readonly name: string
-  readonly protein: number | null
-  readonly source: string
-  readonly source_id: string
-  readonly total_fat: number | null
-}
-
-export interface PortionTable {
-  readonly amount: number
-  readonly dataset_kind: DatasetKind
-  readonly food_id: string
-  readonly name: string
-  readonly ordinal: number
-  readonly unit: 'g' | 'ml'
-}
-
-export interface NutrientDefinitionTable {
-  readonly description: string
-  readonly field_name: string
-  readonly unit: string
-  readonly value_kind: 'direct' | 'derived'
-}
-
 export interface ProfileTable {
   readonly clerk_user_id: string | null
   readonly created_at: Date

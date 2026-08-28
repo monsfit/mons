@@ -45,7 +45,6 @@ jobs:
         env:
           MIGRATION_DATABASE_URL: ${{ secrets.MIGRATION_DATABASE_URL }}
           MONS_APP_SCHEMA: mons_app
-          MONS_CATALOG_SCHEMA: mons_catalog
           MONS_DATABASE_RUNTIME_USER: ${{ secrets.MONS_DATABASE_RUNTIME_USER }}
       - name: Deploy API
         run: pnpm exec sst deploy --stage "${{ steps.deployment.outputs.stage }}"

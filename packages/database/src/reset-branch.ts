@@ -4,7 +4,7 @@ import { SqlClient } from 'effect/unstable/sql'
 import { execFileSync } from 'node:child_process'
 
 import { appSchemaFromBranchId, branchIdFromName, isProtectedBranch } from './deployment.ts'
-import { createDatabaseLayer } from './client.ts'
+import { createDatabaseLayer } from './core/client.ts'
 import { grantRuntimeDatabaseAccess, migrateApplicationDatabase } from './migrations.ts'
 
 const argument = (name: string) => {
@@ -40,7 +40,7 @@ const program = Effect.gen(function* () {
     if (!dropOnly) {
       yield* migrateApplicationDatabase(appSchema)
       if (Option.isSome(runtimeRole)) {
-        yield* grantRuntimeDatabaseAccess(runtimeRole.value, appSchema, 'mons_catalog')
+        yield* grantRuntimeDatabaseAccess(runtimeRole.value, appSchema)
       }
     }
     yield* Effect.logInfo(dropOnly ? 'Mons branch schema dropped' : 'Mons branch schema reset', {

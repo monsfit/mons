@@ -37,4 +37,3 @@ plutil -create xml1 "$output_file"
 plutil -insert MONS_API_BASE_URL -string "$api_url" "$output_file"
 plutil -insert MONS_API_ENVIRONMENT -string "$environment" "$output_file"
 echo "Mons $environment -> $api_url"
-

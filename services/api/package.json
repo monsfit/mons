@@ -4,16 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "ai:smoke": "node --env-file-if-exists=../../.env src/ai-gateway-smoke.ts",
     "build": "tsgo -p tsconfig.build.json",
     "cleanup:preview-media": "node src/cleanup-preview-media.ts",
-    "dev": "node --env-file-if-exists=../../.env --watch src/server.ts",
     "lint": "oxlint src --deny-warnings",
-    "meal:smoke": "node --env-file-if-exists=../../.env src/meal-intelligence-smoke.ts",
     "openapi": "node src/generate-openapi.ts",
     "openapi:check": "node src/generate-openapi.ts --check",
-    "r2:smoke": "node --env-file-if-exists=../../.env src/r2-storage-smoke.ts",
-    "start": "node --env-file-if-exists=../../.env dist/server.js",
     "test": "vitest run",
     "typecheck": "tsgo -p tsconfig.json"
   },
@@ -29,6 +24,7 @@
     "workers-ai-provider": "4.0.0"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260823.1",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
     "@types/pg": "catalog:",

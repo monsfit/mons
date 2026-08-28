@@ -1,27 +1,26 @@
 [project]
 name = "nutrition-ingest"
 version = "0.2.0"
-description = "Normalize multiple food composition databases into a shared JSONL schema."
+description = "Build, publish, and load immutable Mons nutrition releases."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "boto3>=1.40.0",
     "openpyxl>=3.1.5",
+    "psycopg[binary]>=3.2.0",
+    "pyarrow>=23.0.0",
+    "python-dotenv>=1.1.0",
 ]
 
-[project.optional-dependencies]
-branded = ["pyarrow>=23.0.0"]
-postgres = ["psycopg[binary]>=3.2.0"]
-all = ["pyarrow>=23.0.0", "psycopg[binary]>=3.2.0"]
-
 [project.scripts]
-nutrition-ingest = "titan.cli:main"
+nutrition-ingest = "nutrition_ingest.cli:main"
 
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-include = ["titan*"]
+include = ["nutrition_ingest*"]
 exclude = ["data*", "tests*"]
 
 [dependency-groups]
@@ -48,7 +47,7 @@ disable_error_code = ["import-untyped"]
 exclude = ["data/"]
 
 [tool.coverage.run]
-source = ["titan"]
+source = ["nutrition_ingest"]
 
 [tool.coverage.report]
 skip_empty = true

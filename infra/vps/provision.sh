@@ -74,10 +74,7 @@ if [[ -n ${CLOUDFLARE_DEFAULT_ACCOUNT_ID:-} && -n ${R2_BACKUP_ACCESS_KEY_ID:-} &
     -e "s|@SECRET_ACCESS_KEY@|${R2_BACKUP_SECRET_ACCESS_KEY}|g" \
     "${script_directory}/pgbackrest.conf.template" > "${backup_config}"
 elif [[ -s /etc/mons/pgbackrest/pgbackrest.conf ]]; then
-  sed \
-    -e 's|regolith-prod|mons-prod|g' \
-    -e 's|regolith_prod_admin|mons_prod_admin|g' \
-    /etc/mons/pgbackrest/pgbackrest.conf > "${backup_config}"
+  cp /etc/mons/pgbackrest/pgbackrest.conf "${backup_config}"
   echo 'Existing pgBackRest credentials retained'
 else
   echo 'R2 backup credentials are required when no existing pgBackRest configuration is available' >&2

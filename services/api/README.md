@@ -4,7 +4,7 @@ The API exposes the active food catalog through Effect's HTTP platform and reads
 through Effect SQL. Effect Schema provides runtime validation, typed errors, and the OpenAPI 3.1
 contract from the same declarative endpoint definitions.
 
-## Run locally
+## Development
 
 From the repository root:
 
@@ -13,44 +13,34 @@ npx pnpm@11.20.0 db:migrate
 npx pnpm@11.20.0 dev
 ```
 
-The service uses these environment variables:
+`dev` runs the API as the Cloudflare Worker declared in `sst.config.ts`. SST uses its default
+personal stage for live development while linking the development Hyperdrive, Workers AI, R2, and
+Clerk resources through native bindings.
 
-| Variable                            | Default                                            |
-| ----------------------------------- | -------------------------------------------------- |
-| `DATABASE_URL`                      | `postgresql://mons:mons_local@localhost:5432/mons` |
-| `CLERK_PUBLISHABLE_KEY`             | required; pull with the Clerk CLI                  |
-| `CLERK_SECRET_KEY`                  | required; pull with the Clerk CLI                  |
-| `MONS_SCHEMA`                       | `mons`                                             |
-| `MONS_APP_SCHEMA`                   | `mons_app`                                         |
-| `API_PORT`                          | `3000`                                             |
-| `API_HOST`                          | `0.0.0.0`                                          |
-| `AI_GATEWAY_API_KEY`                | required only when an AI operation runs            |
-| `AI_GATEWAY_MODEL`                  | `google/gemini-3.7-flash`                          |
-| `AI_GATEWAY_MEAL_OBSERVATION_MODEL` | `google/gemini-3.7-flash`                          |
-| `AI_GATEWAY_MEAL_RESOLUTION_MODEL`  | `google/gemini-3.7-flash`                          |
-| `AI_GATEWAY_TRANSCRIPTION_MODEL`    | `google/gemini-3.7-flash`                          |
-| `R2_ACCOUNT_ID`                     | optional Cloudflare account ID                     |
-| `R2_ACCESS_KEY_ID`                  | optional R2 S3 access-key ID                       |
-| `R2_SECRET_ACCESS_KEY`              | optional R2 S3 secret access key                   |
-| `R2_BUCKET_NAME`                    | `mons`                                             |
+## Architecture
 
-Standalone Node development uses Vercel AI Gateway as a hosted model router, but it is not deployed
-to Vercel. `AI_GATEWAY_API_KEY` is read from the process environment by the AI SDK. The Cloudflare
-Worker instead uses its native AI binding with the stage's `mons-*` AI Gateway and Unified Billing.
+The API follows one dependency direction:
 
-R2 uses Cloudflare's account-level S3 endpoint,
-`https://<R2_ACCOUNT_ID>.r2.cloudflarestorage.com`; the bucket is supplied separately on every
-request. Do not append `/mons` to `endpoint`. The R2 Effect service owns and closes its S3 client,
-keeps credentials redacted, validates object keys, and maps SDK failures into typed errors.
-The API still starts when R2 is not configured so profile, nutrition, food-log, and workout routes
-remain usable; only meal-estimation operations that require media storage fail.
+```text
+HTTP API declaration -> handler -> service -> repository -> SQL/external system
+```
+
+- `features/<feature>.ts` owns a feature's routes, handlers, service, calculations, and mapping.
+- `features/<feature>*.test.ts` contains focused behavior tests beside the feature modules.
+- `@mons/database/features/*/repository.ts` owns SQL, transactions, row decoding, ordering, and
+  persistence errors.
+- `infrastructure/` contains Clerk, AI, and object-storage adapters.
+- `core/` contains cross-feature authentication and error types.
+- `runtime.ts` wires repositories, services, and infrastructure together.
+
+Add tests for public contracts, authorization, transaction guarantees, non-trivial calculations,
+external-system compensation, or reproduced regressions—not file boundaries or simple delegation.
 
 ## Routes
 
 | Method   | Path                                                    | Purpose                                          |
 | -------- | ------------------------------------------------------- | ------------------------------------------------ |
 | `GET`    | `/health`                                               | Process health                                   |
-| `GET`    | `/v1/catalog`                                           | Active snapshot metadata and row counts          |
 | `GET`    | `/v1/foods/by-gtin/:gtin`                               | Branded-food lookup by normalized 14-digit GTIN  |
 | `GET`    | `/v1/foods/search`                                      | Weighted full-text and typo-tolerant search      |
 | `PUT`    | `/v1/profile`                                           | Resolve the authenticated account's profile      |
@@ -83,9 +73,8 @@ Search accepts `q`, optional `kind=raw|branded`, and optional `limit=1..100`. Ti
 routes require an inclusive `from` and exclusive `to` ISO timestamp. Weight is persisted in
 kilograms; clients may convert it for localized display.
 
-The server applies stable application migrations before listening. Catalog ingestion remains
-owned by the nutrition-ingest service; `db:migrate` upgrades an older local catalog with the full-text search vector
-and GIN indexes.
+Application migrations run before deployment. The API never migrates on startup. Catalog ingestion
+and catalog indexes are owned entirely by the nutrition-ingest service.
 
 All `/v1` routes require a Clerk session token in the `Authorization: Bearer <token>` header.
 `PUT /v1/profile` creates or returns the database profile mapped to the authenticated Clerk user.
@@ -111,19 +100,13 @@ multiplier, and the requested weekly body-weight percentage. Targets never fall 
 kcal/day, and the response reports when that floor limits the requested rate. The feature is
 intended for adults and is an estimate, not medical guidance.
 
-## Development
+## Checks
 
 ```bash
 npx pnpm@11.20.0 --filter @mons/api test
 npx pnpm@11.20.0 --filter @mons/api typecheck
-npx pnpm@11.20.0 --filter @mons/api ai:smoke
-npx pnpm@11.20.0 --filter @mons/api meal:smoke
-npx pnpm@11.20.0 --filter @mons/api r2:smoke
 npx pnpm@11.20.0 openapi
 ```
-
-Set `MEAL_SMOKE_AUDIO_PATH` to a local M4A, MP3, WAV, or WebM file to include live transcription
-in the meal smoke test; otherwise it exercises the text-to-catalog path.
 
 `openapi.json` and the interactive Scalar page are generated directly by Effect's HTTP API
 declaration. Request decoding failures are transformed into deterministic JSON validation errors.

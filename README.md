@@ -3,17 +3,14 @@
 Mons is a food-data and fitness application maintained as a polyglot monorepo.
 
 ```text
-source datasets
-      │
-      ▼
-Nutrition ingest (Python) ──► versioned JSONL + manifests ──► PostgreSQL
-      │                                               │
-      └──► generated JSON Schemas                     ▼
-                                           Effect API (TypeScript)
-                                                      │
-                                      ┌───────────────┴──────────────┐
-                                      ▼                              ▼
-                               Mons (SwiftUI)           Marketing (TanStack Start)
+source datasets ──► Nutrition ingest (Python) ──► immutable Parquet release ──► PostgreSQL
+                                                                                 │
+                                                                                 ▼
+                                                                      Effect API (TypeScript)
+                                                                                 │
+                                                                 ┌───────────────┴──────────────┐
+                                                                 ▼                              ▼
+                                                          Mons (SwiftUI)           Marketing (TanStack Start)
 ```
 
 ## Repository layout
@@ -23,7 +20,7 @@ clients/
   ios/                 SwiftUI application and Xcode tests
   web/                 TanStack Start marketing website
 packages/
-  contracts/           Effect Schema API contracts and generated food JSON Schemas
+  contracts/           Effect Schema API contracts
   database/            Effect SQL migrations and repositories
 services/
   api/                 TypeScript HTTP API and generated OpenAPI document
@@ -31,10 +28,8 @@ services/
 data/                   Local inputs and generated snapshots; intentionally ignored
 ```
 
-See [the API guide](services/api/README.md), [the marketing guide](clients/web/README.md),
-[the nutrition-ingest guide](services/nutrition-ingest/README.md), and
-[data-source policy](services/nutrition-ingest/DATA_SOURCES.md)
-for component-specific details.
+See [the API guide](services/api/README.md), [the marketing guide](clients/web/README.md), and
+[the nutrition-ingest guide](services/nutrition-ingest/README.md) for component-specific details.
 
 ## Requirements
 
@@ -52,7 +47,7 @@ Run commands from the repository root:
 ```bash
 nvm use
 pnpm install
-uv sync --project services/nutrition-ingest --all-extras
+uv sync --project services/nutrition-ingest --locked
 npx clerk@latest env pull --app app_2ydgnHRPQ7JmVCswcMHsCCx0PMZ --instance dev --file .env
 pnpm dev
 ```
@@ -147,33 +142,30 @@ standalone Node server needs remote media access during local development.
 
 ## Common commands
 
-| Command                           | Purpose                                                                      |
-| --------------------------------- | ---------------------------------------------------------------------------- |
-| `pnpm dev`            | Run `sst dev` with an automatically migrated branch schema                  |
-| `pnpm dev:marketing`  | Run the TanStack Start marketing website on port 3001                        |
-| `pnpm db:status`      | Inspect the active PostgreSQL snapshot                                       |
-| `pnpm db:migrate`     | Migrate stable app tables and catalog full-text search                       |
-| `pnpm db:branch:reset`| Recreate and migrate only the current feature branch schema                  |
-| `pnpm monitoring:up`  | Start the private VPS monitoring stack                                       |
-| `pnpm monitoring:logs`| Follow logs for Prometheus, Grafana, and all exporters                       |
-| `pnpm db:ingest`      | Atomically ingest the schema-v2 raw and branded snapshots                    |
-| `pnpm vps:backup`     | Create a full production backup from the VPS                                 |
-| `pnpm contracts`      | Regenerate raw and branded JSON Schemas                                      |
-| `pnpm openapi`        | Regenerate the OpenAPI document                                              |
-| `pnpm mons:test`      | Build and test the Mons Xcode project on macOS                               |
-| `pnpm mons:build:ios` | Compile the iOS app and barcode scanner path                                 |
-| `pnpm verify`         | Run every local formatting, build, test, contract, database, and Xcode check |
-
-`db:ingest` expects the manifest-backed files under `data/outputs/v2`. The nutrition-ingest service verifies their
-schema versions and SHA-256 hashes before loading them.
+| Command                    | Purpose                                                                      |
+| -------------------------- | ---------------------------------------------------------------------------- |
+| `pnpm dev`                 | Run `sst dev` with an automatically migrated branch schema                   |
+| `pnpm dev:marketing`       | Run the TanStack Start marketing website on port 3001                        |
+| `pnpm db:status`           | Inspect the active PostgreSQL catalog release                                |
+| `pnpm db:migrate`          | Migrate stable application tables                                            |
+| `pnpm db:branch:reset`     | Recreate and migrate only the current feature branch schema                  |
+| `pnpm nutrition build`     | Build the local immutable nutrition release                                  |
+| `pnpm nutrition publish`   | Publish the verified nutrition release to private R2                         |
+| `pnpm monitoring:up`       | Start the private VPS monitoring stack                                       |
+| `pnpm monitoring:logs`     | Follow logs for Prometheus, Grafana, and all exporters                       |
+| `pnpm vps:backup`          | Create a full production backup from the VPS                                 |
+| `pnpm openapi`             | Regenerate the OpenAPI document                                              |
+| `pnpm mons:test`           | Build and test the Mons Xcode project on macOS                               |
+| `pnpm mons:build:ios`      | Compile the iOS app and barcode scanner path                                 |
+| `pnpm verify`              | Run every local formatting, build, test, contract, database, and Xcode check |
 
 ## Development guarantees
 
 - Dependency versions are exact and resolved by one pnpm lockfile.
 - HTTP routes, OpenAPI, request validation, errors, layers, logging, and PostgreSQL access use
   Effect 4 modules end to end; the generated contract and runtime share one declaration.
-- Nutrition ingest emits stable JSONL bytes and records hashes, row counts, source hashes, rejection
-  details, and field coverage in sidecar manifests.
+- Nutrition ingest emits one validated Parquet catalog with source hashes, row counts, rejection
+  details, and field coverage in one manifest.
 - PostgreSQL ingestion uses staging schemas and an atomic schema swap.
 - Raw and branded foods share one schema while remaining separate table partitions.
 - USDA branded records win valid GTIN duplicates before Open Food Facts records are considered.
@@ -189,14 +181,13 @@ schema versions and SHA-256 hashes before loading them.
 - Adult onboarding inputs and the resulting nutrition plan live in `mons_app`; the API
   calculates RMR, TDEE, goal velocity, and the daily calorie target on the server.
 - Food logs snapshot nutrients per 100 g so historical totals survive catalog refreshes.
-- JSON Schema and OpenAPI artifacts are generated deterministically and checked in CI.
-- CI independently verifies TypeScript, Python 3.11–3.13, PostgreSQL, and Mons.
+- OpenAPI artifacts are generated deterministically and checked in CI.
+- CI independently verifies TypeScript, Python 3.11, PostgreSQL, and Mons.
 
 The former standalone Mons repository history is retained locally under
 `.history/mons.git` and is intentionally excluded from the monorepo working tree.
 
 ## Data licensing
 
-Apache-2.0 covers the software only. Input datasets and derived datasets retain their
-providers' terms and must not be published until the review gate in
-[DATA_SOURCES.md](services/nutrition-ingest/DATA_SOURCES.md) is complete.
+Apache-2.0 covers the software only. Input and derived datasets retain their providers' terms;
+the upstream sources are listed in the nutrition-ingest guide.

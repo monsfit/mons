@@ -34,11 +34,6 @@ pnpm vps:backup:install-timers
 Host secrets, TLS material, backup credentials, and database volumes remain outside the repository
 under `/etc/mons` and Docker-managed storage.
 
-For an already-provisioned host, complete [the one-time Mons name cutover](MONS_NAME_CUTOVER.md)
-before starting the updated Compose file. The database volumes are retained, but PostgreSQL roles,
-database names, Hyperdrive credentials, backup stanza, host secret path, and systemd units must be
-switched together.
-
 Provisioning generates three passwords per environment under `/etc/mons/postgres/<environment>`:
 `admin-password`, `migration-password`, and `app-password`. It retains existing non-empty passwords
 and TLS keys, making reruns safe. The pgBackRest configuration containing R2 credentials is installed

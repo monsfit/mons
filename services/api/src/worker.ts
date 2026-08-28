@@ -3,15 +3,18 @@ import { Layer, Option } from 'effect'
 import { Resource } from 'sst'
 import { createWorkersAI } from 'workers-ai-provider'
 
-import { defaultAiGatewayModel, makeAiSdkClient } from './ai-gateway.ts'
-import type { ApiConfig } from './config.ts'
+import { defaultAiGatewayModel, makeAiSdkClient } from './infrastructure/ai/gateway.ts'
+import type { ApiConfig } from './core/config.ts'
 import {
   defaultMealObservationModel,
   defaultMealResolutionModel,
   defaultMealTranscriptionModel,
   makeMealAiClient,
-} from './meal-intelligence.ts'
-import { type R2BucketBinding, makeR2BindingStorageLayer } from './r2-storage.ts'
+} from './features/meals.ts'
+import {
+  type R2BucketBinding,
+  makeR2BindingStorageLayer,
+} from './infrastructure/storage/r2-storage.ts'
 import { makeApiApplication } from './runtime.ts'
 
 const resources = Resource as unknown as {

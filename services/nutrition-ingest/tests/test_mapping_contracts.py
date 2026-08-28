@@ -1,7 +1,7 @@
 import unittest
 
-from titan.common.contracts import FieldKind
-from titan.nutrient_mapping import (
+from nutrition_ingest.common.contracts import FieldKind
+from nutrition_ingest.nutrient_mapping import (
     AUSTRALIA_FIELD_SPECS,
     CORE_FIELD_UNITS,
     CORE_FOOD_FIELDS,
