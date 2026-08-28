@@ -2,19 +2,10 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from titan.parsers import normalize_raw
+from nutrition_ingest.parsers import normalize_raw
 
 
 class NormalizeRawTests(unittest.TestCase):
-    def test_validate_raw_output_path_blocks_branded_filename(self):
-        with self.assertRaisesRegex(RuntimeError, "Refusing to write raw rows"):
-            normalize_raw.validate_raw_output_path(
-                Path("data/outputs/branded-foods.jsonl")
-            )
-
-    def test_validate_raw_output_path_accepts_raw_filename(self):
-        normalize_raw.validate_raw_output_path(Path("data/outputs/raw-foods.jsonl"))
-
     def test_enforce_defined_names_filters_null_and_blank_names(self):
         rows = [
             {"source_id": "1", "name": "Apple"},
@@ -90,17 +81,11 @@ class NormalizeRawTests(unittest.TestCase):
                     ]
                 ),
             ),
-            patch.object(
-                normalize_raw.usda_parser, "build_usda_runtime_map", return_value={}
-            ),
-            patch.object(
-                normalize_raw.usda_parser, "load_nutrient_rows", return_value={}
-            ),
+            patch.object(normalize_raw.usda_parser, "build_usda_runtime_map", return_value={}),
+            patch.object(normalize_raw.usda_parser, "load_nutrient_rows", return_value={}),
             patch.object(normalize_raw.usda_parser, "validate_mapping_fields"),
             patch.object(normalize_raw.usda_parser, "validate_mapping_nutrients"),
-            patch.object(
-                normalize_raw.usda_parser, "validate_core_field_units_against_usda"
-            ),
+            patch.object(normalize_raw.usda_parser, "validate_core_field_units_against_usda"),
             patch.object(
                 normalize_raw.usda_parser,
                 "iter_all_usda_rows",

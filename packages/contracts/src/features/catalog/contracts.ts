@@ -13,15 +13,6 @@ import {
 export const catalogDatasetKindSchema = Schema.Literals(['raw', 'branded'])
 export const datasetKindSchema = catalogDatasetKindSchema
 
-export const catalogStatusSchema = Schema.Struct({
-  active: Schema.Boolean,
-  brandedFoods: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
-  completedAt: Schema.NullOr(Schema.String),
-  rawFoods: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
-  schemaVersion: Schema.NullOr(Schema.String),
-  snapshotId: Schema.NullOr(Schema.String),
-}).pipe(identifier('CatalogStatus', 'Active catalog snapshot status'))
-
 export const gtinPathSchema = Schema.Struct({
   gtin: Schema.String.check(Schema.isPattern(/^\d{14}$/)),
 })
@@ -99,7 +90,6 @@ export const foodLogResponseSchema = Schema.Struct({
 
 export const foodLogEntryPathSchema = Schema.Struct({ entryId: uuidSchema, profileId: uuidSchema })
 
-export type CatalogStatus = typeof catalogStatusSchema.Type
 export type DatasetKind = typeof datasetKindSchema.Type
 export type FoodLogEntry = typeof foodLogEntrySchema.Type
 export type FoodNutrient = typeof foodNutrientSchema.Type

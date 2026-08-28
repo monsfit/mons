@@ -3,11 +3,11 @@ import { Effect, FileSystem } from 'effect'
 import { OpenApi } from 'effect/unstable/httpapi'
 import { fileURLToPath } from 'node:url'
 
-import { RegolithApi } from './api.ts'
+import { MonsApi } from './api.ts'
 
 const outputDirectory = fileURLToPath(new URL('../openapi/', import.meta.url))
 const outputPath = fileURLToPath(new URL('../openapi/openapi.json', import.meta.url))
-const payload = `${JSON.stringify(OpenApi.fromApi(RegolithApi), null, 2)}\n`
+const payload = `${JSON.stringify(OpenApi.fromApi(MonsApi), null, 2)}\n`
 const check = process.argv.includes('--check')
 
 const program = Effect.gen(function* () {

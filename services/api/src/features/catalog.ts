@@ -1,4 +1,4 @@
-import type { RegolithApi } from '../api.ts'
+import type { MonsApi } from '../api.ts'
 import { Authentication } from '../core/auth.ts'
 import {
   InternalApiError,
@@ -10,22 +10,17 @@ import { fromService } from '../core/handler-errors.ts'
 import { type ServicePersistenceError, fromRepository } from '../core/service-errors.ts'
 import {
   type FoodSummary,
-  catalogStatusSchema,
   foodSearchQuerySchema,
   foodSearchResponseSchema,
   foodSummarySchema,
   gtinPathSchema,
-} from '@regolith/contracts'
-import { CatalogReader, type FoodRecord } from '@regolith/database'
+} from '@mons/contracts'
+import { CatalogReader, type FoodRecord } from '@mons/database'
 import { Context, Effect, Layer } from 'effect'
 import { HttpApiBuilder, HttpApiEndpoint, HttpApiGroup } from 'effect/unstable/httpapi'
 
 export const catalogApi = HttpApiGroup.make('catalog')
   .add(
-    HttpApiEndpoint.get('catalogStatus', '/v1/catalog', {
-      success: catalogStatusSchema,
-      error: [UnauthorizedError, InternalApiError],
-    }),
     HttpApiEndpoint.get('foodByGtin', '/v1/foods/by-gtin/:gtin', {
       params: gtinPathSchema,
       success: foodSummarySchema,
@@ -40,15 +35,9 @@ export const catalogApi = HttpApiGroup.make('catalog')
   .middleware(RequestValidation)
   .middleware(Authentication)
 
-export const catalogHandlers = (api: typeof RegolithApi) =>
+export const catalogHandlers = (api: typeof MonsApi) =>
   HttpApiBuilder.group(api, 'catalog', (handlers) =>
     handlers
-      .handle('catalogStatus', () =>
-        Effect.gen(function* () {
-          const catalog = yield* CatalogService
-          return yield* fromService(catalog.status)
-        }),
-      )
       .handle('foodByGtin', ({ params }) =>
         Effect.gen(function* () {
           const catalog = yield* CatalogService
@@ -96,20 +85,9 @@ export interface CatalogServiceShape {
     readonly limit?: number
     readonly q: string
   }) => Effect.Effect<{ readonly foods: ReadonlyArray<FoodSummary> }, ServicePersistenceError>
-  readonly status: Effect.Effect<
-    {
-      readonly active: boolean
-      readonly brandedFoods: number
-      readonly completedAt: string | null
-      readonly rawFoods: number
-      readonly schemaVersion: string | null
-      readonly snapshotId: string | null
-    },
-    ServicePersistenceError
-  >
 }
 
-export const CatalogService = Context.Service<CatalogServiceShape>('@regolith/api/CatalogService')
+export const CatalogService = Context.Service<CatalogServiceShape>('@mons/api/CatalogService')
 
 export const catalogServiceLayer = Layer.effect(
   CatalogService,
@@ -129,12 +107,6 @@ export const catalogServiceLayer = Layer.effect(
             query: query.q,
           }),
         ).pipe(Effect.map((foods) => ({ foods: foods.map(toFoodSummary) }))),
-      status: fromRepository('CatalogReader.getStatus', catalog.getStatus).pipe(
-        Effect.map((status) => ({
-          ...status,
-          completedAt: status.completedAt?.toISOString() ?? null,
-        })),
-      ),
     })
   }),
 )

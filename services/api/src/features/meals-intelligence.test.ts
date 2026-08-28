@@ -4,7 +4,7 @@ import {
   type CatalogReaderService,
   LibraryRepository,
   type LibraryRepositoryService,
-} from '@regolith/database'
+} from '@mons/database'
 import { Effect, Layer, Schema } from 'effect'
 
 import {
@@ -16,14 +16,6 @@ import {
 
 const catalog: CatalogReaderService = {
   findByGtin: () => Effect.succeed(undefined),
-  getStatus: Effect.succeed({
-    active: true,
-    brandedFoods: 1,
-    completedAt: new Date('2026-08-05T00:00:00.000Z'),
-    rawFoods: 0,
-    schemaVersion: '2.0.0',
-    snapshotId: 'snapshot',
-  }),
   search: () =>
     Effect.succeed([
       {
@@ -33,7 +25,6 @@ const catalog: CatalogReaderService = {
         dataset_kind: 'branded',
         food_id: 'food-42',
         gtin: null,
-        ingestion_run_id: 'run',
         name: 'Example Food',
         nutrients: [],
         portions: [],

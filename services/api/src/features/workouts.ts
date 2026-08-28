@@ -1,4 +1,4 @@
-import type { RegolithApi } from '../api.ts'
+import type { MonsApi } from '../api.ts'
 import { Authentication, CurrentIdentity } from '../core/auth.ts'
 import {
   ForbiddenError,
@@ -31,13 +31,13 @@ import {
   workoutTemplatePathSchema,
   workoutTemplateResponseSchema,
   workoutTemplateSchema,
-} from '@regolith/contracts'
+} from '@mons/contracts'
 import {
   type SaveWorkoutTemplateInput,
   type WorkoutRecord,
   WorkoutRepository,
   type WorkoutTemplateRecord,
-} from '@regolith/database'
+} from '@mons/database'
 import { Context, Effect, Layer } from 'effect'
 import {
   HttpApiBuilder,
@@ -100,7 +100,7 @@ export const workoutsApi = HttpApiGroup.make('workouts')
   .middleware(RequestValidation)
   .middleware(Authentication)
 
-export const workoutsHandlers = (api: typeof RegolithApi) =>
+export const workoutsHandlers = (api: typeof MonsApi) =>
   HttpApiBuilder.group(api, 'workouts', (handlers) =>
     handlers.handleAll({
       listWorkouts: ({ params, query }) =>
@@ -245,7 +245,7 @@ export interface WorkoutServiceShape {
   ) => Effect.Effect<WorkoutTemplate, WorkoutServiceError>
 }
 
-export const WorkoutService = Context.Service<WorkoutServiceShape>('@regolith/api/WorkoutService')
+export const WorkoutService = Context.Service<WorkoutServiceShape>('@mons/api/WorkoutService')
 
 export const workoutServiceLayer = Layer.effect(
   WorkoutService,

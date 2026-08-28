@@ -21,8 +21,8 @@ import {
   WorkoutRepository,
   type WorkoutRepositoryService,
   type WorkoutTemplateRecord,
-} from '@regolith/database'
-import type { MealEstimate } from '@regolith/contracts'
+} from '@mons/database'
+import type { MealEstimate } from '@mons/contracts'
 import { Context, Effect, Layer } from 'effect'
 import { HttpRouter } from 'effect/unstable/http'
 import { NodeHttpServer } from '@effect/platform-node'
@@ -38,7 +38,7 @@ import { systemServiceLayer } from './features/system.ts'
 import { weightServiceLayer } from './features/weight.ts'
 import { workoutServiceLayer } from './features/workouts.ts'
 
-const userId = 'user_regolith_test'
+const userId = 'user_mons_test'
 const profileId = '00000000-0000-4000-8000-000000000001'
 const food: FoodRecord = {
   brand: 'Example Brand',
@@ -47,7 +47,6 @@ const food: FoodRecord = {
   dataset_kind: 'branded',
   food_id: '42',
   gtin: '00012345678905',
-  ingestion_run_id: '00000000-0000-0000-0000-000000000001',
   name: 'Example Food',
   nutrients: [{ amount: 3.2, field: 'fiber', name: 'Dietary fibre', unit: 'g' }],
   portions: [{ amount: 30, name: '1 bar', unit: 'g' }],
@@ -193,14 +192,6 @@ const mealEstimate: MealEstimate = {
 
 const catalog: CatalogReaderService = {
   findByGtin: (gtin) => Effect.succeed(gtin === food.gtin ? food : undefined),
-  getStatus: Effect.succeed({
-    active: true,
-    brandedFoods: 4_092_797,
-    completedAt: new Date('2026-08-04T00:00:00Z'),
-    rawFoods: 26_163,
-    schemaVersion: '2.0.0',
-    snapshotId: '00000000-0000-0000-0000-000000000001',
-  }),
   search: () => Effect.succeed([food]),
 }
 const profiles: ProfileRepositoryService = {
@@ -244,7 +235,7 @@ const workouts: WorkoutRepositoryService = {
 class TestWebHandler extends Context.Service<
   TestWebHandler,
   (request: Request) => Promise<Response>
->()('@regolith/api/TestWebHandler') {}
+>()('@mons/api/TestWebHandler') {}
 
 const repositories = Layer.mergeAll(
   Layer.succeed(DatabaseHealth)({ check: Effect.void }),
@@ -319,7 +310,7 @@ const request = (
   )
 const json = (response: Response) => Effect.promise(() => response.json())
 
-layer(webHandlerLayer)('Regolith Effect HTTP API', (it) => {
+layer(webHandlerLayer)('Mons Effect HTTP API', (it) => {
   it.effect('serves health and rejects missing authentication', () =>
     Effect.gen(function* () {
       const handler = yield* TestWebHandler

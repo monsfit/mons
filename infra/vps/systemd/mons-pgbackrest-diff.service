@@ -1,0 +1,9 @@
+[Unit]
+Description=Mons production PostgreSQL differential backup
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/ubuntu/projects/mons
+ExecStart=/usr/bin/docker compose --file infra/vps/compose.yaml exec -T --user postgres postgres-prod pgbackrest --config=/var/lib/postgresql/pgbackrest/pgbackrest.conf --stanza=mons-prod --type=diff backup

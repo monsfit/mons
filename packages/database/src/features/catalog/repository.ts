@@ -24,7 +24,6 @@ const foodRecordSchema = Schema.Struct({
   dataset_kind: Schema.Literals(['raw', 'branded']),
   food_id: Schema.String,
   gtin: Schema.NullOr(Schema.String),
-  ingestion_run_id: Schema.String,
   name: Schema.String,
   nutrients: Schema.Array(foodNutrientRecordSchema),
   portions: Schema.Array(foodPortionRecordSchema),
@@ -34,19 +33,9 @@ const foodRecordSchema = Schema.Struct({
   total_fat: Schema.NullOr(Schema.Number),
 })
 
-const catalogSnapshotRecordSchema = Schema.Struct({
-  active: Schema.Boolean,
-  brandedFoods: Schema.Number,
-  completedAt: Schema.NullOr(Schema.Date),
-  rawFoods: Schema.Number,
-  schemaVersion: Schema.NullOr(Schema.String),
-  snapshotId: Schema.NullOr(Schema.String),
-})
-
 export type FoodPortionRecord = typeof foodPortionRecordSchema.Type
 export type FoodNutrientRecord = typeof foodNutrientRecordSchema.Type
 export type FoodRecord = typeof foodRecordSchema.Type
-export type CatalogSnapshotRecord = typeof catalogSnapshotRecordSchema.Type
 
 export interface FoodSearchOptions {
   readonly kind?: DatasetKind
@@ -58,25 +47,21 @@ type CatalogReaderError = SqlError.SqlError | Schema.SchemaError
 
 export interface CatalogReaderService {
   readonly findByGtin: (gtin: string) => Effect.Effect<FoodRecord | undefined, CatalogReaderError>
-  readonly getStatus: Effect.Effect<CatalogSnapshotRecord, CatalogReaderError>
   readonly search: (
     options: FoodSearchOptions,
   ) => Effect.Effect<ReadonlyArray<FoodRecord>, CatalogReaderError>
 }
 
-export const CatalogReader = Context.Service<CatalogReaderService>(
-  '@regolith/database/CatalogReader',
-)
+export const CatalogReader = Context.Service<CatalogReaderService>('@mons/database/CatalogReader')
 
 const decodeFoodRows = Schema.decodeUnknownEffect(Schema.Array(foodRecordSchema))
 
-export const makeCatalogReader = (schema = 'regolith') =>
+export const makeCatalogReader = (schema = 'mons_catalog') =>
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient
     const safeSchema = yield* validateSchemaName(schema)
     const foods = sql(`${safeSchema}.foods`)
     const brandedFoods = sql(`${safeSchema}.branded_foods`)
-    const ingestionRuns = sql(`${safeSchema}.ingestion_runs`)
 
     const selectedFoodColumns = (tableAlias: string) =>
       sql.literal(`
@@ -86,7 +71,6 @@ export const makeCatalogReader = (schema = 'regolith') =>
       f.dataset_kind,
       f.food_id,
       f.gtin,
-      f.ingestion_run_id,
       f.name,
       coalesce((
         SELECT json_agg(
@@ -144,36 +128,6 @@ export const makeCatalogReader = (schema = 'regolith') =>
       const decoded = yield* decodeFoodRows(rows)
       return decoded[0]
     })
-
-    const getStatus = Effect.fn('CatalogReader.getStatus')(function* () {
-      const [runs, counts] = yield* Effect.all(
-        [
-          sql<{
-            readonly completed_at: Date | null
-            readonly run_id: string
-            readonly schema_version: string
-          }>`SELECT run_id, schema_version, completed_at
-             FROM ${ingestionRuns}
-             WHERE status = 'success'
-             ORDER BY started_at DESC
-             LIMIT 1`,
-          sql<{ readonly count: string; readonly dataset_kind: DatasetKind }>`
-            SELECT dataset_kind, count(*) AS count FROM ${foods} GROUP BY dataset_kind
-          `,
-        ],
-        { concurrency: 2 },
-      )
-      const run = runs[0]
-      const countByKind = new Map(counts.map((row) => [row.dataset_kind, Number(row.count)]))
-      return yield* Schema.decodeUnknownEffect(catalogSnapshotRecordSchema)({
-        active: run !== undefined,
-        brandedFoods: countByKind.get('branded') ?? 0,
-        completedAt: run?.completed_at ?? null,
-        rawFoods: countByKind.get('raw') ?? 0,
-        schemaVersion: run?.schema_version ?? null,
-        snapshotId: run?.run_id ?? null,
-      })
-    })()
 
     const search = Effect.fn('CatalogReader.search')(function* (options: FoodSearchOptions) {
       const kind =
@@ -247,8 +201,8 @@ export const makeCatalogReader = (schema = 'regolith') =>
       return [...fullTextMatches, ...fuzzyMatches]
     })
 
-    return CatalogReader.of({ findByGtin, getStatus, search })
+    return CatalogReader.of({ findByGtin, search })
   })
 
-export const catalogReaderLayer = (schema = 'regolith') =>
+export const catalogReaderLayer = (schema = 'mons_catalog') =>
   Layer.effect(CatalogReader, makeCatalogReader(schema))

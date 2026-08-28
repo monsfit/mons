@@ -49,6 +49,12 @@ struct WorkoutListView: View {
                     WorkoutWeeklySummaryRow(summary: weeklySummary)
                 }
 
+                Section("Explore") {
+                    NavigationLink(value: WorkoutDestination.muscleMap) {
+                        MuscleMapNavigationRow()
+                    }
+                }
+
                 Section {
                     if store.isLoadingWorkoutTemplates && store.workoutTemplates.isEmpty {
                         ProgressView("Loading templates…")
@@ -124,6 +130,8 @@ struct WorkoutListView: View {
             }
             .navigationDestination(for: WorkoutDestination.self) { destination in
                 switch destination {
+                case .muscleMap:
+                    MuscleMapView()
                 case .session(let session):
                     WorkoutSessionDetailView(initialSession: session)
                 case .template(let template):

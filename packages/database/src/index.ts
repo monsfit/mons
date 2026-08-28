@@ -5,7 +5,6 @@ export {
 } from './features/catalog/repository.ts'
 export type {
   CatalogReaderService,
-  CatalogSnapshotRecord,
   FoodNutrientRecord,
   FoodPortionRecord,
   FoodRecord,
@@ -116,7 +115,6 @@ export type {
 export {
   grantRuntimeDatabaseAccess,
   migrateApplicationDatabase,
-  migrateCatalogSearch,
   validateSchemaName,
 } from './migrations.ts'
 export type {
@@ -125,13 +123,10 @@ export type {
   FoodSourceKind,
   ExerciseFrequency,
   FoodLogEntryTable,
-  FoodTable,
   IngestionRunTable,
   MealCategory,
   MetabolicSex,
   NutritionPlanTable,
-  NutrientDefinitionTable,
-  PortionTable,
   ProfileTable,
   WeightGoal,
   WeightLogEntryTable,

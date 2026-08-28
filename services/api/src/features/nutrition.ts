@@ -1,4 +1,4 @@
-import type { RegolithApi } from '../api.ts'
+import type { MonsApi } from '../api.ts'
 import { Authentication, CurrentIdentity } from '../core/auth.ts'
 import {
   ForbiddenError,
@@ -27,8 +27,8 @@ import {
   nutritionPlanSchema,
   profilePathSchema,
   saveNutritionPlanSchema,
-} from '@regolith/contracts'
-import { type NutritionPlanRecord, NutritionPlanRepository } from '@regolith/database'
+} from '@mons/contracts'
+import { type NutritionPlanRecord, NutritionPlanRepository } from '@mons/database'
 import { Context, Effect, Layer } from 'effect'
 import { HttpApiBuilder, HttpApiEndpoint, HttpApiGroup } from 'effect/unstable/httpapi'
 
@@ -184,7 +184,7 @@ function round(value: number, places: number): number {
   return Math.round(value * scale) / scale
 }
 
-export const nutritionHandlers = (api: typeof RegolithApi) =>
+export const nutritionHandlers = (api: typeof MonsApi) =>
   HttpApiBuilder.group(api, 'nutrition', (handlers) =>
     handlers
       .handle('getNutritionPlan', ({ params }) =>
@@ -237,9 +237,7 @@ export interface NutritionServiceShape {
   ) => Effect.Effect<NutritionPlan, NutritionServiceError>
 }
 
-export const NutritionService = Context.Service<NutritionServiceShape>(
-  '@regolith/api/NutritionService',
-)
+export const NutritionService = Context.Service<NutritionServiceShape>('@mons/api/NutritionService')
 
 export const nutritionServiceLayer = Layer.effect(
   NutritionService,

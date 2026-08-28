@@ -69,15 +69,17 @@ not assumed to equal the development team ID.
 The project, application target, test target, scheme, Swift module, and bundle identifiers
 all use the `mons` name. Local Xcode user state and Derived Data are intentionally ignored.
 
-Configure the development API URL for the SST development Worker, then start the API before
-launching Mons:
+Choose the API at build time with one of the shared schemes:
 
-```bash
-npx pnpm@11.20.0 db:migrate
-npx pnpm@11.20.0 dev
-```
+- `Mons Live` targets the active personal `sst dev` stage;
+- `Mons Preview` targets the persistent preview for the current branch;
+- `Mons Dev` targets `https://api.dev.mons.fit`;
+- `Mons Prod` targets `https://api.mons.fit` with a Release build.
 
-Barcode scanning requires a physical device.
+The selected URL is embedded in the app, with no runtime environment switch. Use Preview or Dev
+when the installed phone build must continue working after the laptop is off. The complete flow is
+documented in [Development environments](../../docs/development-environments.md). Barcode scanning
+requires a physical device.
 
 On first launch, Mons presents a compact step-by-step onboarding flow for metabolic inputs,
 measurements, exercise frequency, normal daily activity, weight goal, and goal velocity. The

@@ -1,5 +1,5 @@
 import { assert, describe, it } from '@effect/vitest'
-import { MealLogOwnershipError, MealLogNotFoundError } from '@regolith/database'
+import { MealLogOwnershipError, MealLogNotFoundError } from '@mons/database'
 
 import { R2StorageUnavailable } from '../infrastructure/storage/r2-storage.ts'
 import { InvalidMealMedia, MealEstimationError } from './meals.ts'

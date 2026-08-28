@@ -211,7 +211,7 @@ export interface LibraryRepositoryService {
 }
 
 export const LibraryRepository = Context.Service<LibraryRepositoryService>(
-  '@regolith/database/LibraryRepository',
+  '@mons/database/LibraryRepository',
 )
 
 const decode = <S extends Schema.Constraint>(schema: S, rows: ReadonlyArray<unknown>) =>
@@ -222,7 +222,7 @@ export const makeLibraryRepository = (
 ) =>
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient
-    const schema = yield* validateSchemaName(options.appSchema ?? 'regolith_app')
+    const schema = yield* validateSchemaName(options.appSchema ?? 'mons_app')
     const now = options.now ?? (() => new Date())
     const customFoods = sql(`${schema}.custom_foods`)
     const portions = sql(`${schema}.custom_food_portions`)

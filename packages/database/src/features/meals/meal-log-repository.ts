@@ -134,7 +134,7 @@ export interface MealLogRepositoryService {
 }
 
 export const MealLogRepository = Context.Service<MealLogRepositoryService>(
-  '@regolith/database/MealLogRepository',
+  '@mons/database/MealLogRepository',
 )
 
 export const makeMealLogRepository = (
@@ -146,8 +146,8 @@ export const makeMealLogRepository = (
 ) =>
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient
-    const appSchema = yield* validateSchemaName(options.appSchema ?? 'regolith_app')
-    const catalogSchema = yield* validateSchemaName(options.catalogSchema ?? 'regolith')
+    const appSchema = yield* validateSchemaName(options.appSchema ?? 'mons_app')
+    const catalogSchema = yield* validateSchemaName(options.catalogSchema ?? 'mons_catalog')
     const now = options.now ?? (() => new Date())
     const meals = sql(`${appSchema}.meal_logs`)
     const entries = sql(`${appSchema}.food_log_entries`)

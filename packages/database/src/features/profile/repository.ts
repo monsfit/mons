@@ -14,7 +14,7 @@ export interface ProfileRepositoryService {
 }
 
 export const ProfileRepository = Context.Service<ProfileRepositoryService>(
-  '@regolith/database/ProfileRepository',
+  '@mons/database/ProfileRepository',
 )
 
 export const makeProfileRepository = (
@@ -22,7 +22,7 @@ export const makeProfileRepository = (
 ) =>
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient
-    const appSchema = yield* validateSchemaName(options.appSchema ?? 'regolith_app')
+    const appSchema = yield* validateSchemaName(options.appSchema ?? 'mons_app')
     const now = options.now ?? (() => new Date())
     const profiles = sql(`${appSchema}.profiles`)
 

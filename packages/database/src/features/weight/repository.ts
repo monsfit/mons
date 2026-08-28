@@ -35,7 +35,7 @@ export interface WeightRepositoryService {
 }
 
 export const WeightRepository = Context.Service<WeightRepositoryService>(
-  '@regolith/database/WeightRepository',
+  '@mons/database/WeightRepository',
 )
 
 export const makeWeightRepository = (
@@ -43,7 +43,7 @@ export const makeWeightRepository = (
 ) =>
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient
-    const appSchema = yield* validateSchemaName(options.appSchema ?? 'regolith_app')
+    const appSchema = yield* validateSchemaName(options.appSchema ?? 'mons_app')
     const now = options.now ?? (() => new Date())
     const profiles = sql(`${appSchema}.profiles`)
     const weightLogEntries = sql(`${appSchema}.weight_log_entries`)

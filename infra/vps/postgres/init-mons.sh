@@ -5,9 +5,9 @@ app_password="$(< /var/lib/postgresql/secrets/app-password)"
 migration_password="$(< /var/lib/postgresql/secrets/migration-password)"
 
 psql --set=ON_ERROR_STOP=1 \
-  --set=app_user="${REGOLITH_APP_DATABASE_USER}" \
+  --set=app_user="${MONS_APP_DATABASE_USER}" \
   --set=app_password="${app_password}" \
-  --set=migration_user="${REGOLITH_MIGRATION_DATABASE_USER}" \
+  --set=migration_user="${MONS_MIGRATION_DATABASE_USER}" \
   --set=migration_password="${migration_password}" \
   --username "${POSTGRES_USER}" \
   --dbname "${POSTGRES_DB}" <<'SQL'

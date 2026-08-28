@@ -9,7 +9,7 @@ import { systemApi } from './features/system.ts'
 import { weightApi } from './features/weight.ts'
 import { workoutsApi } from './features/workouts.ts'
 
-export const RegolithApi = HttpApi.make('regolith')
+export const MonsApi = HttpApi.make('mons')
   .add(systemApi)
   .add(catalogApi)
   .add(profileApi)
@@ -18,6 +18,6 @@ export const RegolithApi = HttpApi.make('regolith')
   .add(libraryApi)
   .add(weightApi)
   .add(workoutsApi)
-  .annotate(OpenApi.Title, 'Regolith API')
+  .annotate(OpenApi.Title, 'Mons API')
   .annotate(OpenApi.Version, '0.1.0')
-  .annotate(OpenApi.Description, 'Regolith nutrition and workout API')
+  .annotate(OpenApi.Description, 'Mons nutrition and workout API')

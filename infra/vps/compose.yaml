@@ -5,17 +5,17 @@ services:
     build:
       context: ./postgres
     environment:
-      POSTGRES_DB: regolith_dev
-      POSTGRES_USER: regolith_dev_admin
+      POSTGRES_DB: mons_dev
+      POSTGRES_USER: mons_dev_admin
       POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
-      REGOLITH_APP_DATABASE_USER: regolith_dev_app
-      REGOLITH_MIGRATION_DATABASE_USER: regolith_dev_migration
+      MONS_APP_DATABASE_USER: mons_dev_app
+      MONS_MIGRATION_DATABASE_USER: mons_dev_migration
     ports:
-      - '100.71.253.62:5433:5432'
+      - '127.0.0.1:5433:5432'
     volumes:
       - mons-postgres-dev:/var/lib/postgresql
-      - /etc/regolith/postgres/dev:/run/mons-secrets:ro
-      - /etc/regolith/postgres/dev/tls:/run/mons-tls:ro
+      - /etc/mons/postgres/dev:/run/mons-secrets:ro
+      - /etc/mons/postgres/dev/tls:/run/mons-tls:ro
     networks:
       database:
         aliases:
@@ -32,20 +32,23 @@ services:
     build:
       context: ./postgres
     environment:
-      POSTGRES_DB: regolith_prod
-      POSTGRES_USER: regolith_prod_admin
+      POSTGRES_DB: mons_prod
+      POSTGRES_USER: mons_prod_admin
       POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
-      REGOLITH_APP_DATABASE_USER: regolith_prod_app
-      REGOLITH_MIGRATION_DATABASE_USER: regolith_prod_migration
+      MONS_APP_DATABASE_USER: mons_prod_app
+      MONS_MIGRATION_DATABASE_USER: mons_prod_migration
+    ports:
+      - '127.0.0.1:5434:5432'
     volumes:
       - mons-postgres-prod:/var/lib/postgresql
-      - /etc/regolith/postgres/prod:/run/mons-secrets:ro
-      - /etc/regolith/postgres/prod/tls:/run/mons-tls:ro
-      - /etc/regolith/pgbackrest:/run/mons-pgbackrest:ro
+      - /etc/mons/postgres/prod:/run/mons-secrets:ro
+      - /etc/mons/postgres/prod/tls:/run/mons-tls:ro
+      - /etc/mons/pgbackrest:/run/mons-pgbackrest:ro
     networks:
       database:
         aliases:
           - postgres-prod.internal.mons.fit
+      tailscale-publish:
       backup-egress:
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
@@ -64,7 +67,7 @@ services:
       postgres-prod:
         condition: service_healthy
     volumes:
-      - /etc/regolith/cloudflared/tunnel-token:/run/secrets/tunnel-token:ro
+      - /etc/mons/cloudflared/tunnel-token:/run/secrets/tunnel-token:ro
     networks:
       - database
       - cloudflare-egress

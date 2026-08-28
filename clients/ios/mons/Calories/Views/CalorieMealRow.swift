@@ -43,7 +43,10 @@ struct CalorieMealRow: View {
 }
 
 #Preview {
-    let day = CalorieSampleData.days(referenceDate: .now, calendar: .current)[0]
+    let day = CalorieSampleData.days(
+        referenceDate: CalorieSampleData.previewReferenceDate,
+        calendar: .current
+    )[0]
     VStack(spacing: 8) {
         CalorieMealRow(meal: day.meals[0])
         CalorieMealRow(meal: day.meals[1])

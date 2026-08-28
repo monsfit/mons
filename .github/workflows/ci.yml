@@ -2,34 +2,56 @@ name: CI
 
 on:
   push:
+    branches:
+      - main
   pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
-  typescript:
+  changes:
+    name: Detect changes
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:18.4-alpine
-        env:
-          POSTGRES_DB: regolith
-          POSTGRES_USER: regolith
-          POSTGRES_PASSWORD: regolith_local
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U regolith -d regolith"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 12
-    env:
-      DATABASE_URL: postgresql://regolith:regolith_local@localhost:5432/regolith
-      REGOLITH_DATABASE_RUNTIME_USER: regolith
-      REGOLITH_TEST_DATABASE_URL: postgresql://regolith:regolith_local@localhost:5432/regolith
+    outputs:
+      api: ${{ steps.filter.outputs.api }}
+      ci: ${{ steps.filter.outputs.ci }}
+      database: ${{ steps.filter.outputs.database }}
+      infrastructure: ${{ steps.filter.outputs.infrastructure }}
+      mons: ${{ steps.filter.outputs.mons }}
+      postgres: ${{ steps.filter.outputs.postgres }}
+      python: ${{ steps.filter.outputs.python }}
+      python_postgres: ${{ steps.filter.outputs.python_postgres }}
+      typescript: ${{ steps.filter.outputs.typescript }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: filter
+        uses: dorny/paths-filter@0e4a8c6effa4802afeda77dc8d303f8176d7dfad # v3.0.4
+        with:
+          filters: .github/ci-paths.yml
+
+  typescript:
+    name: TypeScript
+    needs: changes
+    if: needs.changes.outputs.typescript == 'true'
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://mons:mons_local@localhost:5432/mons
+      MONS_DATABASE_RUNTIME_USER: mons
+      MONS_TEST_DATABASE_URL: postgresql://mons:mons_local@localhost:5432/mons
+      TURBO_SCM_BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+      TURBO_SCM_HEAD: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: pnpm/action-setup@v4
         with:
           version: 11.20.0
@@ -38,31 +60,51 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Validate SST provider setup
-        run: pnpm sst:check
-      - run: pnpm check
-      - run: pnpm db:migrate
-      - run: pnpm db:migrate
-      - run: pnpm openapi:check
+      - name: Start test PostgreSQL
+        if: needs.changes.outputs.postgres == 'true'
+        run: |
+          docker run --detach --rm \
+            --name mons-ci-postgres \
+            --publish 5432:5432 \
+            --env POSTGRES_DB=mons \
+            --env POSTGRES_USER=mons \
+            --env POSTGRES_PASSWORD=mons_local \
+            postgres:18.4-alpine
+
+          for attempt in {1..30}; do
+            if docker exec mons-ci-postgres pg_isready -U mons -d mons; then
+              exit 0
+            fi
+            sleep 1
+          done
+
+          docker logs mons-ci-postgres
+          exit 1
+      - name: Check formatting
+        run: pnpm format:check
+      - name: Check affected packages
+        env:
+          CI_CHANGED: ${{ needs.changes.outputs.ci }}
+        run: |
+          if [[ "$CI_CHANGED" == 'true' ]]; then
+            pnpm exec turbo run lint typecheck test build
+          else
+            pnpm exec turbo run lint typecheck test build --affected
+          fi
+      - name: Check migrations are repeatable
+        if: needs.changes.outputs.database == 'true'
+        run: |
+          pnpm db:migrate
+          pnpm db:migrate
+      - name: Check generated OpenAPI document
+        if: needs.changes.outputs.api == 'true'
+        run: pnpm openapi:check
 
   python:
+    name: Python ingestion
+    needs: changes
+    if: needs.changes.outputs.python == 'true'
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:18.4-alpine
-        env:
-          POSTGRES_DB: regolith
-          POSTGRES_USER: regolith
-          POSTGRES_PASSWORD: regolith_local
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U regolith -d regolith"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 12
-    env:
-      REGOLITH_TEST_DATABASE_URL: postgresql://regolith:regolith_local@localhost:5432/regolith
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -73,67 +115,100 @@ jobs:
           enable-cache: true
       - run: uv sync --project services/nutrition-ingest --locked --all-extras
       - run: uv run --project services/nutrition-ingest ruff check services/nutrition-ingest
-      - run: uv run --project services/nutrition-ingest mypy --config-file services/nutrition-ingest/pyproject.toml services/nutrition-ingest/titan
+      - run: uv run --project services/nutrition-ingest mypy --config-file services/nutrition-ingest/pyproject.toml services/nutrition-ingest/nutrition_ingest
       - run: uv run --project services/nutrition-ingest python -m unittest discover -s services/nutrition-ingest/tests -v
-      - run: uv run --project services/nutrition-ingest nutrition-ingest schema --check
+      - name: Start test PostgreSQL
+        if: needs.changes.outputs.python_postgres == 'true'
+        run: |
+          docker run --detach --rm \
+            --name mons-ci-postgres \
+            --publish 5432:5432 \
+            --env POSTGRES_DB=mons \
+            --env POSTGRES_USER=mons \
+            --env POSTGRES_PASSWORD=mons_local \
+            postgres:18.4-alpine
+
+          for attempt in {1..30}; do
+            if docker exec mons-ci-postgres pg_isready -U mons -d mons; then
+              exit 0
+            fi
+            sleep 1
+          done
+
+          docker logs mons-ci-postgres
+          exit 1
+      - name: Run PostgreSQL integration test
+        if: needs.changes.outputs.python_postgres == 'true'
+        env:
+          MONS_TEST_DATABASE_URL: postgresql://mons:mons_local@localhost:5432/mons
+        run: >-
+          uv run --project services/nutrition-ingest python -m unittest discover
+          -s services/nutrition-ingest/tests
+          -p test_postgres_integration.py
+          -v
 
   mons:
+    name: Mons iOS
+    needs: changes
+    if: needs.changes.outputs.mons == 'true'
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
+      - run: swift test --package-path clients/ios -Xswiftc -warnings-as-errors
       - run: >-
           xcodebuild build -quiet
           -project clients/ios/mons.xcodeproj
-          -scheme mons
+          -scheme 'Mons Dev'
           -destination 'generic/platform=iOS Simulator'
           CODE_SIGNING_ALLOWED=NO
       - run: >-
           xcodebuild test
           -project clients/ios/mons.xcodeproj
-          -scheme mons
+          -scheme 'Mons Dev'
           -destination 'platform=macOS'
           CODE_SIGNING_ALLOWED=NO
 
-  deploy-dev:
-    needs: [typescript, python, mons]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+  infrastructure:
+    name: VPS infrastructure
+    needs: changes
+    if: needs.changes.outputs.infrastructure == 'true'
     runs-on: ubuntu-latest
-    concurrency: deploy-dev
-    environment:
-      name: dev
-      url: https://api.dev.mons.fit
-    env:
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 11.20.0
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm deploy:dev
+      - name: Check shell scripts
+        run: find infra/vps -type f -name '*.sh' -exec bash -n {} +
+      - name: Check Compose configuration
+        run: |
+          docker compose -f infra/vps/compose.yaml config --quiet
+          docker compose -f infra/vps/monitoring/compose.yaml config --quiet
 
-  deploy-production:
-    needs: [typescript, python, mons]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+  gate:
+    name: Gate
+    if: always()
+    needs:
+      - changes
+      - infrastructure
+      - mons
+      - python
+      - typescript
     runs-on: ubuntu-latest
-    concurrency: deploy-production
-    environment:
-      name: prod
-      url: https://api.mons.fit
-    env:
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 11.20.0
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm deploy:production
+      - name: Require successful selected jobs
+        env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          INFRASTRUCTURE_RESULT: ${{ needs.infrastructure.result }}
+          MONS_RESULT: ${{ needs.mons.result }}
+          PYTHON_RESULT: ${{ needs.python.result }}
+          TYPESCRIPT_RESULT: ${{ needs.typescript.result }}
+        run: |
+          for result in \
+            "$CHANGES_RESULT" \
+            "$INFRASTRUCTURE_RESULT" \
+            "$MONS_RESULT" \
+            "$PYTHON_RESULT" \
+            "$TYPESCRIPT_RESULT"; do
+            if [[ "$result" != 'success' && "$result" != 'skipped' ]]; then
+              echo "Required CI job finished with result: $result"
+              exit 1
+            fi
+          done

@@ -56,13 +56,13 @@ export interface NutritionPlanRepositoryService {
 }
 
 export const NutritionPlanRepository = Context.Service<NutritionPlanRepositoryService>(
-  '@regolith/database/NutritionPlanRepository',
+  '@mons/database/NutritionPlanRepository',
 )
 
 export const makeNutritionPlanRepository = (options: { readonly appSchema?: string } = {}) =>
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient
-    const appSchema = yield* validateSchemaName(options.appSchema ?? 'regolith_app')
+    const appSchema = yield* validateSchemaName(options.appSchema ?? 'mons_app')
     const profiles = sql(`${appSchema}.profiles`)
     const nutritionPlans = sql(`${appSchema}.nutrition_plans`)
 

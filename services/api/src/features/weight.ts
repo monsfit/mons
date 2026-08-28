@@ -1,4 +1,4 @@
-import type { RegolithApi } from '../api.ts'
+import type { MonsApi } from '../api.ts'
 import { Authentication, CurrentIdentity } from '../core/auth.ts'
 import {
   ForbiddenError,
@@ -24,8 +24,8 @@ import {
   weightLogEntryPathSchema,
   weightLogEntrySchema,
   weightLogResponseSchema,
-} from '@regolith/contracts'
-import { type WeightLogEntryRecord, WeightRepository } from '@regolith/database'
+} from '@mons/contracts'
+import { type WeightLogEntryRecord, WeightRepository } from '@mons/database'
 import { Context, Effect, Layer } from 'effect'
 import {
   HttpApiBuilder,
@@ -66,7 +66,7 @@ export const weightApi = HttpApiGroup.make('weight')
   .middleware(RequestValidation)
   .middleware(Authentication)
 
-export const weightHandlers = (api: typeof RegolithApi) =>
+export const weightHandlers = (api: typeof MonsApi) =>
   HttpApiBuilder.group(api, 'weight', (handlers) =>
     handlers.handleAll({
       listWeightLog: ({ params, query }) =>
@@ -132,7 +132,7 @@ export interface WeightServiceShape {
   ) => Effect.Effect<WeightLogEntry, WeightServiceError>
 }
 
-export const WeightService = Context.Service<WeightServiceShape>('@regolith/api/WeightService')
+export const WeightService = Context.Service<WeightServiceShape>('@mons/api/WeightService')
 
 export const weightServiceLayer = Layer.effect(
   WeightService,

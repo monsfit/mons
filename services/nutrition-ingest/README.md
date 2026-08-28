@@ -1,136 +1,116 @@
-# Nutrition ingest
+# Mons nutrition
 
-The nutrition-ingest service converts public food datasets into one deterministic schema, publishes versioned
-JSONL snapshots with verification manifests, and atomically loads those snapshots into
-PostgreSQL.
-
-Run all commands below from the monorepo root.
+This service normalizes public food datasets, creates one immutable release, and atomically loads
+that release into PostgreSQL. Run commands from the monorepo root.
 
 ## Setup
 
 ```bash
-uv sync --project services/nutrition-ingest --all-extras
+uv sync --project services/nutrition-ingest
 ```
 
-The active contract is schema `2.0.0`. Nutrients are normalized per 100 g.
+The active normalized schema is `2.0.0`. Nutrients are expressed per 100 g.
 
-## Build snapshots
-
-Build the combined non-branded snapshot from the conventional `data/inputs` layout:
+## Normal flow
 
 ```bash
-npx pnpm@11.20.0 titan normalize-raw --inputs-dir data/inputs
+pnpm nutrition build
+pnpm nutrition publish
 ```
 
-Build the branded snapshot from USDA and Open Food Facts:
-
-```bash
-npx pnpm@11.20.0 titan merge-off-branded \
-  --usda-branded data/inputs/FoodData_Central_branded_food_json_2025-12-18.json \
-  --off-parquet data/inputs/food.parquet \
-  --nutrient-csv data/inputs/FoodData_Central_csv_2025-04-24/nutrient.csv
-```
-
-Default outputs are:
+`build` reads the conventional `data/inputs` layout and writes:
 
 ```text
-data/outputs/v2/raw-foods.jsonl
-data/outputs/v2/raw-foods.rejected.jsonl
-data/outputs/v2/raw-foods.manifest.json
-
-data/outputs/v2/branded-foods.jsonl
-data/outputs/v2/branded-foods.rejected.jsonl
-data/outputs/v2/branded-foods.manifest.json
+data/outputs/v2/
+  foods.parquet
+  manifest.json
+  rejects.jsonl
 ```
 
-The manifest is published last. It records schema and package versions, input and output
-hashes, counts, quality thresholds, rejection reasons, and per-source field coverage. A
-failed run never replaces the last successful output.
+`foods.parquet` is the canonical artifact for local analysis and PostgreSQL loading. Its
+`dataset_kind` column distinguishes `raw` and `branded` rows. `rejects.jsonl` is a local build
+diagnostic and is not published.
 
-All parsers support `--output`, `--rejects`, `--manifest`, rejection thresholds, and progress
-intervals. Use `--output -` for non-transactional stdout without sidecars.
+`publish` verifies the current build, archives every original input by SHA-256, uploads the
+Parquet artifact to the private `mons-nutrition` R2 bucket, and uploads `manifest.json` last. A
+completed release cannot be overwritten.
+
+```text
+sources/<sha256>/<original-filename>
+releases/<release-id>/
+  foods.parquet
+  manifest.json
+```
+
+Release IDs use `<UTC-date>-<content-hash>`, for example `2026-08-27-a1b2c3d4`.
+
+## Database promotion
+
+Run the **Load nutrition release** GitHub workflow with a release ID and either `dev` or
+`production`. The workflow downloads and verifies the release over R2, joins Tailscale, loads a
+staging schema, validates it, grants the runtime role access, and atomically swaps it to
+`mons_catalog`.
+
+Personal and preview SST stages share the dev database's `mons_catalog`. They never copy or rebuild
+the nutrition catalog. Production loads the exact release already tested in dev. Loading an older
+release is the rollback procedure.
+
+For a direct status check:
+
+```bash
+pnpm db:status
+```
+
+`MIGRATION_DATABASE_URL` is required. There is deliberately no implicit local database URL.
+
+## Environment
+
+Local commands read the ignored root `.env` and `.env.local` files. Existing process variables win
+over file values.
+
+Publishing uses:
+
+```text
+CLOUDFLARE_DEFAULT_ACCOUNT_ID
+CLOUDFLARE_ACCESS_KEY_ID
+CLOUDFLARE_SECRET_ACCESS_KEY
+```
+
+Loading also uses:
+
+```text
+MIGRATION_DATABASE_URL
+MONS_DATABASE_RUNTIME_USER
+```
+
+## Parser development
+
+Small deterministic parser tests do not require source downloads. The parsers are internal modules;
+`pnpm nutrition build` is the only supported way to produce a complete release.
 
 ## Sources
 
-| Dataset | Snapshot role | Command |
+| Dataset | Provider | Upstream |
 |---|---|---|
-| Australian Food Composition Database | Raw | `titan australia` |
-| Canadian Nutrient File | Raw | `titan canada` |
-| UK CoFID | Raw | `titan cofid` |
-| Dutch NEVO | Raw | `titan nevo` |
-| New Zealand FOODfiles | Raw | `titan new-zealand` |
-| USDA FoodData Central | Raw and branded | `titan usda` / `titan merge-off-branded` |
-| Open Food Facts | Branded | `titan merge-off-branded` |
+| Australian Food Composition Database | Food Standards Australia New Zealand | <https://www.foodstandards.gov.au/science-data/food-nutrient-databases/afcd/data-files> |
+| Canadian Nutrient File | Health Canada | <https://www.canada.ca/en/health-canada/services/food-nutrition/healthy-eating/nutrient-data/canadian-nutrient-file-2015-download-files.html> |
+| CoFID | UK Government | <https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid> |
+| NEVO | RIVM | <https://www.rivm.nl/en/dutch-food-composition-database> |
+| New Zealand FOODfiles | New Zealand Institute for Public Health and Forensic Science | <https://www.foodcomposition.co.nz/foodfiles/concise-tables/> |
+| USDA FoodData Central | U.S. Department of Agriculture | <https://fdc.nal.usda.gov/> |
+| Open Food Facts | Open Food Facts | <https://world.openfoodfacts.org/data> |
 
-Use `npx pnpm@11.20.0 titan <command> --help` for source-specific paths and options. Source
-provenance and redistribution status are maintained in [DATA_SOURCES.md](DATA_SOURCES.md).
+USDA wins when it and Open Food Facts contain the same valid GTIN. The existing parser quality and
+nutrition validation rules remain unchanged.
 
-USDA wins when it and Open Food Facts contain the same valid GTIN. Branded rows are published
-only when they have a valid GTIN, a display-safe name, and finite calories, protein, fat, and
-carbohydrate values per 100 g. Calories must be between 0 and 1,000 kcal, individual macros
-between 0 and 100 g, and their combined weight at most 120 g. Open Food Facts rows marked
-obsolete, without nutrition data, or with source quality-error tags are excluded. Nutrition ingest reads
-only explicit Open Food Facts `100g` nutriment values; serving values are never relabeled as
-per-100-g data. Source names written entirely in uppercase are deterministically converted to
-display case; existing mixed-case and non-Latin names are preserved.
-
-## Contract
-
-[`titan/common/schema.py`](titan/common/schema.py) is the source of truth for field order,
-units, descriptions, and direct-versus-derived value semantics. Raw foods contain the common
-fields. Branded foods add nullable `brand` and normalized 14-digit `gtin` fields.
-
-The carbohydrate fields deliberately distinguish source values from calculations:
-
-- `carbohydrates_total`: source-reported total or by-difference carbohydrate.
-- `carbohydrates_available`: source-reported available carbohydrate.
-- `carbohydrates_net_calculated`: total minus fibre, only when both operands exist.
-
-Generate the language-neutral raw and branded JSON Schemas with:
+## Verification
 
 ```bash
-npx pnpm@11.20.0 contracts
+pnpm nutrition:lint
+pnpm nutrition:typecheck
+pnpm nutrition:test
+pnpm nutrition:test:postgres
 ```
 
-## PostgreSQL
-
-```bash
-npx pnpm@11.20.0 db:status
-npx pnpm@11.20.0 db:ingest
-```
-
-Ingestion verifies both manifests and hashes, validates every row, streams data with `COPY`,
-builds indexes, checks counts and coverage, and atomically swaps a staging schema into place.
-An advisory lock prevents concurrent ingestion into the same database.
-
-```text
-regolith.foods                    partitioned parent
-├── regolith.raw_foods
-└── regolith.branded_foods
-
-regolith.portions                 partitioned parent
-├── regolith.raw_portions
-└── regolith.branded_portions
-
-regolith.nutrient_definitions     field units and descriptions
-regolith.ingestion_runs           snapshot provenance and load status
-```
-
-The local Compose defaults are database/user `regolith`, password `regolith_local`, and port `5432`.
-Override them through `.env` or command options. The `mons-postgres` volume persists across
-ordinary container restarts.
-
-## Development
-
-```bash
-npx pnpm@11.20.0 nutrition:lint
-npx pnpm@11.20.0 nutrition:typecheck
-npx pnpm@11.20.0 nutrition:test
-npx pnpm@11.20.0 nutrition:test:postgres
-```
-
-Small deterministic tests do not require source downloads. When `data/inputs` exists, the
-same suite automatically exercises every available source parser and unit contract.
-
-Nutrition ingest is Apache-2.0 software. That license does not grant redistribution rights for source
-or generated datasets; consult [DATA_SOURCES.md](DATA_SOURCES.md) before publishing data.
+The PostgreSQL integration test runs only when `MONS_TEST_DATABASE_URL` is explicitly provided. CI
+provides a disposable PostgreSQL service.

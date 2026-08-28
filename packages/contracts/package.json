@@ -1,5 +1,5 @@
 {
-  "name": "@regolith/contracts",
+  "name": "@mons/contracts",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -7,9 +7,7 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    },
-    "./schema/raw-food-v2": "./schema/raw-food-v2.schema.json",
-    "./schema/branded-food-v2": "./schema/branded-food-v2.schema.json"
+    }
   },
   "scripts": {
     "build": "tsgo -p tsconfig.build.json",

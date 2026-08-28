@@ -1,7 +1,11 @@
 import unittest
 
-from titan.common.units import convert_numeric_value, extract_unit_from_label, normalize_unit_token
-from titan.nutrient_mapping import CORE_FIELD_UNITS
+from nutrition_ingest.common.units import (
+    convert_numeric_value,
+    extract_unit_from_label,
+    normalize_unit_token,
+)
+from nutrition_ingest.nutrient_mapping import CORE_FIELD_UNITS
 
 
 class UnitNormalizationTests(unittest.TestCase):

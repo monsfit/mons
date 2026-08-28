@@ -19,17 +19,17 @@ export interface RequestAuthenticatorService {
 }
 
 export const RequestAuthenticator = Context.Service<RequestAuthenticatorService>(
-  '@regolith/api/RequestAuthenticator',
+  '@mons/api/RequestAuthenticator',
 )
 
 export class CurrentIdentity extends Context.Service<CurrentIdentity, AuthenticatedIdentity>()(
-  '@regolith/api/CurrentIdentity',
+  '@mons/api/CurrentIdentity',
 ) {}
 
 export class Authentication extends HttpApiMiddleware.Service<
   Authentication,
   { provides: CurrentIdentity }
->()('@regolith/api/Authentication', {
+>()('@mons/api/Authentication', {
   error: UnauthorizedError,
   security: { bearerAuth: HttpApiSecurity.bearer },
 }) {}
