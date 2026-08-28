@@ -141,7 +141,11 @@ jobs:
         if: needs.changes.outputs.python_postgres == 'true'
         env:
           MONS_TEST_DATABASE_URL: postgresql://mons:mons_local@localhost:5432/mons
-        run: uv run --project services/nutrition-ingest python -m unittest services/nutrition-ingest/tests/test_postgres_integration.py -v
+        run: >-
+          uv run --project services/nutrition-ingest python -m unittest discover
+          -s services/nutrition-ingest/tests
+          -p test_postgres_integration.py
+          -v
 
   mons:
     name: Mons iOS
