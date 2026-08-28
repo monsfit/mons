@@ -4,7 +4,7 @@ import {
   type CatalogReaderService,
   LibraryRepository,
   type LibraryRepositoryService,
-} from '@regolith/database'
+} from '@mons/database'
 import { Effect, Layer, Schema } from 'effect'
 
 import {

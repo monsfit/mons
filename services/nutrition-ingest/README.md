@@ -104,19 +104,19 @@ builds indexes, checks counts and coverage, and atomically swaps a staging schem
 An advisory lock prevents concurrent ingestion into the same database.
 
 ```text
-regolith.foods                    partitioned parent
-├── regolith.raw_foods
-└── regolith.branded_foods
+mons_catalog.foods                    partitioned parent
+├── mons_catalog.raw_foods
+└── mons_catalog.branded_foods
 
-regolith.portions                 partitioned parent
-├── regolith.raw_portions
-└── regolith.branded_portions
+mons_catalog.portions                 partitioned parent
+├── mons_catalog.raw_portions
+└── mons_catalog.branded_portions
 
-regolith.nutrient_definitions     field units and descriptions
-regolith.ingestion_runs           snapshot provenance and load status
+mons_catalog.nutrient_definitions     field units and descriptions
+mons_catalog.ingestion_runs           snapshot provenance and load status
 ```
 
-The local Compose defaults are database/user `regolith`, password `regolith_local`, and port `5432`.
+The local Compose defaults are database/user `mons`, password `mons_local`, and port `5432`.
 Override them through `.env` or command options. The `mons-postgres` volume persists across
 ordinary container restarts.
 

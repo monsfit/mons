@@ -1,6 +1,6 @@
 import { Layer } from 'effect'
 
-import { RegolithApi } from './api.ts'
+import { MonsApi } from './api.ts'
 import { catalogHandlers } from './features/catalog.ts'
 import { libraryHandlers } from './features/library.ts'
 import { mealsHandlers } from './features/meals.ts'
@@ -11,12 +11,12 @@ import { weightHandlers } from './features/weight.ts'
 import { workoutsHandlers } from './features/workouts.ts'
 
 export const handlerLayers = Layer.mergeAll(
-  systemHandlers(RegolithApi),
-  catalogHandlers(RegolithApi),
-  profileHandlers(RegolithApi),
-  nutritionHandlers(RegolithApi),
-  mealsHandlers(RegolithApi),
-  libraryHandlers(RegolithApi),
-  weightHandlers(RegolithApi),
-  workoutsHandlers(RegolithApi),
+  systemHandlers(MonsApi),
+  catalogHandlers(MonsApi),
+  profileHandlers(MonsApi),
+  nutritionHandlers(MonsApi),
+  mealsHandlers(MonsApi),
+  libraryHandlers(MonsApi),
+  weightHandlers(MonsApi),
+  workoutsHandlers(MonsApi),
 )

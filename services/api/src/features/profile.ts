@@ -1,4 +1,4 @@
-import type { RegolithApi } from '../api.ts'
+import type { MonsApi } from '../api.ts'
 import { Authentication, CurrentIdentity } from '../core/auth.ts'
 import { InternalApiError, RequestValidation, UnauthorizedError } from '../core/errors.ts'
 import { fromService } from '../core/handler-errors.ts'
@@ -7,8 +7,8 @@ import {
   type ServicePersistenceError,
   fromRepository,
 } from '../core/service-errors.ts'
-import { profileSchema } from '@regolith/contracts'
-import { ProfileRepository } from '@regolith/database'
+import { profileSchema } from '@mons/contracts'
+import { ProfileRepository } from '@mons/database'
 import { Context, Effect, Layer } from 'effect'
 import { HttpApiBuilder, HttpApiEndpoint, HttpApiGroup } from 'effect/unstable/httpapi'
 
@@ -20,7 +20,7 @@ export interface ProfileAccessServiceShape {
 }
 
 export const ProfileAccessService = Context.Service<ProfileAccessServiceShape>(
-  '@regolith/api/ProfileAccessService',
+  '@mons/api/ProfileAccessService',
 )
 
 export const profileAccessServiceLayer = Layer.effect(
@@ -52,7 +52,7 @@ export const profileApi = HttpApiGroup.make('profile')
   .middleware(RequestValidation)
   .middleware(Authentication)
 
-export const profileHandlers = (api: typeof RegolithApi) =>
+export const profileHandlers = (api: typeof MonsApi) =>
   HttpApiBuilder.group(api, 'profile', (handlers) =>
     handlers.handle('ensureProfile', () =>
       Effect.gen(function* () {
@@ -69,7 +69,7 @@ export interface ProfileServiceShape {
   ) => Effect.Effect<{ readonly profileId: string }, ServicePersistenceError>
 }
 
-export const ProfileService = Context.Service<ProfileServiceShape>('@regolith/api/ProfileService')
+export const ProfileService = Context.Service<ProfileServiceShape>('@mons/api/ProfileService')
 
 export const profileServiceLayer = Layer.effect(
   ProfileService,

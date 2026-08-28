@@ -6,14 +6,32 @@
 
 declare module 'sst' {
   export interface Resource {
-    Ai: import('@cloudflare/workers-types').Ai
-    Api: import('@cloudflare/workers-types').Service
+    Ai: {
+      type: 'sst.cloudflare.Ai'
+    }
+    Api: {
+      type: 'sst.cloudflare.Worker'
+      url: string
+    }
     ClerkSecretKey: {
       type: 'sst.sst.Secret'
       value: string
     }
-    Database: import('@cloudflare/workers-types').Hyperdrive
-    Media: import('@cloudflare/workers-types').R2Bucket
+    Database: {
+      id: string
+      type: 'sst.cloudflare.Hyperdrive'
+    }
+    DatabaseConfig: {
+      appSchema: string
+      catalogSchema: string
+      r2Prefix: string
+      scope: string
+      type: 'sst.sst.Linkable'
+    }
+    Media: {
+      name: string
+      type: 'sst.sst.Linkable'
+    }
     PublicConfig: {
       clerkPublishableKey: string
       type: 'sst.sst.Linkable'

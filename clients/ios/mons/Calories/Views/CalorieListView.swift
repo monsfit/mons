@@ -124,10 +124,9 @@ struct CalorieListView: View {
                 .environment(\.defaultMinListRowHeight, 1)
             }
             .safeAreaInset(edge: .top, spacing: 0) {
-                CalorieTimelineHeader(
+                CalorieDateHeader(
                     selectedDate: $selectedDate,
                     maximumDate: referenceDate,
-                    days: days,
                     calendar: calendar
                 )
             }
@@ -162,6 +161,12 @@ struct CalorieListView: View {
 }
 
 #Preview("Calories") {
-    CalorieListView(days: CalorieSampleData.days(referenceDate: .now, calendar: .current))
+    CalorieListView(
+        referenceDate: CalorieSampleData.previewReferenceDate,
+        days: CalorieSampleData.days(
+            referenceDate: CalorieSampleData.previewReferenceDate,
+            calendar: .current
+        )
+    )
         .environment(AppStore.preview)
 }

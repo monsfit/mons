@@ -30,4 +30,4 @@ protocol MealStoreAPI: Actor {
     func discardMealEstimate(profileId: UUID, estimateId: UUID) async throws
 }
 
-extension RegolithAPIClient: MealStoreAPI {}
+extension MonsAPIClient: MealStoreAPI {}

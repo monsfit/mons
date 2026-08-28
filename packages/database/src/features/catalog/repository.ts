@@ -64,13 +64,11 @@ export interface CatalogReaderService {
   ) => Effect.Effect<ReadonlyArray<FoodRecord>, CatalogReaderError>
 }
 
-export const CatalogReader = Context.Service<CatalogReaderService>(
-  '@regolith/database/CatalogReader',
-)
+export const CatalogReader = Context.Service<CatalogReaderService>('@mons/database/CatalogReader')
 
 const decodeFoodRows = Schema.decodeUnknownEffect(Schema.Array(foodRecordSchema))
 
-export const makeCatalogReader = (schema = 'regolith') =>
+export const makeCatalogReader = (schema = 'mons_catalog') =>
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient
     const safeSchema = yield* validateSchemaName(schema)
@@ -250,5 +248,5 @@ export const makeCatalogReader = (schema = 'regolith') =>
     return CatalogReader.of({ findByGtin, getStatus, search })
   })
 
-export const catalogReaderLayer = (schema = 'regolith') =>
+export const catalogReaderLayer = (schema = 'mons_catalog') =>
   Layer.effect(CatalogReader, makeCatalogReader(schema))

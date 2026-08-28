@@ -15,7 +15,7 @@ from typing import Any
 from titan.common.schema import CORE_FOOD_FIELDS, FIELD_DEFINITIONS, NUTRIENT_FIELDS, SCHEMA_VERSION
 from titan.common.validation import validate_normalized_row
 
-DEFAULT_DATABASE_URL = "postgresql://regolith:regolith_local@localhost:5432/regolith"
+DEFAULT_DATABASE_URL = "postgresql://mons:mons_local@localhost:5432/mons"
 ADVISORY_LOCK_ID = 7_140_221
 LOAD_PROGRESS_EVERY = 100_000
 SCHEMA_NAME_PATTERN = re.compile(r"^[a-z_][a-z0-9_]*$")
@@ -259,7 +259,7 @@ def ingest(
     raw_manifest_path: Path | None = None,
     branded_manifest_path: Path | None = None,
     database_url: str | None = None,
-    active_schema: str = "regolith",
+    active_schema: str = "mons_catalog",
 ) -> dict[str, Any]:
     psycopg = _psycopg()
     database_url = database_url or os.environ.get("DATABASE_URL", DEFAULT_DATABASE_URL)
@@ -287,7 +287,7 @@ def ingest(
             "SELECT pg_try_advisory_lock(%s)", (ADVISORY_LOCK_ID,)
         ).fetchone()[0]
         if not acquired:
-            raise RuntimeError("Another Regolith Postgres ingestion is already running")
+            raise RuntimeError("Another Mons Postgres ingestion is already running")
         try:
             connection.execute("CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public")
             connection.execute(_schema_ddl(staging_schema))
@@ -403,7 +403,7 @@ def ingest(
     return {"run_id": str(run_id), "raw_rows": raw_count, "branded_rows": branded_count}
 
 
-def status(database_url: str | None = None, *, active_schema: str = "regolith") -> dict[str, Any]:
+def status(database_url: str | None = None, *, active_schema: str = "mons_catalog") -> dict[str, Any]:
     psycopg = _psycopg()
     database_url = database_url or os.environ.get("DATABASE_URL", DEFAULT_DATABASE_URL)
     active_schema = _validated_schema_name(active_schema)

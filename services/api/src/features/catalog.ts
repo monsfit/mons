@@ -1,4 +1,4 @@
-import type { RegolithApi } from '../api.ts'
+import type { MonsApi } from '../api.ts'
 import { Authentication } from '../core/auth.ts'
 import {
   InternalApiError,
@@ -15,8 +15,8 @@ import {
   foodSearchResponseSchema,
   foodSummarySchema,
   gtinPathSchema,
-} from '@regolith/contracts'
-import { CatalogReader, type FoodRecord } from '@regolith/database'
+} from '@mons/contracts'
+import { CatalogReader, type FoodRecord } from '@mons/database'
 import { Context, Effect, Layer } from 'effect'
 import { HttpApiBuilder, HttpApiEndpoint, HttpApiGroup } from 'effect/unstable/httpapi'
 
@@ -40,7 +40,7 @@ export const catalogApi = HttpApiGroup.make('catalog')
   .middleware(RequestValidation)
   .middleware(Authentication)
 
-export const catalogHandlers = (api: typeof RegolithApi) =>
+export const catalogHandlers = (api: typeof MonsApi) =>
   HttpApiBuilder.group(api, 'catalog', (handlers) =>
     handlers
       .handle('catalogStatus', () =>
@@ -109,7 +109,7 @@ export interface CatalogServiceShape {
   >
 }
 
-export const CatalogService = Context.Service<CatalogServiceShape>('@regolith/api/CatalogService')
+export const CatalogService = Context.Service<CatalogServiceShape>('@mons/api/CatalogService')
 
 export const catalogServiceLayer = Layer.effect(
   CatalogService,

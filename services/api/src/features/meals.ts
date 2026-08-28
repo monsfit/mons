@@ -1,4 +1,4 @@
-import type { RegolithApi } from '../api.ts'
+import type { MonsApi } from '../api.ts'
 import { Authentication, CurrentIdentity } from '../core/auth.ts'
 import {
   ForbiddenError,
@@ -49,7 +49,7 @@ import {
   profilePathSchema,
   saveMealLogSchema,
   timeRangeQuerySchema,
-} from '@regolith/contracts'
+} from '@mons/contracts'
 import {
   CatalogReader,
   type CustomFoodRecord,
@@ -64,7 +64,7 @@ import {
   MealLogRepository,
   type MealLogRepositoryError,
   type RecipeRecord,
-} from '@regolith/database'
+} from '@mons/database'
 import {
   type LanguageModel,
   NoObjectGeneratedError,
@@ -200,7 +200,7 @@ export interface MealEstimationService {
 }
 
 export class MealEstimation extends Context.Service<MealEstimation, MealEstimationService>()(
-  '@regolith/api/MealEstimation',
+  '@mons/api/MealEstimation',
 ) {}
 
 const decodeMealMediaBase64 = Effect.fn('MealEstimation.decodeBase64')(function* (encoded: string) {
@@ -364,7 +364,7 @@ const withAuthorizedProfile = <A, E, R>(profileId: string, effect: Effect.Effect
     return yield* effect
   })
 
-export const mealsHandlers = (api: typeof RegolithApi) =>
+export const mealsHandlers = (api: typeof MonsApi) =>
   HttpApiBuilder.group(api, 'meals', (handlers) =>
     handlers.handleAll({
       listFoodLog: ({ params, query }) =>
@@ -909,7 +909,7 @@ export interface MealIntelligenceService {
 }
 
 export class MealIntelligence extends Context.Service<MealIntelligence, MealIntelligenceService>()(
-  '@regolith/api/MealIntelligence',
+  '@mons/api/MealIntelligence',
 ) {}
 
 const completeNutrition = (
@@ -1276,7 +1276,7 @@ export interface LegacyFoodLogServiceShape {
 }
 
 export const LegacyFoodLogService = Context.Service<LegacyFoodLogServiceShape>(
-  '@regolith/api/LegacyFoodLogService',
+  '@mons/api/LegacyFoodLogService',
 )
 
 export const legacyFoodLogServiceLayer = Layer.effect(
@@ -1355,7 +1355,7 @@ export interface MealLoggingService {
 }
 
 export class MealLogging extends Context.Service<MealLogging, MealLoggingService>()(
-  '@regolith/api/MealLogging',
+  '@mons/api/MealLogging',
 ) {}
 
 const decodeMealPhotoBase64 = Effect.fn('MealLogging.decodeBase64')(function* (encoded: string) {
@@ -1369,9 +1369,10 @@ const decodeMealPhotoBase64 = Effect.fn('MealLogging.decodeBase64')(function* (e
 
 const cleanupDelayMillis = 10 * 60 * 1_000
 
-export const mealLoggingLayer = Layer.effect(
-  MealLogging,
-  Effect.gen(function* () {
+export const makeMealLoggingLayer = (options: { readonly storagePrefix: string }) =>
+  Layer.effect(
+    MealLogging,
+    Effect.gen(function* () {
     const estimates = yield* MealEstimateRepository
     const intelligence = yield* MealIntelligence
     const meals = yield* MealLogRepository
@@ -1428,7 +1429,7 @@ export const mealLoggingLayer = Layer.effect(
               return {
                 bytes,
                 estimateId: input.estimateId,
-                key: `profiles/${profileId}/meal-estimates/${input.estimateId}/input.jpg`,
+                key: `${options.storagePrefix}/profiles/${profileId}/meal-estimates/${input.estimateId}/input.jpg`,
               }
             })
       const saveInput = {
@@ -1484,8 +1485,10 @@ export const mealLoggingLayer = Layer.effect(
       }),
       save,
     })
-  }),
-)
+    }),
+  )
+
+export const mealLoggingLayer = makeMealLoggingLayer({ storagePrefix: 'test' })
 
 const scaled = (value: number | null, quantityGrams: number): number | null =>
   value === null ? null : Math.round(value * quantityGrams * 10) / 1000

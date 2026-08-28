@@ -50,7 +50,7 @@ class ValidationOutputTests(unittest.TestCase):
         self.assertEqual([issue.code for issue in issues], ["nul_in_text"])
 
     def test_atomic_writer_creates_manifest_and_rejects(self):
-        with tempfile.TemporaryDirectory(prefix="regolith-output-test-") as directory:
+        with tempfile.TemporaryDirectory(prefix="mons-output-test-") as directory:
             output = Path(directory) / "foods.jsonl"
             bad = valid_row("2")
             bad["protein"] = -1.0
@@ -77,7 +77,7 @@ class ValidationOutputTests(unittest.TestCase):
             )
 
     def test_output_bytes_are_deterministic_across_runs(self):
-        with tempfile.TemporaryDirectory(prefix="regolith-output-test-") as directory:
+        with tempfile.TemporaryDirectory(prefix="mons-output-test-") as directory:
             root = Path(directory)
             first = root / "first.jsonl"
             second = root / "second.jsonl"
@@ -95,7 +95,7 @@ class ValidationOutputTests(unittest.TestCase):
             )
 
     def test_contract_failure_preserves_previous_output(self):
-        with tempfile.TemporaryDirectory(prefix="regolith-output-test-") as directory:
+        with tempfile.TemporaryDirectory(prefix="mons-output-test-") as directory:
             output = Path(directory) / "foods.jsonl"
             output.write_text("previous\n")
             invalid = valid_row()
@@ -108,21 +108,21 @@ class ValidationOutputTests(unittest.TestCase):
             self.assertTrue(list(Path(directory).glob("foods.failed-*.manifest.json")))
 
     def test_manifest_verification(self):
-        with tempfile.TemporaryDirectory(prefix="regolith-manifest-test-") as directory:
+        with tempfile.TemporaryDirectory(prefix="mons-manifest-test-") as directory:
             output = Path(directory) / "foods.jsonl"
             write_jsonl([valid_row()], output, source_name="test")
             manifest = load_verified_manifest(output, default_manifest_path(output))
             self.assertEqual(manifest["output"]["rows"], 1)
 
     def test_postgres_ddl_uses_partitions(self):
-        ddl = _schema_ddl("regolith_stage_test")
+        ddl = _schema_ddl("mons_stage_test")
         self.assertIn("PARTITION BY LIST (dataset_kind)", ddl)
         self.assertIn("raw_foods PARTITION OF", ddl)
         self.assertIn("branded_foods PARTITION OF", ddl)
         self.assertIn("raw_portions PARTITION OF", ddl)
         self.assertIn("branded_portions PARTITION OF", ddl)
         self.assertIn("search_document tsvector GENERATED ALWAYS", ddl)
-        indexes = "\n".join(_index_ddl("regolith_stage_test"))
+        indexes = "\n".join(_index_ddl("mons_stage_test"))
         self.assertIn("raw_foods_search_document_idx", indexes)
         self.assertIn("branded_foods_search_document_idx", indexes)
         self.assertNotIn("UNIQUE (dataset_kind, source, source_id)", ddl)

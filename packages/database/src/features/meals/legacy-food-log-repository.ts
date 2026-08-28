@@ -61,7 +61,7 @@ export interface LegacyFoodLogRepositoryService {
 }
 
 export const LegacyFoodLogRepository = Context.Service<LegacyFoodLogRepositoryService>(
-  '@regolith/database/LegacyFoodLogRepository',
+  '@mons/database/LegacyFoodLogRepository',
 )
 
 export const makeLegacyFoodLogRepository = (
@@ -73,8 +73,8 @@ export const makeLegacyFoodLogRepository = (
 ) =>
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient
-    const appSchema = yield* validateSchemaName(options.appSchema ?? 'regolith_app')
-    const catalogSchema = yield* validateSchemaName(options.catalogSchema ?? 'regolith')
+    const appSchema = yield* validateSchemaName(options.appSchema ?? 'mons_app')
+    const catalogSchema = yield* validateSchemaName(options.catalogSchema ?? 'mons_catalog')
     const now = options.now ?? (() => new Date())
     const profiles = sql(`${appSchema}.profiles`)
     const foodLogEntries = sql(`${appSchema}.food_log_entries`)

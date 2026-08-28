@@ -19,7 +19,7 @@ if [[ "${1:-}" == "postgres" ]]; then
       /var/lib/postgresql/pgbackrest/pgbackrest.conf
     set -- "$@" \
       -c archive_mode=on \
-      -c "archive_command=pgbackrest --config=/var/lib/postgresql/pgbackrest/pgbackrest.conf --stanza=regolith-prod archive-push %p"
+      -c "archive_command=pgbackrest --config=/var/lib/postgresql/pgbackrest/pgbackrest.conf --stanza=mons-prod archive-push %p"
   fi
 
   set -- "$@" \
@@ -27,7 +27,11 @@ if [[ "${1:-}" == "postgres" ]]; then
     -c ssl_cert_file=/var/lib/postgresql/tls/server.crt \
     -c ssl_key_file=/var/lib/postgresql/tls/server.key \
     -c ssl_min_protocol_version=TLSv1.2 \
-    -c password_encryption=scram-sha-256
+    -c password_encryption=scram-sha-256 \
+    -c shared_preload_libraries=pg_stat_statements \
+    -c compute_query_id=on \
+    -c pg_stat_statements.track=top \
+    -c pg_stat_statements.track_utility=off
 fi
 
 exec /usr/local/bin/docker-entrypoint.sh "$@"

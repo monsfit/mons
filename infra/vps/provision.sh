@@ -4,16 +4,11 @@ set -Eeuo pipefail
 readonly script_directory=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 readonly repository_directory=$(cd "${script_directory}/../.." && pwd)
 readonly compose=(docker compose --file "${script_directory}/compose.yaml")
-readonly secret_root=/etc/regolith/postgres
+readonly secret_root=/etc/mons/postgres
 
 if [[ ${EUID} -ne 0 ]]; then
   exec sudo --preserve-env=CLOUDFLARE_API_TOKEN,CLOUDFLARE_DEFAULT_ACCOUNT_ID,R2_BACKUP_ACCESS_KEY_ID,R2_BACKUP_SECRET_ACCESS_KEY "$0" "$@"
 fi
-
-: "${CLOUDFLARE_DEFAULT_ACCOUNT_ID:?CLOUDFLARE_DEFAULT_ACCOUNT_ID is required}"
-: "${CLOUDFLARE_API_TOKEN:?CLOUDFLARE_API_TOKEN is required}"
-: "${R2_BACKUP_ACCESS_KEY_ID:?R2_BACKUP_ACCESS_KEY_ID is required}"
-: "${R2_BACKUP_SECRET_ACCESS_KEY:?R2_BACKUP_SECRET_ACCESS_KEY is required}"
 
 provision_postgres() {
   local environment=$1
@@ -33,6 +28,8 @@ provision_postgres() {
     echo "${environment}: existing TLS key and certificate retained"
     return
   fi
+
+  : "${CLOUDFLARE_API_TOKEN:?CLOUDFLARE_API_TOKEN is required to issue a missing TLS certificate}"
 
   openssl ecparam -name prime256v1 -genkey -noout -out "${target}/tls/server.key"
   openssl req -new -sha256 \
@@ -67,29 +64,53 @@ provision_postgres() {
 provision_postgres dev postgres-dev.internal.mons.fit
 provision_postgres prod postgres-prod.internal.mons.fit
 
-install -d -m 0700 /etc/regolith/pgbackrest
+install -d -m 0700 /etc/mons/pgbackrest
 backup_config=$(mktemp)
 trap 'rm -f "${backup_config}"' EXIT
-sed \
-  -e "s|@ACCOUNT_ID@|${CLOUDFLARE_DEFAULT_ACCOUNT_ID}|g" \
-  -e "s|@ACCESS_KEY_ID@|${R2_BACKUP_ACCESS_KEY_ID}|g" \
-  -e "s|@SECRET_ACCESS_KEY@|${R2_BACKUP_SECRET_ACCESS_KEY}|g" \
-  "${script_directory}/pgbackrest.conf.template" > "${backup_config}"
-install -m 0600 "${backup_config}" /etc/regolith/pgbackrest/pgbackrest.conf
+if [[ -n ${CLOUDFLARE_DEFAULT_ACCOUNT_ID:-} && -n ${R2_BACKUP_ACCESS_KEY_ID:-} && -n ${R2_BACKUP_SECRET_ACCESS_KEY:-} ]]; then
+  sed \
+    -e "s|@ACCOUNT_ID@|${CLOUDFLARE_DEFAULT_ACCOUNT_ID}|g" \
+    -e "s|@ACCESS_KEY_ID@|${R2_BACKUP_ACCESS_KEY_ID}|g" \
+    -e "s|@SECRET_ACCESS_KEY@|${R2_BACKUP_SECRET_ACCESS_KEY}|g" \
+    "${script_directory}/pgbackrest.conf.template" > "${backup_config}"
+elif [[ -s /etc/mons/pgbackrest/pgbackrest.conf ]]; then
+  sed \
+    -e 's|regolith-prod|mons-prod|g' \
+    -e 's|regolith_prod_admin|mons_prod_admin|g' \
+    /etc/mons/pgbackrest/pgbackrest.conf > "${backup_config}"
+  echo 'Existing pgBackRest credentials retained'
+else
+  echo 'R2 backup credentials are required when no existing pgBackRest configuration is available' >&2
+  exit 1
+fi
+install -m 0600 "${backup_config}" /etc/mons/pgbackrest/pgbackrest.conf
 
 cd "${repository_directory}"
-"${compose[@]}" up -d --wait postgres-dev postgres-prod
+"${compose[@]}" up -d --wait --build postgres-dev postgres-prod
+
+# Publish only through the tailnet. The backing ports remain bound to localhost,
+# so neither PostgreSQL environment is reachable from the public network or LAN.
+tailscale serve --bg --tcp=5433 tcp://127.0.0.1:5433
+tailscale serve --bg --tcp=5434 tcp://127.0.0.1:5434
+
+# The PostgreSQL entrypoint copies pgBackRest configuration into the data volume at container
+# startup. Refresh that copy on every provisioning run so rotated R2 credentials take effect
+# without requiring a database restart.
+"${compose[@]}" exec -T --user root postgres-prod \
+  install -m 0600 -o postgres -g postgres \
+  /run/mons-pgbackrest/pgbackrest.conf \
+  /var/lib/postgresql/pgbackrest/pgbackrest.conf
 
 for environment in dev prod; do
   app_password=$(< "${secret_root}/${environment}/app-password")
   migration_password=$(< "${secret_root}/${environment}/migration-password")
   "${compose[@]}" exec -T --user postgres "postgres-${environment}" psql \
-    --username "regolith_${environment}_admin" \
-    --dbname "regolith_${environment}" \
+    --username "mons_${environment}_admin" \
+    --dbname "mons_${environment}" \
     --set=ON_ERROR_STOP=1 \
-    --set=app_user="regolith_${environment}_app" \
+    --set=app_user="mons_${environment}_app" \
     --set=app_password="${app_password}" \
-    --set=migration_user="regolith_${environment}_migration" \
+    --set=migration_user="mons_${environment}_migration" \
     --set=migration_password="${migration_password}" <<'SQL'
 SELECT format('ALTER ROLE %I LOGIN PASSWORD %L', :'app_user', :'app_password') \gexec
 SELECT format('CREATE ROLE %I LOGIN PASSWORD %L', :'migration_user', :'migration_password')
@@ -103,6 +124,6 @@ done
 
 "${compose[@]}" exec -T --user postgres postgres-prod \
   pgbackrest --config=/var/lib/postgresql/pgbackrest/pgbackrest.conf \
-  --stanza=regolith-prod stanza-create
+  --stanza=mons-prod stanza-create
 
 echo "Provisioned PostgreSQL, role credentials, TLS, and pgBackRest"

@@ -1,12 +1,12 @@
 import { Layer } from 'effect'
 import { HttpApiBuilder, HttpApiScalar } from 'effect/unstable/httpapi'
 
-import { RegolithApi } from './api.ts'
+import { MonsApi } from './api.ts'
 import { authenticationLayer } from './core/auth.ts'
 import { requestValidationLayer } from './core/errors.ts'
 import { handlerLayers } from './handlers.ts'
 
-const routesLayer = HttpApiBuilder.layer(RegolithApi, {
+const routesLayer = HttpApiBuilder.layer(MonsApi, {
   openapiPath: '/openapi.json',
 }).pipe(
   Layer.provide(handlerLayers),
@@ -14,7 +14,7 @@ const routesLayer = HttpApiBuilder.layer(RegolithApi, {
   Layer.provide(authenticationLayer),
 )
 
-const documentationLayer = HttpApiScalar.layer(RegolithApi, {
+const documentationLayer = HttpApiScalar.layer(MonsApi, {
   path: '/docs',
   scalar: { theme: 'saturn' },
 })

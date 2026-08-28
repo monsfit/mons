@@ -20,7 +20,7 @@ class NutrientsOutputTests(unittest.TestCase):
         self.assertIn("protein", fields)
 
     def test_write_tracked_nutrient_units_writes_json_payload(self):
-        with tempfile.TemporaryDirectory(prefix="regolith-nutrients-") as temp_dir:
+        with tempfile.TemporaryDirectory(prefix="mons-nutrients-") as temp_dir:
             output_path = write_tracked_nutrient_units(
                 Path(temp_dir),
                 CORE_FOOD_FIELDS,

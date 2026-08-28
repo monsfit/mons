@@ -18,6 +18,12 @@ class Resource:
     class Database:
         id: str
         type: str
+    class DatabaseConfig:
+        appSchema: str
+        catalogSchema: str
+        r2Prefix: str
+        scope: str
+        type: str
     class Media:
         name: str
         type: str

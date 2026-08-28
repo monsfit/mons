@@ -10,7 +10,7 @@ import {
   profileRepositoryLayer,
   weightRepositoryLayer,
   workoutRepositoryLayer,
-} from '@regolith/database'
+} from '@mons/database'
 import { Layer, Option } from 'effect'
 import { HttpRouter } from 'effect/unstable/http'
 
@@ -24,7 +24,7 @@ import {
   makeMealEstimationLayer,
   type MealAiClient,
   makeMealIntelligenceLayer,
-  mealLoggingLayer,
+  makeMealLoggingLayer,
 } from './features/meals.ts'
 import { nutritionServiceLayer } from './features/nutrition.ts'
 import { profileAccessServiceLayer, profileServiceLayer } from './features/profile.ts'
@@ -99,7 +99,9 @@ export const makeApiApplication = (config: ApiConfig, options: ApiRuntimeOptions
     resolutionModel: config.mealResolutionModel,
     transcriptionModel: config.mealTranscriptionModel,
   }).pipe(Layer.provide(Layer.mergeAll(repositories, mealIntelligence)))
-  const mealLogging = mealLoggingLayer.pipe(
+  const mealLogging = makeMealLoggingLayer({
+    storagePrefix: config.storagePrefix ?? 'local',
+  }).pipe(
     Layer.provide(Layer.mergeAll(repositories, storage, mealIntelligence)),
   )
   // HttpRouter.provideRequest builds and releases this layer inside every request

@@ -1,4 +1,4 @@
-import type { RegolithApi } from '../api.ts'
+import type { MonsApi } from '../api.ts'
 import { Authentication, CurrentIdentity } from '../core/auth.ts'
 import {
   ForbiddenError,
@@ -29,14 +29,14 @@ import {
   recipeSchema,
   saveCustomFoodSchema,
   saveRecipeSchema,
-} from '@regolith/contracts'
+} from '@mons/contracts'
 import {
   type CustomFoodRecord,
   LibraryRepository,
   type RecipeRecord,
   type SaveCustomFoodInput,
   type SaveRecipeInput,
-} from '@regolith/database'
+} from '@mons/database'
 import { Context, Effect, Layer } from 'effect'
 import {
   HttpApiBuilder,
@@ -90,7 +90,7 @@ export const libraryApi = HttpApiGroup.make('library')
   .middleware(RequestValidation)
   .middleware(Authentication)
 
-export const libraryHandlers = (api: typeof RegolithApi) =>
+export const libraryHandlers = (api: typeof MonsApi) =>
   HttpApiBuilder.group(api, 'library', (handlers) =>
     handlers.handleAll({
       listCustomFoods: ({ params }) =>
@@ -304,7 +304,7 @@ export interface LibraryServiceShape {
   ) => Effect.Effect<Recipe, LibraryServiceError>
 }
 
-export const LibraryService = Context.Service<LibraryServiceShape>('@regolith/api/LibraryService')
+export const LibraryService = Context.Service<LibraryServiceShape>('@mons/api/LibraryService')
 
 export const libraryServiceLayer = Layer.effect(
   LibraryService,

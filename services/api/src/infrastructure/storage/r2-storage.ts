@@ -72,7 +72,7 @@ export interface R2StorageService {
 }
 
 export class R2Storage extends Context.Service<R2Storage, R2StorageService>()(
-  '@regolith/api/R2Storage',
+  '@mons/api/R2Storage',
 ) {}
 
 export interface R2Client {

@@ -132,6 +132,11 @@ struct CalorieSummaryRow: View {
 }
 
 #Preview("Nutrition summary") {
-    CalorieSummaryRow(day: CalorieSampleData.days(referenceDate: .now, calendar: .current)[0])
+    CalorieSummaryRow(
+        day: CalorieSampleData.days(
+            referenceDate: CalorieSampleData.previewReferenceDate,
+            calendar: .current
+        )[0]
+    )
         .padding()
 }

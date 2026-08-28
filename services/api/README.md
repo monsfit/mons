@@ -27,7 +27,7 @@ HTTP API declaration -> handler -> service -> repository -> SQL/external system
 
 - `features/<feature>.ts` owns a feature's routes, handlers, service, calculations, and mapping.
 - `features/<feature>*.test.ts` contains focused behavior tests beside the feature modules.
-- `@regolith/database/features/*/repository.ts` owns SQL, transactions, row decoding, ordering, and
+- `@mons/database/features/*/repository.ts` owns SQL, transactions, row decoding, ordering, and
   persistence errors.
 - `infrastructure/` contains Clerk, AI, and object-storage adapters.
 - `core/` contains cross-feature authentication and error types.
@@ -105,8 +105,8 @@ intended for adults and is an estimate, not medical guidance.
 ## Checks
 
 ```bash
-npx pnpm@11.20.0 --filter @regolith/api test
-npx pnpm@11.20.0 --filter @regolith/api typecheck
+npx pnpm@11.20.0 --filter @mons/api test
+npx pnpm@11.20.0 --filter @mons/api typecheck
 npx pnpm@11.20.0 openapi
 ```
 

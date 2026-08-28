@@ -137,7 +137,7 @@ export interface WorkoutRepositoryService {
 }
 
 export const WorkoutRepository = Context.Service<WorkoutRepositoryService>(
-  '@regolith/database/WorkoutRepository',
+  '@mons/database/WorkoutRepository',
 )
 
 export const makeWorkoutRepository = (
@@ -145,7 +145,7 @@ export const makeWorkoutRepository = (
 ) =>
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient
-    const appSchema = yield* validateSchemaName(options.appSchema ?? 'regolith_app')
+    const appSchema = yield* validateSchemaName(options.appSchema ?? 'mons_app')
     const now = options.now ?? (() => new Date())
     const profiles = sql(`${appSchema}.profiles`)
     const workoutSessions = sql(`${appSchema}.workout_sessions`)

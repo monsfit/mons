@@ -9,7 +9,7 @@ export interface DatabaseOptions {
 
 export const createDatabaseLayer = (options: DatabaseOptions) =>
   PgClient.layer({
-    applicationName: 'regolith-api',
+    applicationName: 'mons-api',
     maxConnections: options.maximumPoolSize ?? 10,
     url: Redacted.make(options.connectionString),
   })
@@ -19,7 +19,7 @@ export interface DatabaseHealthService {
 }
 
 export class DatabaseHealth extends Context.Service<DatabaseHealth, DatabaseHealthService>()(
-  '@regolith/database/DatabaseHealth',
+  '@mons/database/DatabaseHealth',
 ) {}
 
 export const databaseHealthLayer = Layer.effect(
