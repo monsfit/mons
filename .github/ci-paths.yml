@@ -62,7 +62,7 @@ mons:
   - '.github/ci-paths.yml'
   - '.github/workflows/ci.yml'
   - 'clients/ios/**'
-  - 'scripts/configure-local-ios-api.sh'
+  - 'scripts/generate-ios-api-plist.sh'
 
 infrastructure:
   - '.github/ci-paths.yml'
