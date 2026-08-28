@@ -237,9 +237,7 @@ export interface NutritionServiceShape {
   ) => Effect.Effect<NutritionPlan, NutritionServiceError>
 }
 
-export const NutritionService = Context.Service<NutritionServiceShape>(
-  '@mons/api/NutritionService',
-)
+export const NutritionService = Context.Service<NutritionServiceShape>('@mons/api/NutritionService')
 
 export const nutritionServiceLayer = Layer.effect(
   NutritionService,

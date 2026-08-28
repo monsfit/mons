@@ -101,9 +101,7 @@ export const makeApiApplication = (config: ApiConfig, options: ApiRuntimeOptions
   }).pipe(Layer.provide(Layer.mergeAll(repositories, mealIntelligence)))
   const mealLogging = makeMealLoggingLayer({
     storagePrefix: config.storagePrefix ?? 'local',
-  }).pipe(
-    Layer.provide(Layer.mergeAll(repositories, storage, mealIntelligence)),
-  )
+  }).pipe(Layer.provide(Layer.mergeAll(repositories, storage, mealIntelligence)))
   // HttpRouter.provideRequest builds and releases this layer inside every request
   // scope. In Workers, that keeps the pg pool and its sockets request-local while
   // Hyperdrive owns the long-lived pool to the origin database.

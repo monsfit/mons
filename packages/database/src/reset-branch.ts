@@ -4,7 +4,7 @@ import { SqlClient } from 'effect/unstable/sql'
 import { execFileSync } from 'node:child_process'
 
 import { appSchemaFromBranchId, branchIdFromName, isProtectedBranch } from './deployment.ts'
-import { createDatabaseLayer } from './client.ts'
+import { createDatabaseLayer } from './core/client.ts'
 import { grantRuntimeDatabaseAccess, migrateApplicationDatabase } from './migrations.ts'
 
 const argument = (name: string) => {

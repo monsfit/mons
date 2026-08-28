@@ -24,7 +24,7 @@
     "deploy:production": "pnpm build:api && sst deploy --stage production",
     "prepare": "./scripts/prepare-effect.sh",
     "test": "turbo run test",
-    "test:database": "MONS_TEST_DATABASE_URL=${DATABASE_URL:-postgresql://mons:mons_local@localhost:5432/mons} pnpm --filter @mons/database test",
+    "test:database": "MONS_TEST_DATABASE_URL=${MONS_TEST_DATABASE_URL:-${DATABASE_URL:-postgresql://mons:mons_local@localhost:5432/mons}} pnpm --filter @mons/database test",
     "typecheck": "turbo run typecheck",
     "vps:backup": "docker compose -f infra/vps/compose.yaml exec -T --user postgres postgres-prod pgbackrest --config=/var/lib/postgresql/pgbackrest/pgbackrest.conf --stanza=mons-prod --type=full backup",
     "vps:backup:install-timers": "./infra/vps/install-backup-timers.sh",
