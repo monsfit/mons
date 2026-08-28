@@ -41,7 +41,6 @@ external-system compensation, or reproduced regressions—not file boundaries or
 | Method   | Path                                                    | Purpose                                          |
 | -------- | ------------------------------------------------------- | ------------------------------------------------ |
 | `GET`    | `/health`                                               | Process health                                   |
-| `GET`    | `/v1/catalog`                                           | Active snapshot metadata and row counts          |
 | `GET`    | `/v1/foods/by-gtin/:gtin`                               | Branded-food lookup by normalized 14-digit GTIN  |
 | `GET`    | `/v1/foods/search`                                      | Weighted full-text and typo-tolerant search      |
 | `PUT`    | `/v1/profile`                                           | Resolve the authenticated account's profile      |
@@ -74,9 +73,8 @@ Search accepts `q`, optional `kind=raw|branded`, and optional `limit=1..100`. Ti
 routes require an inclusive `from` and exclusive `to` ISO timestamp. Weight is persisted in
 kilograms; clients may convert it for localized display.
 
-The server applies stable application migrations before listening. Catalog ingestion remains
-owned by the nutrition-ingest service; `db:migrate` upgrades an older local catalog with the full-text search vector
-and GIN indexes.
+Application migrations run before deployment. The API never migrates on startup. Catalog ingestion
+and catalog indexes are owned entirely by the nutrition-ingest service.
 
 All `/v1` routes require a Clerk session token in the `Authorization: Bearer <token>` header.
 `PUT /v1/profile` creates or returns the database profile mapped to the authenticated Clerk user.

@@ -1,9 +1,8 @@
 import unittest
-from pathlib import Path
 from typing import cast
 
-from titan.nutrient_mapping import CORE_FOOD_FIELDS
-from titan.parsers import merge_off_branded
+from nutrition_ingest.nutrient_mapping import CORE_FOOD_FIELDS
+from nutrition_ingest.parsers import merge_off_branded
 
 
 class MergeOffBrandedTests(unittest.TestCase):
@@ -22,13 +21,6 @@ class MergeOffBrandedTests(unittest.TestCase):
         }
         row.update(overrides)
         return row
-
-    def test_validate_branded_output_path_blocks_raw_filename(self):
-        with self.assertRaisesRegex(RuntimeError, "Refusing to write branded rows"):
-            merge_off_branded.validate_branded_output_path(Path("data/outputs/raw-foods.jsonl"))
-
-    def test_validate_branded_output_path_accepts_branded_filename(self):
-        merge_off_branded.validate_branded_output_path(Path("data/outputs/branded-foods.jsonl"))
 
     def test_gtin_is_validated_and_padded(self):
         self.assertEqual(
@@ -49,28 +41,6 @@ class MergeOffBrandedTests(unittest.TestCase):
         self.assertEqual(merged[0]["source"], "usda")
         self.assertEqual(merged[1]["source"], "off")
         self.assertEqual(merged[1]["name"], "OFF unique")
-
-    def test_enforce_unique_upc(self):
-        rows = [
-            {"source": "a", "gtin": "012345678905", "name": "name-a"},
-            {"source": "b", "gtin": "0012345678905", "name": "name-b"},
-            {"source": "c", "gtin": "123456789012", "name": "name-c"},
-        ]
-
-        deduped = list(merge_off_branded.enforce_unique_keys(rows, unique_upc=True))
-        self.assertEqual(len(deduped), 2)
-        self.assertEqual(deduped[0]["name"], "name-a")
-        self.assertEqual(deduped[1]["name"], "name-c")
-
-    def test_name_is_not_used_for_dedup(self):
-        rows = [
-            {"source": "a", "gtin": "012345678905", "name": "Same Name"},
-            {"source": "b", "gtin": None, "name": " same   name "},
-            {"source": "c", "gtin": "123456789012", "name": "Other Name"},
-        ]
-
-        deduped = list(merge_off_branded.enforce_unique_keys(rows))
-        self.assertEqual(len(deduped), 3)
 
     def test_convert_iu_for_vitamin_d(self):
         converted = merge_off_branded.convert_nutrient_value(
@@ -269,9 +239,7 @@ class MergeOffBrandedTests(unittest.TestCase):
     def test_off_quality_flags_exclude_unusable_products(self):
         self.assertTrue(merge_off_branded.has_acceptable_off_source_quality({}))
         self.assertTrue(
-            merge_off_branded.has_acceptable_off_source_quality(
-                {"data_quality_errors_tags": []}
-            )
+            merge_off_branded.has_acceptable_off_source_quality({"data_quality_errors_tags": []})
         )
         self.assertFalse(
             merge_off_branded.has_acceptable_off_source_quality(
@@ -279,13 +247,9 @@ class MergeOffBrandedTests(unittest.TestCase):
             )
         )
         self.assertFalse(
-            merge_off_branded.has_acceptable_off_source_quality(
-                {"no_nutrition_data": True}
-            )
+            merge_off_branded.has_acceptable_off_source_quality({"no_nutrition_data": True})
         )
-        self.assertFalse(
-            merge_off_branded.has_acceptable_off_source_quality({"obsolete": True})
-        )
+        self.assertFalse(merge_off_branded.has_acceptable_off_source_quality({"obsolete": True}))
 
 
 if __name__ == "__main__":

@@ -155,9 +155,7 @@ def convert_numeric_value(
         converted_iu = _convert_iu(numeric, normalized_target, field)
         if converted_iu is not None:
             return converted_iu
-        raise RuntimeError(
-            f"Cannot convert IU for field {field!r} to {normalized_target!r}"
-        )
+        raise RuntimeError(f"Cannot convert IU for field {field!r} to {normalized_target!r}")
 
     converted_mass = _convert_mass(numeric, normalized_source, normalized_target)
     if converted_mass is not None:

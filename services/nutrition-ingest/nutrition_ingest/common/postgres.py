@@ -4,31 +4,28 @@ import hashlib
 import json
 import os
 import re
-import shutil
 import sys
 import uuid
-from collections import Counter, defaultdict
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
-from titan.common.schema import CORE_FOOD_FIELDS, FIELD_DEFINITIONS, NUTRIENT_FIELDS, SCHEMA_VERSION
-from titan.common.validation import validate_normalized_row
+import psycopg
+import pyarrow.parquet as pq
 
-DEFAULT_DATABASE_URL = "postgresql://mons:mons_local@localhost:5432/mons"
+from nutrition_ingest.common.schema import (
+    CORE_FOOD_FIELDS,
+    FIELD_DEFINITIONS,
+    NUTRIENT_FIELDS,
+    SCHEMA_VERSION,
+)
+from nutrition_ingest.common.validation import validate_normalized_row
+
 ADVISORY_LOCK_ID = 7_140_221
 LOAD_PROGRESS_EVERY = 100_000
 SCHEMA_NAME_PATTERN = re.compile(r"^[a-z_][a-z0-9_]*$")
-
-
-def _psycopg():
-    try:
-        import psycopg
-    except ModuleNotFoundError as exc:
-        raise RuntimeError(
-            "Postgres support requires the `postgres` extra: uv sync --extra postgres"
-        ) from exc
-    return psycopg
+RELEASE_ID_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}-[a-f0-9]{8}$")
 
 
 def _sha256(path: Path) -> str:
@@ -37,10 +34,6 @@ def _sha256(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
-
-
-def default_manifest_path(jsonl_path: Path) -> Path:
-    return jsonl_path.with_name(f"{jsonl_path.stem}.manifest.json")
 
 
 def _validated_schema_name(value: str) -> str:
@@ -52,32 +45,48 @@ def _validated_schema_name(value: str) -> str:
     return value
 
 
-def load_verified_manifest(jsonl_path: Path, manifest_path: Path) -> dict[str, Any]:
-    if not jsonl_path.is_file():
-        raise RuntimeError(f"Missing JSONL input: {jsonl_path}")
+def _first_value(row: tuple[Any, ...] | None, label: str) -> Any:
+    if row is None:
+        raise RuntimeError(f"PostgreSQL returned no row for {label}")
+    return row[0]
+
+
+def load_verified_manifest(
+    catalog_path: Path,
+    manifest_path: Path,
+) -> dict[str, Any]:
+    if not catalog_path.is_file():
+        raise RuntimeError(f"Missing catalog Parquet input: {catalog_path}")
     if not manifest_path.is_file():
         raise RuntimeError(f"Missing manifest: {manifest_path}")
     with manifest_path.open("r", encoding="utf-8") as handle:
         manifest = json.load(handle)
     if not isinstance(manifest, dict):
         raise RuntimeError(f"Manifest must be an object: {manifest_path}")
-    if manifest.get("status") != "success":
+    if manifest.get("manifest_version") != 1 or manifest.get("status") != "success":
         raise RuntimeError(f"Manifest is not successful: {manifest_path}")
     if manifest.get("schema_version") != SCHEMA_VERSION:
         raise RuntimeError(
             f"Manifest schema {manifest.get('schema_version')!r} is not supported; expected {SCHEMA_VERSION}"
         )
-    output = manifest.get("output")
-    if not isinstance(output, dict):
-        raise RuntimeError(f"Manifest has no output metadata: {manifest_path}")
-    expected_hash = output.get("sha256")
-    actual_hash = _sha256(jsonl_path)
-    if expected_hash != actual_hash:
+    release_id = manifest.get("release_id")
+    if not isinstance(release_id, str) or RELEASE_ID_PATTERN.fullmatch(release_id) is None:
+        raise RuntimeError(f"Manifest has an invalid release ID: {manifest_path}")
+    artifact = manifest.get("artifact")
+    if not isinstance(artifact, dict) or artifact.get("filename") != "foods.parquet":
+        raise RuntimeError(f"Manifest has no catalog Parquet artifact: {manifest_path}")
+    actual_hash = _sha256(catalog_path)
+    if artifact.get("sha256") != actual_hash:
         raise RuntimeError(
-            f"JSONL hash does not match manifest for {jsonl_path}: expected={expected_hash}, actual={actual_hash}"
+            f"Catalog Parquet hash does not match manifest for {catalog_path}: "
+            f"expected={artifact.get('sha256')}, actual={actual_hash}"
         )
-    if not isinstance(output.get("rows"), int) or output["rows"] < 0:
-        raise RuntimeError(f"Manifest has an invalid output row count: {manifest_path}")
+    counts = manifest.get("counts")
+    if not isinstance(counts, dict):
+        raise RuntimeError(f"Manifest has no catalog counts: {manifest_path}")
+    for kind in ("raw", "branded"):
+        if not isinstance(counts.get(kind), int) or counts[kind] < 0:
+            raise RuntimeError(f"Manifest has an invalid {kind} row count: {manifest_path}")
     return manifest
 
 
@@ -88,17 +97,13 @@ def _schema_ddl(schema: str) -> str:
     )
     return f"""
 CREATE SCHEMA "{schema}";
-CREATE TABLE "{schema}".ingestion_runs (
-    run_id uuid PRIMARY KEY,
+CREATE TABLE "{schema}".catalog_metadata (
+    release_id text PRIMARY KEY,
     schema_version text NOT NULL,
-    package_version text NOT NULL,
-    started_at timestamptz NOT NULL,
-    completed_at timestamptz,
-    raw_manifest jsonb NOT NULL,
-    branded_manifest jsonb NOT NULL,
+    built_at timestamptz NOT NULL,
+    loaded_at timestamptz NOT NULL,
     raw_rows bigint NOT NULL DEFAULT 0,
-    branded_rows bigint NOT NULL DEFAULT 0,
-    status text NOT NULL CHECK (status IN ('loading', 'success'))
+    branded_rows bigint NOT NULL DEFAULT 0
 );
 CREATE TABLE "{schema}".foods (
     dataset_kind text NOT NULL CHECK (dataset_kind IN ('raw', 'branded')),
@@ -113,7 +118,6 @@ CREATE TABLE "{schema}".foods (
         setweight(to_tsvector('simple', coalesce(brand, '')), 'B')
     ) STORED,
     gtin char(14),
-    ingestion_run_id uuid NOT NULL REFERENCES "{schema}".ingestion_runs(run_id),
     PRIMARY KEY (dataset_kind, food_id),
     CHECK (gtin IS NULL OR gtin ~ '^[0-9]{{14}}$'),
     CHECK (
@@ -154,7 +158,7 @@ CREATE TABLE "{schema}".nutrient_definitions (
 
 def _index_ddl(schema: str) -> tuple[str, ...]:
     return (
-        'CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public',
+        "CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public",
         f'CREATE INDEX raw_foods_name_trgm_idx ON "{schema}".raw_foods USING gin (name gin_trgm_ops)',
         f'CREATE INDEX branded_foods_name_trgm_idx ON "{schema}".branded_foods USING gin (name gin_trgm_ops)',
         f'CREATE INDEX branded_foods_brand_trgm_idx ON "{schema}".branded_foods USING gin (brand gin_trgm_ops)',
@@ -173,7 +177,6 @@ def _food_columns() -> list[str]:
         *[field for field in CORE_FOOD_FIELDS if field != "portions"],
         "brand",
         "gtin",
-        "ingestion_run_id",
     ]
 
 
@@ -182,43 +185,41 @@ def _copy_statement(schema: str, table: str, columns: list[str]) -> str:
     return f'COPY "{schema}"."{table}" ({quoted}) FROM STDIN'
 
 
-def _row_values(row: dict[str, Any], dataset_kind: str, food_id: int, run_id: uuid.UUID) -> tuple[Any, ...]:
+def _row_values(row: dict[str, Any], dataset_kind: str, food_id: int) -> tuple[Any, ...]:
     values: list[Any] = [dataset_kind, food_id]
     for field in CORE_FOOD_FIELDS:
         if field == "portions":
             continue
         values.append(row.get(field))
-    values.extend([row.get("brand"), row.get("gtin"), run_id])
+    values.extend([row.get("brand"), row.get("gtin")])
     return tuple(values)
 
 
-def _load_dataset(
+def _load_catalog(
     food_copy,
     portion_copy,
-    jsonl_path: Path,
-    dataset_kind: str,
-    run_id: uuid.UUID,
-    first_food_id: int,
-) -> tuple[int, dict[str, Counter[str]]]:
-    count = 0
-    coverage: dict[str, Counter[str]] = defaultdict(Counter)
-    with jsonl_path.open("r", encoding="utf-8") as handle:
-        for line_number, line in enumerate(handle, start=1):
-            try:
-                row = json.loads(line)
-            except json.JSONDecodeError as exc:
-                raise RuntimeError(f"Invalid JSON at {jsonl_path}:{line_number}: {exc}") from exc
-            if not isinstance(row, dict):
-                raise RuntimeError(f"Expected object at {jsonl_path}:{line_number}")
+    catalog_path: Path,
+) -> dict[str, int]:
+    counts = {"raw": 0, "branded": 0}
+    total = 0
+    parquet = pq.ParquetFile(catalog_path)
+    for batch in parquet.iter_batches(batch_size=10_000):
+        for catalog_row in batch.to_pylist():
+            dataset_kind = catalog_row.get("dataset_kind")
+            if dataset_kind not in counts:
+                raise RuntimeError(f"Invalid dataset kind in {catalog_path}: {dataset_kind!r}")
+            row = {field: catalog_row.get(field) for field in CORE_FOOD_FIELDS}
+            if dataset_kind == "branded":
+                row.update({"brand": catalog_row.get("brand"), "gtin": catalog_row.get("gtin")})
             issues = validate_normalized_row(row, branded=dataset_kind == "branded")
             if issues:
                 codes = ", ".join(sorted({issue.code for issue in issues}))
                 raise RuntimeError(
                     f"Row no longer satisfies schema {SCHEMA_VERSION} at "
-                    f"{jsonl_path}:{line_number}: {codes}"
+                    f"{catalog_path}:{total + 1}: {codes}"
                 )
-            food_id = first_food_id + count
-            food_copy.write_row(_row_values(row, dataset_kind, food_id, run_id))
+            food_id = total + 1
+            food_copy.write_row(_row_values(row, dataset_kind, food_id))
             portions = row.get("portions") or []
             for ordinal, portion in enumerate(portions):
                 portion_copy.write_row(
@@ -231,79 +232,60 @@ def _load_dataset(
                         portion["unit"],
                     )
                 )
-            source = str(row.get("source"))
-            coverage[source]["__rows__"] += 1
-            for field in CORE_FOOD_FIELDS:
-                if row.get(field) is not None:
-                    coverage[source][field] += 1
-            count += 1
-            if count % LOAD_PROGRESS_EVERY == 0:
-                print(f"titan postgres: loaded {dataset_kind} rows={count:,}", file=sys.stderr)
-    return count, coverage
-
-
-def _compare_coverage(actual: dict[str, Counter[str]], manifest: dict[str, Any], label: str) -> None:
-    expected = manifest.get("coverage")
-    normalized_actual = {
-        source: {field: count for field, count in fields.items()}
-        for source, fields in actual.items()
-    }
-    if expected != normalized_actual:
-        raise RuntimeError(f"{label} field coverage does not match its manifest")
+            counts[dataset_kind] += 1
+            total += 1
+            if total % LOAD_PROGRESS_EVERY == 0:
+                print(f"Mons nutrition: loaded rows={total:,}", file=sys.stderr)
+    return counts
 
 
 def ingest(
     *,
-    raw_path: Path,
-    branded_path: Path,
-    raw_manifest_path: Path | None = None,
-    branded_manifest_path: Path | None = None,
+    catalog_path: Path,
+    manifest_path: Path,
     database_url: str | None = None,
+    runtime_role: str,
     active_schema: str = "mons_catalog",
 ) -> dict[str, Any]:
-    psycopg = _psycopg()
-    database_url = database_url or os.environ.get("DATABASE_URL", DEFAULT_DATABASE_URL)
+    database_url = _database_url(database_url)
     active_schema = _validated_schema_name(active_schema)
-    raw_manifest_path = raw_manifest_path or default_manifest_path(raw_path)
-    branded_manifest_path = branded_manifest_path or default_manifest_path(branded_path)
-    raw_manifest = load_verified_manifest(raw_path, raw_manifest_path)
-    branded_manifest = load_verified_manifest(branded_path, branded_manifest_path)
+    runtime_role = _validated_schema_name(runtime_role)
+    manifest = load_verified_manifest(catalog_path, manifest_path)
+    release_id = manifest["release_id"]
 
-    required_bytes = raw_path.stat().st_size + branded_path.stat().st_size
-    free_bytes = shutil.disk_usage(Path.cwd()).free
-    if free_bytes < required_bytes * 2:
-        raise RuntimeError(
-            f"Insufficient host free space for an atomic database load: free={free_bytes:,}, required~={required_bytes * 2:,}"
-        )
-
-    run_id = uuid.uuid4()
-    suffix = run_id.hex[:12]
+    suffix = uuid.uuid4().hex[:12]
     staging_schema = f"{active_schema}_stage_{suffix}"
     previous_schema = f"{active_schema}_previous_{suffix}"
-    started_at = datetime.now(UTC)
 
     with psycopg.connect(database_url) as connection:
-        acquired = connection.execute(
-            "SELECT pg_try_advisory_lock(%s)", (ADVISORY_LOCK_ID,)
-        ).fetchone()[0]
+        acquired = _first_value(
+            connection.execute("SELECT pg_try_advisory_lock(%s)", (ADVISORY_LOCK_ID,)).fetchone(),
+            "catalog ingestion lock",
+        )
         if not acquired:
             raise RuntimeError("Another Mons Postgres ingestion is already running")
         try:
+            metadata_exists = _first_value(
+                connection.execute(
+                    "SELECT to_regclass(%s) IS NOT NULL",
+                    (f"{active_schema}.catalog_metadata",),
+                ).fetchone(),
+                "catalog metadata lookup",
+            )
+            if metadata_exists:
+                current_release = connection.execute(
+                    f'SELECT release_id FROM "{active_schema}".catalog_metadata LIMIT 1'
+                ).fetchone()
+                if current_release and current_release[0] == release_id:
+                    return {
+                        "release_id": release_id,
+                        "raw_rows": manifest["counts"]["raw"],
+                        "branded_rows": manifest["counts"]["branded"],
+                        "loaded": False,
+                    }
+
             connection.execute("CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public")
             connection.execute(_schema_ddl(staging_schema))
-            connection.execute(
-                f'INSERT INTO "{staging_schema}".ingestion_runs '
-                "(run_id, schema_version, package_version, started_at, raw_manifest, branded_manifest, status) "
-                "VALUES (%s, %s, %s, %s, %s::jsonb, %s::jsonb, 'loading')",
-                (
-                    run_id,
-                    SCHEMA_VERSION,
-                    "0.2.0",
-                    started_at,
-                    json.dumps(raw_manifest),
-                    json.dumps(branded_manifest),
-                ),
-            )
             connection.commit()
 
             food_columns = _food_columns()
@@ -324,26 +306,16 @@ def ingest(
                             _copy_statement(staging_schema, "portions", portion_columns)
                         ) as portion_copy,
                     ):
-                        raw_count, raw_coverage = _load_dataset(
-                            food_copy, portion_copy, raw_path, "raw", run_id, 1
-                        )
-                        branded_count, branded_coverage = _load_dataset(
-                            food_copy,
-                            portion_copy,
-                            branded_path,
-                            "branded",
-                            run_id,
-                            raw_count + 1,
-                        )
+                        counts = _load_catalog(food_copy, portion_copy, catalog_path)
                 food_connection.commit()
                 portion_connection.commit()
 
-            if raw_count != raw_manifest["output"]["rows"]:
+            raw_count = counts["raw"]
+            branded_count = counts["branded"]
+            if raw_count != manifest["counts"]["raw"]:
                 raise RuntimeError("Raw database row count does not match the manifest")
-            if branded_count != branded_manifest["output"]["rows"]:
+            if branded_count != manifest["counts"]["branded"]:
                 raise RuntimeError("Branded database row count does not match the manifest")
-            _compare_coverage(raw_coverage, raw_manifest, "Raw")
-            _compare_coverage(branded_coverage, branded_manifest, "Branded")
 
             definitions = [
                 (definition.name, definition.unit, definition.description, definition.value_kind)
@@ -370,65 +342,104 @@ def ingest(
             if counts != {"raw": raw_count, "branded": branded_count}:
                 raise RuntimeError(f"Postgres verification count mismatch: {counts}")
             connection.execute(
-                f'UPDATE "{staging_schema}".ingestion_runs SET completed_at = %s, raw_rows = %s, branded_rows = %s, status = \'success\' WHERE run_id = %s',
-                (datetime.now(UTC), raw_count, branded_count, run_id),
+                f'INSERT INTO "{staging_schema}".catalog_metadata '
+                "(release_id, schema_version, built_at, loaded_at, raw_rows, branded_rows) "
+                "VALUES (%s, %s, %s, %s, %s, %s)",
+                (
+                    release_id,
+                    SCHEMA_VERSION,
+                    manifest["built_at"],
+                    datetime.now(UTC),
+                    raw_count,
+                    branded_count,
+                ),
+            )
+            connection.execute(f'GRANT USAGE ON SCHEMA "{staging_schema}" TO "{runtime_role}"')
+            connection.execute(
+                f'GRANT SELECT ON ALL TABLES IN SCHEMA "{staging_schema}" TO "{runtime_role}"'
             )
             connection.commit()
 
-            active_exists = connection.execute(
-                "SELECT to_regnamespace(%s) IS NOT NULL", (active_schema,)
-            ).fetchone()[0]
-            if active_exists:
+            active_exists = _first_value(
                 connection.execute(
-                    f'ALTER SCHEMA "{active_schema}" RENAME TO "{previous_schema}"'
-                )
-            connection.execute(
-                f'ALTER SCHEMA "{staging_schema}" RENAME TO "{active_schema}"'
+                    "SELECT to_regnamespace(%s) IS NOT NULL", (active_schema,)
+                ).fetchone(),
+                "active catalog lookup",
             )
-            connection.commit()
+            if active_exists:
+                connection.execute(f'ALTER SCHEMA "{active_schema}" RENAME TO "{previous_schema}"')
+            connection.execute(f'ALTER SCHEMA "{staging_schema}" RENAME TO "{active_schema}"')
             if active_exists:
                 connection.execute(f'DROP SCHEMA "{previous_schema}" CASCADE')
-                connection.commit()
+            connection.commit()
         except Exception:
             connection.rollback()
-            if connection.execute(
-                "SELECT to_regnamespace(%s) IS NOT NULL", (staging_schema,)
-            ).fetchone()[0]:
+            if _first_value(
+                connection.execute(
+                    "SELECT to_regnamespace(%s) IS NOT NULL", (staging_schema,)
+                ).fetchone(),
+                "staging catalog lookup",
+            ):
                 connection.execute(f'DROP SCHEMA "{staging_schema}" CASCADE')
                 connection.commit()
             raise
         finally:
             connection.execute("SELECT pg_advisory_unlock(%s)", (ADVISORY_LOCK_ID,))
 
-    return {"run_id": str(run_id), "raw_rows": raw_count, "branded_rows": branded_count}
+    return {
+        "release_id": release_id,
+        "raw_rows": raw_count,
+        "branded_rows": branded_count,
+        "loaded": True,
+    }
 
 
-def status(database_url: str | None = None, *, active_schema: str = "mons_catalog") -> dict[str, Any]:
-    psycopg = _psycopg()
-    database_url = database_url or os.environ.get("DATABASE_URL", DEFAULT_DATABASE_URL)
+def _database_url(value: str | None) -> str:
+    database_url = value or os.environ.get("MIGRATION_DATABASE_URL")
+    if not database_url:
+        raise RuntimeError("MIGRATION_DATABASE_URL or --database-url is required")
+    parsed = urlsplit(database_url)
+    query = [
+        (key, item)
+        for key, item in parse_qsl(parsed.query, keep_blank_values=True)
+        if key.casefold() != "uselibpqcompat"
+    ]
+    return urlunsplit(
+        (parsed.scheme, parsed.netloc, parsed.path, urlencode(query), parsed.fragment)
+    )
+
+
+def status(
+    database_url: str | None = None, *, active_schema: str = "mons_catalog"
+) -> dict[str, Any]:
+    database_url = _database_url(database_url)
     active_schema = _validated_schema_name(active_schema)
     with psycopg.connect(database_url) as connection:
-        server_version = connection.execute("SHOW server_version").fetchone()[0]
-        active = connection.execute(
-            "SELECT to_regnamespace(%s) IS NOT NULL", (active_schema,)
-        ).fetchone()[0]
-        result: dict[str, Any] = {"connected": True, "server_version": server_version, "active": active}
+        server_version = _first_value(
+            connection.execute("SHOW server_version").fetchone(), "server version"
+        )
+        active = _first_value(
+            connection.execute(
+                "SELECT to_regnamespace(%s) IS NOT NULL", (active_schema,)
+            ).fetchone(),
+            "active catalog lookup",
+        )
+        result: dict[str, Any] = {
+            "connected": True,
+            "server_version": server_version,
+            "active": active,
+        }
         if active:
-            result["counts"] = dict(
-                connection.execute(
-                    f'SELECT dataset_kind, count(*) FROM "{active_schema}".foods GROUP BY dataset_kind'
-                ).fetchall()
-            )
             row = connection.execute(
-                f'SELECT run_id, schema_version, package_version, started_at, completed_at, status FROM "{active_schema}".ingestion_runs ORDER BY started_at DESC LIMIT 1'
+                f"SELECT release_id, schema_version, built_at, loaded_at, raw_rows, branded_rows "
+                f'FROM "{active_schema}".catalog_metadata LIMIT 1'
             ).fetchone()
             if row:
-                result["run"] = {
-                    "run_id": str(row[0]),
+                result["counts"] = {"raw": row[4], "branded": row[5]}
+                result["release"] = {
+                    "release_id": row[0],
                     "schema_version": row[1],
-                    "package_version": row[2],
-                    "started_at": row[3].isoformat(),
-                    "completed_at": row[4].isoformat() if row[4] else None,
-                    "status": row[5],
+                    "built_at": row[2].isoformat(),
+                    "loaded_at": row[3].isoformat(),
                 }
         return result

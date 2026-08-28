@@ -40,7 +40,7 @@ const program = Effect.gen(function* () {
     if (!dropOnly) {
       yield* migrateApplicationDatabase(appSchema)
       if (Option.isSome(runtimeRole)) {
-        yield* grantRuntimeDatabaseAccess(runtimeRole.value, appSchema, 'mons_catalog')
+        yield* grantRuntimeDatabaseAccess(runtimeRole.value, appSchema)
       }
     }
     yield* Effect.logInfo(dropOnly ? 'Mons branch schema dropped' : 'Mons branch schema reset', {

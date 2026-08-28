@@ -47,7 +47,6 @@ const food: FoodRecord = {
   dataset_kind: 'branded',
   food_id: '42',
   gtin: '00012345678905',
-  ingestion_run_id: '00000000-0000-0000-0000-000000000001',
   name: 'Example Food',
   nutrients: [{ amount: 3.2, field: 'fiber', name: 'Dietary fibre', unit: 'g' }],
   portions: [{ amount: 30, name: '1 bar', unit: 'g' }],
@@ -193,14 +192,6 @@ const mealEstimate: MealEstimate = {
 
 const catalog: CatalogReaderService = {
   findByGtin: (gtin) => Effect.succeed(gtin === food.gtin ? food : undefined),
-  getStatus: Effect.succeed({
-    active: true,
-    brandedFoods: 4_092_797,
-    completedAt: new Date('2026-08-04T00:00:00Z'),
-    rawFoods: 26_163,
-    schemaVersion: '2.0.0',
-    snapshotId: '00000000-0000-0000-0000-000000000001',
-  }),
   search: () => Effect.succeed([food]),
 }
 const profiles: ProfileRepositoryService = {

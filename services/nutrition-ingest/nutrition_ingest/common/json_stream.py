@@ -8,7 +8,9 @@ from pathlib import Path
 from typing import Any, TextIO
 
 
-def iter_root_array(handle: TextIO, root_key: str, chunk_size: int = 65536) -> Iterator[dict[str, Any]]:
+def iter_root_array(
+    handle: TextIO, root_key: str, chunk_size: int = 65536
+) -> Iterator[dict[str, Any]]:
     """Incrementally decode objects from a named top-level JSON array."""
 
     decoder = json.JSONDecoder()
@@ -62,7 +64,9 @@ def select_json_member(zip_path: Path, hint: str | None = None) -> str:
     return members[0]
 
 
-def iter_json_source(path: Path, root_key: str, *, member_hint: str | None = None) -> Iterator[dict[str, Any]]:
+def iter_json_source(
+    path: Path, root_key: str, *, member_hint: str | None = None
+) -> Iterator[dict[str, Any]]:
     if path.suffix.casefold() == ".zip":
         member = select_json_member(path, member_hint)
         with zipfile.ZipFile(path, "r") as archive:

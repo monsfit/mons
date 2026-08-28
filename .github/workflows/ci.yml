@@ -71,11 +71,10 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
-      - run: uv sync --project services/nutrition-ingest --locked --all-extras
+      - run: uv sync --project services/nutrition-ingest --locked
       - run: uv run --project services/nutrition-ingest ruff check services/nutrition-ingest
-      - run: uv run --project services/nutrition-ingest mypy --config-file services/nutrition-ingest/pyproject.toml services/nutrition-ingest/titan
+      - run: uv run --project services/nutrition-ingest mypy --config-file services/nutrition-ingest/pyproject.toml services/nutrition-ingest/nutrition_ingest
       - run: uv run --project services/nutrition-ingest python -m unittest discover -s services/nutrition-ingest/tests -v
-      - run: uv run --project services/nutrition-ingest nutrition-ingest schema --check
 
   mons:
     runs-on: macos-26

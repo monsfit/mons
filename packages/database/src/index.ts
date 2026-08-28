@@ -5,7 +5,6 @@ export {
 } from './features/catalog/repository.ts'
 export type {
   CatalogReaderService,
-  CatalogSnapshotRecord,
   FoodNutrientRecord,
   FoodPortionRecord,
   FoodRecord,
@@ -114,10 +113,8 @@ export type {
   SaveMealEstimateInput,
 } from './features/meals/meal-estimate-repository.ts'
 export {
-  adoptMonsSchemaNames,
   grantRuntimeDatabaseAccess,
   migrateApplicationDatabase,
-  migrateCatalogSearch,
   validateSchemaName,
 } from './migrations.ts'
 export type {
@@ -126,13 +123,10 @@ export type {
   FoodSourceKind,
   ExerciseFrequency,
   FoodLogEntryTable,
-  FoodTable,
   IngestionRunTable,
   MealCategory,
   MetabolicSex,
   NutritionPlanTable,
-  NutrientDefinitionTable,
-  PortionTable,
   ProfileTable,
   WeightGoal,
   WeightLogEntryTable,

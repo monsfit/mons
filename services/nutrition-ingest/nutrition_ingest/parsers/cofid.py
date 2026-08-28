@@ -1,23 +1,18 @@
 from __future__ import annotations
 
-import argparse
 import re
 from pathlib import Path
 from typing import Any
 
 from openpyxl import load_workbook
 
-from titan.common.cli import add_quality_output_arguments, output_options, resolve_output_path
-from titan.common.contracts import FieldKind, FieldSpec
-from titan.common.output import write_jsonl
-from titan.common.units import (
+from nutrition_ingest.common.contracts import FieldKind, FieldSpec
+from nutrition_ingest.common.units import (
     convert_numeric_value,
     extract_unit_from_label,
     sum_complete_numeric_components,
 )
-from titan.nutrient_mapping import COFID_FIELD_SPECS, CORE_FIELD_UNITS, CORE_FOOD_FIELDS
-
-SOURCE_NAME = "cofid"
+from nutrition_ingest.nutrient_mapping import COFID_FIELD_SPECS, CORE_FIELD_UNITS, CORE_FOOD_FIELDS
 
 COFID_SHEETS = {
     "proximates": "1.3 Proximates",
@@ -191,9 +186,7 @@ def canonicalize_header(value: Any) -> str:
     return " ".join(value.replace("\n", " ").strip().split()).casefold()
 
 
-def resolve_source_columns(
-    headers: list[Any], source_columns: list[str]
-) -> dict[str, str | None]:
+def resolve_source_columns(headers: list[Any], source_columns: list[str]) -> dict[str, str | None]:
     header_values = [h for h in headers if isinstance(h, str)]
     headers_by_canonical = {canonicalize_header(h): h for h in header_values}
 
@@ -282,9 +275,7 @@ def sum_sheet_values(
     found_value = False
 
     for source_column in source_columns:
-        value = get_sheet_value(
-            sheet_rows, resolved_columns, sheet_key, source_id, source_column
-        )
+        value = get_sheet_value(sheet_rows, resolved_columns, sheet_key, source_id, source_column)
         if isinstance(value, (int, float)):
             total += float(value)
             found_value = True
@@ -302,9 +293,7 @@ def sum_multi_sheet_values(
     found_value = False
 
     for sheet_key, source_columns in sheet_to_columns.items():
-        value = sum_sheet_values(
-            sheet_rows, resolved_columns, sheet_key, source_id, source_columns
-        )
+        value = sum_sheet_values(sheet_rows, resolved_columns, sheet_key, source_id, source_columns)
         if isinstance(value, (int, float)):
             total += float(value)
             found_value = True
@@ -325,7 +314,7 @@ def _resolve_source_literal(field_specs: dict[str, FieldSpec]) -> str:
 
 
 def build_source_units_by_field(
-    resolved_columns: dict[str, dict[str, str | None]]
+    resolved_columns: dict[str, dict[str, str | None]],
 ) -> dict[str, str | None]:
     source_units: dict[str, str | None] = {}
     for target_field, (sheet_key, source_column) in DIRECT_FIELD_MAP.items():
@@ -345,17 +334,13 @@ def iter_rows(
     source_ids: list[str] = []
 
     for sheet_key, sheet_name in COFID_SHEETS.items():
-        headers, rows_by_code, ordered_codes = load_sheet_rows(
-            workbook_path, sheet_name
-        )
+        headers, rows_by_code, ordered_codes = load_sheet_rows(workbook_path, sheet_name)
         sheet_headers[sheet_key] = headers
         sheet_rows[sheet_key] = rows_by_code
         if sheet_key == "proximates":
             source_ids = ordered_codes
 
-    required_columns_by_sheet: dict[str, set[str]] = {
-        key: set() for key in COFID_SHEETS
-    }
+    required_columns_by_sheet: dict[str, set[str]] = {key: set() for key in COFID_SHEETS}
 
     for sheet_key, source_column in DIRECT_FIELD_MAP.values():
         required_columns_by_sheet[sheet_key].add(source_column)
@@ -485,43 +470,10 @@ def iter_rows(
             )
 
         omega_components = [
-            normalized.get(field)
-            for field in ("omega_3_ala", "omega_3_epa", "omega_3_dha")
+            normalized.get(field) for field in ("omega_3_ala", "omega_3_epa", "omega_3_dha")
         ]
-        normalized["omega_3_ala_epa_dha_sum"] = sum_complete_numeric_components(
-            omega_components
-        )
+        normalized["omega_3_ala_epa_dha_sum"] = sum_complete_numeric_components(omega_components)
 
         if normalized.get("source_id") is None and normalized.get("name") is None:
             continue
         yield normalized
-
-
-def register_subparser(subparsers):
-    parser = subparsers.add_parser("cofid", help="Parse UK CoFID workbook")
-    parser.add_argument("--workbook", required=True, help="Path to CoFID workbook (.xlsx)")
-    add_quality_output_arguments(parser, source_name=SOURCE_NAME)
-    parser.set_defaults(handler=run_from_args)
-
-
-def run_from_args(args) -> None:
-    output_path = resolve_output_path(args.output, SOURCE_NAME)
-    write_jsonl(
-        iter_rows(Path(args.workbook), CORE_FOOD_FIELDS),
-        output_path,
-        source_name=SOURCE_NAME,
-        input_paths=[Path(args.workbook)],
-        **output_options(args),
-    )
-
-
-def main(argv: list[str] | None = None):
-    parser = argparse.ArgumentParser(description="CoFID parser")
-    parser.add_argument("--workbook", required=True, help="Path to CoFID workbook (.xlsx)")
-    add_quality_output_arguments(parser, source_name=SOURCE_NAME)
-    args = parser.parse_args(argv)
-    run_from_args(args)
-
-
-if __name__ == "__main__":
-    main()

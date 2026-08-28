@@ -92,7 +92,6 @@ export default $config({
       },
       environment: {
         MONS_APP_SCHEMA: deployment.appSchema,
-        MONS_CATALOG_SCHEMA: deployment.catalogSchema,
         MONS_STORAGE_PREFIX: deployment.r2Prefix,
       },
     })

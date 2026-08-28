@@ -37,21 +37,14 @@ const fixtureLayer = Layer.effectDiscard(
       const foods = sql(`${schema}.foods`)
       const portions = sql(`${schema}.portions`)
       const nutrients = sql(`${schema}.nutrient_definitions`)
-      const runs = sql(`${schema}.ingestion_runs`)
       yield* sql`DROP SCHEMA IF EXISTS ${catalog} CASCADE`
       yield* sql`DROP SCHEMA IF EXISTS ${application} CASCADE`
       yield* sql`CREATE EXTENSION IF NOT EXISTS pg_trgm`
       yield* sql`CREATE SCHEMA ${catalog}`
-      yield* sql`CREATE TABLE ${runs} (
-        run_id uuid PRIMARY KEY, schema_version text NOT NULL, package_version text NOT NULL,
-        started_at timestamptz NOT NULL, completed_at timestamptz,
-        raw_manifest jsonb NOT NULL, branded_manifest jsonb NOT NULL,
-        raw_rows bigint NOT NULL, branded_rows bigint NOT NULL, status text NOT NULL
-      )`
       yield* sql`CREATE TABLE ${foods} (
         brand text, calories double precision, carbohydrates_available double precision,
         carbohydrates_total double precision, dataset_kind text NOT NULL, food_id bigint PRIMARY KEY,
-        fiber double precision, gtin char(14), ingestion_run_id uuid NOT NULL, name text NOT NULL,
+        fiber double precision, gtin char(14), name text NOT NULL,
         protein double precision, source text NOT NULL, source_id text NOT NULL,
         sodium double precision, total_fat double precision,
         search_document tsvector GENERATED ALWAYS AS (
@@ -70,29 +63,17 @@ const fixtureLayer = Layer.effectDiscard(
       yield* sql`CREATE TABLE ${nutrients} (
         field_name text PRIMARY KEY, unit text NOT NULL, description text NOT NULL, value_kind text NOT NULL
       )`
-      yield* sql`INSERT INTO ${runs} VALUES (
-        '00000000-0000-0000-0000-000000000001', '2.0.0', '0.2.0',
-        '2026-01-01T00:00:00Z', '2026-01-01T00:01:00Z', '{}'::jsonb, '{}'::jsonb,
-        2, 5, 'success'
-      )`
       yield* sql`INSERT INTO ${foods}
         (brand, calories, carbohydrates_total, dataset_kind, food_id, gtin,
-         ingestion_run_id, name, protein, source, source_id, total_fat)
+         name, protein, source, source_id, total_fat)
         VALUES
-        ('Example', 52, 14, 'branded', 1, '00000000000001',
-         '00000000-0000-0000-0000-000000000001', 'Apple', 0.3, 'fixture', 'b-1', 0.2),
-        ('Example', 237, 34, 'branded', 2, '00000000000002',
-         '00000000-0000-0000-0000-000000000001', 'Apple Pie', 2.4, 'fixture', 'b-2', 11),
-        (NULL, 57, 15, 'raw', 3, NULL,
-         '00000000-0000-0000-0000-000000000001', 'Raw Apple', 0.3, 'fixture', 'r-1', 0.1),
-        ('Broken', NULL, NULL, 'branded', 4, '00000000000004',
-         '00000000-0000-0000-0000-000000000001', 'Broken Food', NULL, 'open_food_facts', 'bad-1', NULL),
-        ('USDA', 90, 0.4, 'branded', 5, '00000000000005',
-         '00000000-0000-0000-0000-000000000001', 'Egg Fried', 6.3, 'usda_fooddata_central_branded', 'usda-1', 6.8),
-        ('OFF', 90, 0.4, 'branded', 6, '00000000000006',
-         '00000000-0000-0000-0000-000000000001', 'Egg Fried', 6.3, 'open_food_facts', 'off-1', 6.8),
-        (NULL, 295, NULL, 'raw', 7, NULL,
-         '00000000-0000-0000-0000-000000000001', 'Cardamom Seed', 10.8, 'australian_food_composition', 'au-1', 6.7)`
+        ('Example', 52, 14, 'branded', 1, '00000000000001', 'Apple', 0.3, 'fixture', 'b-1', 0.2),
+        ('Example', 237, 34, 'branded', 2, '00000000000002', 'Apple Pie', 2.4, 'fixture', 'b-2', 11),
+        (NULL, 57, 15, 'raw', 3, NULL, 'Raw Apple', 0.3, 'fixture', 'r-1', 0.1),
+        ('Broken', NULL, NULL, 'branded', 4, '00000000000004', 'Broken Food', NULL, 'open_food_facts', 'bad-1', NULL),
+        ('USDA', 90, 0.4, 'branded', 5, '00000000000005', 'Egg Fried', 6.3, 'usda_fooddata_central_branded', 'usda-1', 6.8),
+        ('OFF', 90, 0.4, 'branded', 6, '00000000000006', 'Egg Fried', 6.3, 'open_food_facts', 'off-1', 6.8),
+        (NULL, 295, NULL, 'raw', 7, NULL, 'Cardamom Seed', 10.8, 'australian_food_composition', 'au-1', 6.7)`
       yield* sql`UPDATE ${foods} SET carbohydrates_available = 40 WHERE food_id = 7`
       yield* sql`UPDATE ${foods} SET fiber = 2.4, sodium = 1 WHERE food_id = 1`
       yield* sql`INSERT INTO ${nutrients} (field_name, unit, description, value_kind) VALUES
@@ -157,16 +138,9 @@ const testLayer = Layer.merge(fixtureLayer, repositoryLayers).pipe(
 
 integration('feature repositories with PostgreSQL', () => {
   layer(testLayer)((it) => {
-    it.effect('reports catalog status and resolves complete barcode nutrition', () =>
+    it.effect('resolves complete barcode nutrition', () =>
       Effect.gen(function* () {
         const catalog = yield* CatalogReader
-        const status = yield* catalog.getStatus
-        expect(status).toMatchObject({
-          active: true,
-          brandedFoods: 5,
-          rawFoods: 2,
-          schemaVersion: '2.0.0',
-        })
         const food = yield* catalog.findByGtin('00000000000001')
         expect(food).toMatchObject({
           food_id: '1',

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import argparse
 import math
 import re
 import sqlite3
@@ -10,14 +9,11 @@ from fractions import Fraction
 from pathlib import Path
 from typing import Any
 
-from titan.common.cli import add_quality_output_arguments, output_options, resolve_output_path
-from titan.common.contracts import FieldSpec
-from titan.common.json_stream import iter_json_source
-from titan.common.output import write_jsonl
-from titan.common.paths import BRANDED_FOODS_OUTPUT
-from titan.common.units import sum_complete_numeric_components
-from titan.nutrient_mapping import CORE_FIELD_UNITS, CORE_FOOD_FIELDS, USDA_FIELD_SPECS
-from titan.parsers.usda import (
+from nutrition_ingest.common.contracts import FieldSpec
+from nutrition_ingest.common.json_stream import iter_json_source
+from nutrition_ingest.common.units import sum_complete_numeric_components
+from nutrition_ingest.nutrient_mapping import CORE_FIELD_UNITS, CORE_FOOD_FIELDS, USDA_FIELD_SPECS
+from nutrition_ingest.parsers.usda import (
     build_usda_runtime_map,
     coerce_fdc_id,
     compute_net_carbohydrates,
@@ -27,14 +23,11 @@ from titan.parsers.usda import (
     validate_mapping_nutrients,
 )
 
-SOURCE_NAME = "branded-foods"
 USDA_BRANDED_SOURCE = "usda_fooddata_central_branded"
 OFF_SOURCE = "open_food_facts"
 EXTRA_FIELD = "gtin"
 BRAND_FIELD = "brand"
 BRANDED_FIELDS = [*CORE_FOOD_FIELDS, EXTRA_FIELD, BRAND_FIELD]
-RAW_OUTPUT_PREFIX = "raw-foods"
-
 ROOT_KEY_BRANDED_FOODS = "BrandedFoods"
 
 SODIUM_FROM_SALT_FACTOR = 0.3934
@@ -345,6 +338,7 @@ def sanitize_row_for_display(row: dict[str, Any]) -> None:
         [row.get(field) for field in ("omega_3_ala", "omega_3_epa", "omega_3_dha")]
     )
 
+
 def enforce_display_safety(rows: Iterable[dict[str, Any]]) -> Iterator[dict[str, Any]]:
     for row in rows:
         if not normalize_valid_food_identity(row):
@@ -373,9 +367,7 @@ def normalize_display_name(value: Any) -> str | None:
     if text is None:
         return None
 
-    cased_characters = [
-        character for character in text if character.lower() != character.upper()
-    ]
+    cased_characters = [character for character in text if character.lower() != character.upper()]
     if len(cased_characters) < 2 or any(character.islower() for character in cased_characters):
         return text
 
@@ -441,18 +433,12 @@ def normalize_unit_token(unit: Any) -> str | None:
     if canonical is not None:
         return canonical
 
-    if (
-        token in MASS_FACTORS_TO_G
-        or token in VOLUME_FACTORS_TO_ML
-        or token in ENERGY_FACTORS_TO_KJ
-    ):
+    if token in MASS_FACTORS_TO_G or token in VOLUME_FACTORS_TO_ML or token in ENERGY_FACTORS_TO_KJ:
         return token
     return None
 
 
-def convert_mass_value(
-    value: float, source_unit: str, target_unit: str
-) -> float | None:
+def convert_mass_value(value: float, source_unit: str, target_unit: str) -> float | None:
     source_factor = MASS_FACTORS_TO_G.get(source_unit)
     target_factor = MASS_FACTORS_TO_G.get(target_unit)
     if source_factor is None or target_factor is None:
@@ -461,9 +447,7 @@ def convert_mass_value(
     return grams / target_factor
 
 
-def convert_energy_value(
-    value: float, source_unit: str, target_unit: str
-) -> float | None:
+def convert_energy_value(value: float, source_unit: str, target_unit: str) -> float | None:
     source_factor = ENERGY_FACTORS_TO_KJ.get(source_unit)
     target_factor = ENERGY_FACTORS_TO_KJ.get(target_unit)
     if source_factor is None or target_factor is None:
@@ -524,11 +508,6 @@ def normalize_gtin(value: Any) -> str | None:
     if actual_check_digit != expected_check_digit:
         return None
     return digits.zfill(14)
-
-
-def gtin_match_keys(gtin: str | None) -> set[str]:
-    normalized = normalize_gtin(gtin)
-    return {normalized} if normalized is not None else set()
 
 
 def build_empty_row(core_fields: list[str]) -> dict[str, Any]:
@@ -655,8 +634,7 @@ def extract_off_brand(food_row: dict[str, Any]) -> str | None:
             for entry in value:
                 if isinstance(entry, dict):
                     brand = first_delimited_text(
-                        normalize_text(entry.get("text"))
-                        or normalize_text(entry.get("name"))
+                        normalize_text(entry.get("text")) or normalize_text(entry.get("name"))
                     )
                 else:
                     brand = first_delimited_text(normalize_text(entry))
@@ -788,14 +766,10 @@ def resolve_off_field_value(
         if salt_item is not None:
             salt_amount, salt_source_unit = extract_off_nutriment_value(salt_item)
             if salt_amount is not None:
-                salt_grams = convert_mass_value(
-                    salt_amount, salt_source_unit or "g", "g"
-                )
+                salt_grams = convert_mass_value(salt_amount, salt_source_unit or "g", "g")
                 if salt_grams is not None:
                     sodium_grams = salt_grams * SODIUM_FROM_SALT_FACTOR
-                    converted = convert_nutrient_value(
-                        sodium_grams, "g", target_unit, field
-                    )
+                    converted = convert_nutrient_value(sodium_grams, "g", target_unit, field)
                     if converted is not None:
                         return converted
     return None
@@ -813,9 +787,7 @@ def map_off_row(
     normalized["source_id"] = source_id
     normalized[EXTRA_FIELD] = normalize_gtin(source_id)
     normalized[BRAND_FIELD] = extract_off_brand(food_row)
-    normalized["name"] = extract_product_name(
-        food_row.get("product_name"), food_row.get("lang")
-    )
+    normalized["name"] = extract_product_name(food_row.get("product_name"), food_row.get("lang"))
     normalized["portions"] = build_off_portions(food_row)
 
     nutriments_by_name = build_off_nutriments_index(food_row.get("nutriments"))
@@ -839,12 +811,9 @@ def map_off_row(
     )
 
     omega_components = [
-        normalized.get(field)
-        for field in ("omega_3_ala", "omega_3_epa", "omega_3_dha")
+        normalized.get(field) for field in ("omega_3_ala", "omega_3_epa", "omega_3_dha")
     ]
-    normalized["omega_3_ala_epa_dha_sum"] = sum_complete_numeric_components(
-        omega_components
-    )
+    normalized["omega_3_ala_epa_dha_sum"] = sum_complete_numeric_components(omega_components)
 
     return normalized
 
@@ -874,18 +843,12 @@ def build_target_units(
         nutrient_row = nutrient_rows_by_id.get(nutrient_id)
         unit_name = nutrient_row.get("unit_name") if nutrient_row is not None else None
         usda_unit = normalize_usda_unit(unit_name)
-        if (
-            expected_unit is not None
-            and usda_unit is not None
-            and expected_unit != usda_unit
-        ):
+        if expected_unit is not None and usda_unit is not None and expected_unit != usda_unit:
             raise RuntimeError(
                 f"Core unit mismatch for {target_field}: expected {expected_unit!r}, "
                 f"USDA derived {usda_unit!r}"
             )
-        target_units[target_field] = (
-            expected_unit if expected_unit is not None else usda_unit
-        )
+        target_units[target_field] = expected_unit if expected_unit is not None else usda_unit
     return target_units
 
 
@@ -945,9 +908,7 @@ def iter_off_rows(
     required_columns = {"code", "nutriments"}
     missing_columns = sorted(required_columns - schema_names)
     if missing_columns:
-        raise RuntimeError(
-            "OFF parquet is missing required columns: " + ", ".join(missing_columns)
-        )
+        raise RuntimeError("OFF parquet is missing required columns: " + ", ".join(missing_columns))
 
     columns = [
         column
@@ -1002,32 +963,6 @@ def merge_rows_with_usda_priority(
             connection.commit()
 
 
-def enforce_unique_keys(
-    rows: Iterable[dict[str, Any]],
-    *,
-    unique_upc: bool = True,
-) -> Iterator[dict[str, Any]]:
-    if not unique_upc:
-        yield from rows
-        return
-
-    with tempfile.TemporaryDirectory(prefix="mons-gtin-unique-") as temp_dir:
-        database = Path(temp_dir) / "gtins.sqlite"
-        with sqlite3.connect(database) as connection:
-            connection.execute("CREATE TABLE seen_gtins (gtin TEXT PRIMARY KEY)")
-            for row in rows:
-                gtin = normalize_gtin(row.get(EXTRA_FIELD))
-                if gtin is None:
-                    yield row
-                    continue
-                cursor = connection.execute(
-                    "INSERT OR IGNORE INTO seen_gtins (gtin) VALUES (?)", (gtin,)
-                )
-                if cursor.rowcount:
-                    yield row
-            connection.commit()
-
-
 def iter_rows(
     usda_branded_path: Path,
     off_parquet_path: Path,
@@ -1047,85 +982,9 @@ def iter_rows(
     usda_rows = enforce_display_safety(
         iter_usda_branded_rows(usda_branded_path, mapping, core_fields)
     )
-    off_rows = enforce_display_safety(
-        iter_off_rows(off_parquet_path, target_units, core_fields)
-    )
+    off_rows = enforce_display_safety(iter_off_rows(off_parquet_path, target_units, core_fields))
     if unique_upc:
         yield from merge_rows_with_usda_priority(usda_rows, off_rows)
     else:
         yield from usda_rows
         yield from off_rows
-
-
-def validate_branded_output_path(output_path: Path | None) -> None:
-    if output_path is None:
-        return
-
-    output_name = output_path.name.casefold()
-    if output_name.startswith(RAW_OUTPUT_PREFIX):
-        raise RuntimeError(
-            "Refusing to write branded rows to a raw-foods output path. "
-            f"Use {BRANDED_FOODS_OUTPUT} or another branded-specific filename."
-        )
-
-
-def register_subparser(subparsers):
-    parser = subparsers.add_parser(
-        "merge-off-branded",
-        help="Merge USDA branded JSON + Open Food Facts parquet into one normalized JSONL",
-    )
-    parser.add_argument(
-        "--usda-branded",
-        required=True,
-        help="Path to USDA branded JSON or ZIP export",
-    )
-    parser.add_argument(
-        "--off-parquet",
-        required=True,
-        help="Path to Open Food Facts parquet file",
-    )
-    parser.add_argument(
-        "--nutrient-csv", required=True, help="Path to USDA nutrient.csv"
-    )
-    add_quality_output_arguments(parser, source_name=SOURCE_NAME)
-    parser.set_defaults(handler=run_from_args)
-
-
-def run_from_args(args) -> None:
-    output_path = resolve_output_path(args.output, SOURCE_NAME)
-    validate_branded_output_path(output_path)
-    rows = iter_rows(
-        Path(args.usda_branded),
-        Path(args.off_parquet),
-        Path(args.nutrient_csv),
-        unique_upc=True,
-    )
-    write_jsonl(
-        rows,
-        output_path,
-        source_name=SOURCE_NAME,
-        input_paths=[Path(args.usda_branded), Path(args.off_parquet), Path(args.nutrient_csv)],
-        **output_options(args),
-    )
-
-
-def main(argv: list[str] | None = None) -> None:
-    parser = argparse.ArgumentParser(
-        description="Merge USDA branded + Open Food Facts into one normalized JSONL"
-    )
-    parser.add_argument(
-        "--usda-branded", required=True, help="Path to USDA branded JSON or ZIP"
-    )
-    parser.add_argument(
-        "--off-parquet", required=True, help="Path to Open Food Facts parquet"
-    )
-    parser.add_argument(
-        "--nutrient-csv", required=True, help="Path to USDA nutrient.csv"
-    )
-    add_quality_output_arguments(parser, source_name=SOURCE_NAME)
-    args = parser.parse_args(argv)
-    run_from_args(args)
-
-
-if __name__ == "__main__":
-    main()

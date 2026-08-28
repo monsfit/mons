@@ -34,7 +34,9 @@ FIELD_DEFINITIONS: tuple[FieldDefinition, ...] = (
     FieldDefinition("protein", "g", "Protein per 100 g"),
     FieldDefinition("total_fat", "g", "Total fat per 100 g"),
     FieldDefinition("carbohydrates_total", "g", "Source-reported total carbohydrate per 100 g"),
-    FieldDefinition("carbohydrates_available", "g", "Source-reported available carbohydrate per 100 g"),
+    FieldDefinition(
+        "carbohydrates_available", "g", "Source-reported available carbohydrate per 100 g"
+    ),
     FieldDefinition(
         "carbohydrates_net_calculated",
         "g",

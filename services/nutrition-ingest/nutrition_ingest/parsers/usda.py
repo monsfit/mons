@@ -1,18 +1,13 @@
 from __future__ import annotations
 
-import argparse
 import csv
 from pathlib import Path
 from typing import Any
 
-from titan.common.cli import add_quality_output_arguments, output_options, resolve_output_path
-from titan.common.contracts import FieldKind, FieldSpec
-from titan.common.json_stream import iter_json_source
-from titan.common.output import write_jsonl
-from titan.common.units import normalize_unit_token, sum_complete_numeric_components
-from titan.nutrient_mapping import CORE_FIELD_UNITS, CORE_FOOD_FIELDS, USDA_FIELD_SPECS
-
-SOURCE_NAME = "usda"
+from nutrition_ingest.common.contracts import FieldKind, FieldSpec
+from nutrition_ingest.common.json_stream import iter_json_source
+from nutrition_ingest.common.units import normalize_unit_token, sum_complete_numeric_components
+from nutrition_ingest.nutrient_mapping import CORE_FOOD_FIELDS
 
 SOURCE_LABELS = {
     "SurveyFoods": "usda_fooddata_central_survey",
@@ -359,7 +354,9 @@ def resolve_fallback_value(
     return None
 
 
-def resolve_nutrient_value(mapping_entry: dict[str, Any], nutrient_amounts: dict[int, float]) -> float | None:
+def resolve_nutrient_value(
+    mapping_entry: dict[str, Any], nutrient_amounts: dict[int, float]
+) -> float | None:
     nutrient_id = coerce_fdc_id(mapping_entry.get("fdc_id"))
     if nutrient_id is not None:
         value = nutrient_amounts.get(nutrient_id)
@@ -426,7 +423,11 @@ def map_usda_food_row(
                 else (1008, 2048, 2047)
             )
             normalized[target_field] = next(
-                (nutrient_amounts[nutrient_id] for nutrient_id in energy_ids if nutrient_id in nutrient_amounts),
+                (
+                    nutrient_amounts[nutrient_id]
+                    for nutrient_id in energy_ids
+                    if nutrient_id in nutrient_amounts
+                ),
                 None,
             )
         else:
@@ -435,10 +436,10 @@ def map_usda_food_row(
     normalized["carbohydrates_net_calculated"] = compute_net_carbohydrates(
         normalized.get("carbohydrates_total"), normalized.get("fiber")
     )
-    omega_components = [normalized.get(field) for field in ("omega_3_ala", "omega_3_epa", "omega_3_dha")]
-    normalized["omega_3_ala_epa_dha_sum"] = sum_complete_numeric_components(
-        omega_components
-    )
+    omega_components = [
+        normalized.get(field) for field in ("omega_3_ala", "omega_3_epa", "omega_3_dha")
+    ]
+    normalized["omega_3_ala_epa_dha_sum"] = sum_complete_numeric_components(omega_components)
     return normalized
 
 
@@ -471,57 +472,3 @@ def iter_all_usda_rows(
     for json_path, root_key in dataset_specs:
         source_label = SOURCE_LABELS[root_key]
         yield from iter_dataset_rows(json_path, root_key, source_label, mapping, core_fields)
-
-
-def register_subparser(subparsers):
-    parser = subparsers.add_parser("usda", help="Parse USDA FoodData Central JSON exports")
-    parser.add_argument("--survey-json", required=True, help="Path to Survey JSON file")
-    parser.add_argument("--foundation-json", required=True, help="Path to Foundation JSON file")
-    parser.add_argument("--sr-legacy-json", required=True, help="Path to SR Legacy JSON file")
-    parser.add_argument("--nutrient-csv", required=True, help="Path to nutrient.csv")
-    add_quality_output_arguments(parser, source_name=SOURCE_NAME)
-    parser.set_defaults(handler=run_from_args)
-
-
-def run_from_args(args) -> None:
-    mapping = build_usda_runtime_map(USDA_FIELD_SPECS)
-    nutrient_rows_by_id = load_nutrient_rows(Path(args.nutrient_csv))
-    validate_mapping_fields(mapping, CORE_FOOD_FIELDS)
-    validate_mapping_nutrients(mapping, CORE_FOOD_FIELDS, nutrient_rows_by_id)
-    validate_core_field_units_against_usda(mapping, nutrient_rows_by_id, CORE_FIELD_UNITS)
-
-    rows = iter_all_usda_rows(
-        Path(args.survey_json),
-        Path(args.foundation_json),
-        Path(args.sr_legacy_json),
-        mapping,
-        CORE_FOOD_FIELDS,
-    )
-    output_path = resolve_output_path(args.output, SOURCE_NAME)
-    write_jsonl(
-        rows,
-        output_path,
-        source_name=SOURCE_NAME,
-        input_paths=[
-            Path(args.survey_json),
-            Path(args.foundation_json),
-            Path(args.sr_legacy_json),
-            Path(args.nutrient_csv),
-        ],
-        **output_options(args),
-    )
-
-
-def main(argv: list[str] | None = None):
-    parser = argparse.ArgumentParser(description="USDA FoodData Central parser")
-    parser.add_argument("--survey-json", required=True, help="Path to Survey JSON file")
-    parser.add_argument("--foundation-json", required=True, help="Path to Foundation JSON file")
-    parser.add_argument("--sr-legacy-json", required=True, help="Path to SR Legacy JSON file")
-    parser.add_argument("--nutrient-csv", required=True, help="Path to nutrient.csv")
-    add_quality_output_arguments(parser, source_name=SOURCE_NAME)
-    args = parser.parse_args(argv)
-    run_from_args(args)
-
-
-if __name__ == "__main__":
-    main()

@@ -1,8 +1,8 @@
 from typing import Any
 
-from titan.common.contracts import FieldKind, FieldSpec
-from titan.common.schema import CORE_FIELD_UNITS as CORE_FIELD_UNITS
-from titan.common.schema import CORE_FOOD_FIELDS as CORE_FOOD_FIELDS
+from nutrition_ingest.common.contracts import FieldKind, FieldSpec
+from nutrition_ingest.common.schema import CORE_FIELD_UNITS as CORE_FIELD_UNITS
+from nutrition_ingest.common.schema import CORE_FOOD_FIELDS as CORE_FOOD_FIELDS
 
 USDA_NUTRIENT_MAP = {
     "source_id": "fdcId",
@@ -552,9 +552,7 @@ def _v2_usda_map(raw_map: dict[str, Any]) -> dict[str, Any]:
     }
     converted["folate_total"] = ""
     converted["folate_dfe"] = raw_map["folate_vitamin_b9"]
-    converted["vitamin_k_phylloquinone"] = raw_map[
-        "vitamin_k_phylloquinone_and_menaquinone"
-    ]
+    converted["vitamin_k_phylloquinone"] = raw_map["vitamin_k_phylloquinone_and_menaquinone"]
     return converted
 
 

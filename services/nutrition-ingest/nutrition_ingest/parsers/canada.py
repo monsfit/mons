@@ -1,15 +1,12 @@
 from __future__ import annotations
 
-import argparse
 import csv
 from pathlib import Path
 from typing import Any
 
-from titan.common.cli import add_quality_output_arguments, output_options, resolve_output_path
-from titan.common.contracts import FieldKind, FieldSpec
-from titan.common.output import write_jsonl
-from titan.common.units import convert_numeric_value, sum_complete_numeric_components
-from titan.nutrient_mapping import CNF_FIELD_SPECS, CORE_FIELD_UNITS, CORE_FOOD_FIELDS
+from nutrition_ingest.common.contracts import FieldKind, FieldSpec
+from nutrition_ingest.common.units import convert_numeric_value, sum_complete_numeric_components
+from nutrition_ingest.nutrient_mapping import CNF_FIELD_SPECS, CORE_FIELD_UNITS, CORE_FOOD_FIELDS
 
 OMEGA3_FALLBACK_SYMBOLS = [
     "18:3cccn-3",
@@ -26,8 +23,6 @@ OMEGA6_FALLBACK_SYMBOLS = [
     "20:4n-6",
     "22:4n-6",
 ]
-
-SOURCE_NAME = "canada"
 
 
 def normalize_value(value: Any) -> Any:
@@ -231,12 +226,9 @@ def map_cnf_row(
         normalized.get("carbohydrates_total"), normalized.get("fiber")
     )
     omega_components = [
-        normalized.get(field)
-        for field in ("omega_3_ala", "omega_3_epa", "omega_3_dha")
+        normalized.get(field) for field in ("omega_3_ala", "omega_3_epa", "omega_3_dha")
     ]
-    normalized["omega_3_ala_epa_dha_sum"] = sum_complete_numeric_components(
-        omega_components
-    )
+    normalized["omega_3_ala_epa_dha_sum"] = sum_complete_numeric_components(omega_components)
 
     return normalized
 
@@ -279,60 +271,3 @@ def iter_rows(
         if mapped_row.get("source_id") is None and mapped_row.get("name") is None:
             continue
         yield mapped_row
-
-
-def _resolve_cnf_paths(args) -> tuple[Path, Path, Path]:
-    directory = Path(args.directory) if args.directory else None
-
-    food_name_path = Path(args.food_name_path) if args.food_name_path else None
-    nutrient_name_path = Path(args.nutrient_name_path) if args.nutrient_name_path else None
-    nutrient_amount_path = Path(args.nutrient_amount_path) if args.nutrient_amount_path else None
-
-    if directory is not None:
-        if food_name_path is None:
-            food_name_path = directory / "FOOD NAME.csv"
-        if nutrient_name_path is None:
-            nutrient_name_path = directory / "NUTRIENT NAME.csv"
-        if nutrient_amount_path is None:
-            nutrient_amount_path = directory / "NUTRIENT AMOUNT.csv"
-
-    if food_name_path is None or nutrient_name_path is None or nutrient_amount_path is None:
-        raise RuntimeError(
-            "Provide --directory or all of --food-name-path, --nutrient-name-path, --nutrient-amount-path"
-        )
-
-    return food_name_path, nutrient_name_path, nutrient_amount_path
-
-
-def register_subparser(subparsers):
-    parser = subparsers.add_parser("canada", help="Parse Canadian Nutrient File CSV data")
-    parser.add_argument("--directory", help="CNF directory containing FOOD NAME.csv etc.")
-    parser.add_argument("--food-name-path", help="Path to FOOD NAME.csv")
-    parser.add_argument("--nutrient-name-path", help="Path to NUTRIENT NAME.csv")
-    parser.add_argument("--nutrient-amount-path", help="Path to NUTRIENT AMOUNT.csv")
-    add_quality_output_arguments(parser, source_name=SOURCE_NAME)
-    parser.set_defaults(handler=run_from_args)
-
-
-def run_from_args(args) -> None:
-    food_name_path, nutrient_name_path, nutrient_amount_path = _resolve_cnf_paths(args)
-    output_path = resolve_output_path(args.output, SOURCE_NAME)
-    rows = iter_rows(food_name_path, nutrient_name_path, nutrient_amount_path)
-    write_jsonl(
-        rows,
-        output_path,
-        source_name=SOURCE_NAME,
-        input_paths=[food_name_path, nutrient_name_path, nutrient_amount_path],
-        **output_options(args),
-    )
-
-
-def main(argv: list[str] | None = None) -> None:
-    parser = argparse.ArgumentParser(description="Canadian nutrient parser")
-    parser.add_argument("--directory", help="CNF directory containing FOOD NAME.csv etc.")
-    parser.add_argument("--food-name-path", help="Path to FOOD NAME.csv")
-    parser.add_argument("--nutrient-name-path", help="Path to NUTRIENT NAME.csv")
-    parser.add_argument("--nutrient-amount-path", help="Path to NUTRIENT AMOUNT.csv")
-    add_quality_output_arguments(parser, source_name=SOURCE_NAME)
-    args = parser.parse_args(argv)
-    run_from_args(args)

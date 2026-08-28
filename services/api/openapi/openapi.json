@@ -38,69 +38,6 @@
         }
       }
     },
-    "/v1/catalog": {
-      "get": {
-        "tags": [
-          "catalog"
-        ],
-        "operationId": "catalog.catalogStatus",
-        "parameters": [],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Active catalog snapshot status",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CatalogStatus"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "ValidationError",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationErrorEncoded"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "UnauthorizedError",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/UnauthorizedErrorEncoded"
-                    },
-                    {
-                      "$ref": "#/components/schemas/UnauthorizedErrorEncoded"
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "InternalApiError",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalApiErrorEncoded"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/v1/foods/by-gtin/{gtin}": {
       "get": {
         "tags": [
@@ -3830,133 +3767,6 @@
         ],
         "additionalProperties": false
       },
-      "CatalogStatus": {
-        "type": "object",
-        "properties": {
-          "active": {
-            "type": "boolean"
-          },
-          "brandedFoods": {
-            "type": "integer",
-            "allOf": [
-              {
-                "minimum": 0
-              }
-            ]
-          },
-          "completedAt": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "rawFoods": {
-            "type": "integer",
-            "allOf": [
-              {
-                "minimum": 0
-              }
-            ]
-          },
-          "schemaVersion": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "snapshotId": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "required": [
-          "active",
-          "brandedFoods",
-          "completedAt",
-          "rawFoods",
-          "schemaVersion",
-          "snapshotId"
-        ],
-        "additionalProperties": false,
-        "description": "Active catalog snapshot status"
-      },
-      "UnauthorizedErrorEncoded": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string",
-            "enum": [
-              "unauthorized"
-            ]
-          },
-          "message": {
-            "type": "string",
-            "enum": [
-              "Authentication required"
-            ]
-          }
-        },
-        "required": [
-          "code",
-          "message"
-        ],
-        "additionalProperties": false
-      },
-      "InternalApiErrorEncoded": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string",
-            "enum": [
-              "internal_error"
-            ]
-          },
-          "message": {
-            "type": "string",
-            "enum": [
-              "Internal server error"
-            ]
-          }
-        },
-        "required": [
-          "code",
-          "message"
-        ],
-        "additionalProperties": false
-      },
-      "ValidationErrorEncoded": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string",
-            "enum": [
-              "validation_error"
-            ]
-          },
-          "message": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "code",
-          "message"
-        ],
-        "additionalProperties": false
-      },
       "FoodNutrient": {
         "type": "object",
         "properties": {
@@ -4212,11 +4022,74 @@
         "additionalProperties": false,
         "description": "Snapshot-scoped normalized food summary"
       },
+      "UnauthorizedErrorEncoded": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "unauthorized"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "enum": [
+              "Authentication required"
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "additionalProperties": false
+      },
       "NotFoundErrorEncoded": {
         "type": "object",
         "properties": {
           "code": {
             "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "additionalProperties": false
+      },
+      "InternalApiErrorEncoded": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "internal_error"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "enum": [
+              "Internal server error"
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "additionalProperties": false
+      },
+      "ValidationErrorEncoded": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "validation_error"
+            ]
           },
           "message": {
             "type": "string"

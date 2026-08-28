@@ -1,26 +1,21 @@
 from __future__ import annotations
 
-import argparse
 import re
 from pathlib import Path
 from typing import Any
 
 from openpyxl import load_workbook
 
-from titan.common.cli import add_quality_output_arguments, output_options, resolve_output_path
-from titan.common.contracts import FieldKind, FieldSpec
-from titan.common.output import write_jsonl
-from titan.common.units import (
+from nutrition_ingest.common.contracts import FieldKind, FieldSpec
+from nutrition_ingest.common.units import (
     convert_numeric_value,
     extract_unit_from_label,
     sum_complete_numeric_components,
 )
-from titan.nutrient_mapping import CORE_FIELD_UNITS, NEVO_FIELD_SPECS
+from nutrition_ingest.nutrient_mapping import CORE_FIELD_UNITS, NEVO_FIELD_SPECS
 
 DEFAULT_SHEET_NAME = "NEVO2025"
 DEFAULT_NUTRIENTS_SHEET_NAME = "NEVO2025_Nutrienten_Nutrients"
-SOURCE_NAME = "nevo"
-
 NEVO_COLUMN_POLYOLS = "POLYL"
 NEVO_CODE_PREFIX_PATTERN = re.compile(r"^([A-Z0-9:_-]+)\s*(?:\(|$)")
 
@@ -66,9 +61,7 @@ def specs_to_source_map(specs: dict[str, FieldSpec]) -> dict[str, str]:
     return mapping
 
 
-def resolve_source_columns(
-    headers: list[Any], mapping: dict[str, str]
-) -> dict[str, str | None]:
+def resolve_source_columns(headers: list[Any], mapping: dict[str, str]) -> dict[str, str | None]:
     header_values = [h for h in headers if isinstance(h, str)]
     headers_by_canonical = {canonicalize_header(h): h for h in header_values}
     headers_by_code = {
@@ -157,7 +150,10 @@ def validate_mapping_codes(
         # Nutrient code columns in NEVO are short identifiers like CHO, VITC, F18:3CN3.
         if source_column in nutrient_metadata:
             continue
-        if target_field in {"carbohydrates_total", "carbohydrates_net_calculated"} and source_column == "CHO":
+        if (
+            target_field in {"carbohydrates_total", "carbohydrates_net_calculated"}
+            and source_column == "CHO"
+        ):
             continue
         if source_column in {"NEVO-code", "Engelse naam/Food name"}:
             continue
@@ -237,12 +233,9 @@ def map_nevo_row(
         normalized.get("carbohydrates_total"), polyols_value
     )
     omega_components = [
-        normalized.get(field)
-        for field in ("omega_3_ala", "omega_3_epa", "omega_3_dha")
+        normalized.get(field) for field in ("omega_3_ala", "omega_3_epa", "omega_3_dha")
     ]
-    normalized["omega_3_ala_epa_dha_sum"] = sum_complete_numeric_components(
-        omega_components
-    )
+    normalized["omega_3_ala_epa_dha_sum"] = sum_complete_numeric_components(omega_components)
 
     return normalized
 
@@ -284,50 +277,3 @@ def iter_rows(
         if mapped_row.get("source_id") is None and mapped_row.get("name") is None:
             continue
         yield mapped_row
-
-
-def register_subparser(subparsers):
-    parser = subparsers.add_parser("nevo", help="Parse Dutch NEVO workbook")
-    parser.add_argument("--workbook", required=True, help="Path to NEVO workbook (.xlsx)")
-    parser.add_argument("--sheet", default=DEFAULT_SHEET_NAME, help="Main food sheet name")
-    parser.add_argument(
-        "--nutrients-sheet",
-        default=DEFAULT_NUTRIENTS_SHEET_NAME,
-        help="Nutrients reference sheet name",
-    )
-    add_quality_output_arguments(parser, source_name=SOURCE_NAME)
-    parser.set_defaults(handler=run_from_args)
-
-
-def run_from_args(args) -> None:
-    output_path = resolve_output_path(args.output, SOURCE_NAME)
-    rows = iter_rows(
-        Path(args.workbook),
-        sheet_name=args.sheet,
-        nutrients_sheet_name=args.nutrients_sheet,
-    )
-    write_jsonl(
-        rows,
-        output_path,
-        source_name=SOURCE_NAME,
-        input_paths=[Path(args.workbook)],
-        **output_options(args),
-    )
-
-
-def main(argv: list[str] | None = None):
-    parser = argparse.ArgumentParser(description="Dutch NEVO parser")
-    parser.add_argument("--workbook", required=True, help="Path to NEVO workbook (.xlsx)")
-    parser.add_argument("--sheet", default=DEFAULT_SHEET_NAME, help="Main food sheet name")
-    parser.add_argument(
-        "--nutrients-sheet",
-        default=DEFAULT_NUTRIENTS_SHEET_NAME,
-        help="Nutrients reference sheet name",
-    )
-    add_quality_output_arguments(parser, source_name=SOURCE_NAME)
-    args = parser.parse_args(argv)
-    run_from_args(args)
-
-
-if __name__ == "__main__":
-    main()

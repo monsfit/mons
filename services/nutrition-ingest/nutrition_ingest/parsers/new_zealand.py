@@ -1,25 +1,20 @@
 from __future__ import annotations
 
-import argparse
 import re
 from pathlib import Path
 from typing import Any
 
 from openpyxl import load_workbook
 
-from titan.common.cli import add_quality_output_arguments, output_options, resolve_output_path
-from titan.common.contracts import FieldKind, FieldSpec
-from titan.common.output import write_jsonl
-from titan.common.units import (
+from nutrition_ingest.common.contracts import FieldKind, FieldSpec
+from nutrition_ingest.common.units import (
     convert_numeric_value,
     extract_unit_from_label,
     sum_complete_numeric_components,
 )
-from titan.nutrient_mapping import CORE_FIELD_UNITS, NEW_ZEALAND_FIELD_SPECS
+from nutrition_ingest.nutrient_mapping import CORE_FIELD_UNITS, NEW_ZEALAND_FIELD_SPECS
 
 DEFAULT_SHEET_NAME = "Concisen Tables 14th Edition wi"
-SOURCE_NAME = "new_zealand"
-
 FOOD_ID_PATTERN = re.compile(r"^[A-Z]\d+$")
 CATEGORY_ID_PATTERN = re.compile(r"^[A-Z]$")
 PORTION_NAME_PATTERN = re.compile(
@@ -62,9 +57,7 @@ def specs_to_source_map(specs: dict[str, FieldSpec]) -> dict[str, str]:
     return mapping
 
 
-def resolve_source_columns(
-    headers: list[Any], mapping: dict[str, str]
-) -> dict[str, str | None]:
+def resolve_source_columns(headers: list[Any], mapping: dict[str, str]) -> dict[str, str | None]:
     header_values = [h for h in headers if isinstance(h, str)]
     headers_by_canonical = {canonicalize_header(h): h for h in header_values}
 
@@ -199,12 +192,9 @@ def map_new_zealand_row(
         normalized[target_field] = value
 
     omega_components = [
-        normalized.get(field)
-        for field in ("omega_3_ala", "omega_3_epa", "omega_3_dha")
+        normalized.get(field) for field in ("omega_3_ala", "omega_3_epa", "omega_3_dha")
     ]
-    normalized["omega_3_ala_epa_dha_sum"] = sum_complete_numeric_components(
-        omega_components
-    )
+    normalized["omega_3_ala_epa_dha_sum"] = sum_complete_numeric_components(omega_components)
 
     return normalized
 
@@ -304,36 +294,3 @@ def iter_rows(
 
     if current_food is not None:
         yield finalize_food(current_food)
-
-
-def register_subparser(subparsers):
-    parser = subparsers.add_parser("new-zealand", help="Parse New Zealand food composition workbook")
-    parser.add_argument("--workbook", required=True, help="Path to New Zealand workbook (.xlsx)")
-    parser.add_argument("--sheet", default=DEFAULT_SHEET_NAME, help="Workbook sheet name")
-    add_quality_output_arguments(parser, source_name=SOURCE_NAME)
-    parser.set_defaults(handler=run_from_args)
-
-
-def run_from_args(args) -> None:
-    output_path = resolve_output_path(args.output, SOURCE_NAME)
-    rows = iter_rows(Path(args.workbook), sheet_name=args.sheet)
-    write_jsonl(
-        rows,
-        output_path,
-        source_name=SOURCE_NAME,
-        input_paths=[Path(args.workbook)],
-        **output_options(args),
-    )
-
-
-def main(argv: list[str] | None = None):
-    parser = argparse.ArgumentParser(description="New Zealand food composition parser")
-    parser.add_argument("--workbook", required=True, help="Path to New Zealand workbook (.xlsx)")
-    parser.add_argument("--sheet", default=DEFAULT_SHEET_NAME, help="Workbook sheet name")
-    add_quality_output_arguments(parser, source_name=SOURCE_NAME)
-    args = parser.parse_args(argv)
-    run_from_args(args)
-
-
-if __name__ == "__main__":
-    main()
