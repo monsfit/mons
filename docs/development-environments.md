@@ -18,7 +18,7 @@ used consistently for its schema, preview stage, hostname, and `preview/<branch-
 
 ## Ordinary development
 
-Put the direct development migration-role URL in the ignored root `.env.local`:
+Put the direct development migration-role URL in the ignored root `.env`:
 
 ```dotenv
 MIGRATION_DATABASE_URL=postgresql://mons_dev_migration:...@<VPS_MAGICDNS_NAME>:5433/mons_dev?uselibpqcompat=true&sslmode=require

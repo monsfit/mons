@@ -65,8 +65,7 @@ pnpm db:status
 
 ## Environment
 
-Local commands read the ignored root `.env` and `.env.local` files. Existing process variables win
-over file values.
+Local commands read the ignored root `.env` file. Existing process variables win over file values.
 
 Publishing uses:
 
