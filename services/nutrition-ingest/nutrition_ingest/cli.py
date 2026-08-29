@@ -36,15 +36,11 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> None:
     repository = Path(__file__).resolve().parents[3]
-    file_values: dict[str, str] = {}
-    for filename in (".env", ".env.local"):
-        file_values.update(
-            {
-                key: value
-                for key, value in dotenv_values(repository / filename).items()
-                if value is not None
-            }
-        )
+    file_values = {
+        key: value
+        for key, value in dotenv_values(repository / ".env").items()
+        if value is not None
+    }
     for key, value in file_values.items():
         os.environ.setdefault(key, value)
 
