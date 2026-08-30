@@ -4,9 +4,10 @@ import json
 import math
 import sqlite3
 import tempfile
+import unicodedata
 from collections.abc import Iterable, Iterator
 from pathlib import Path
-from typing import Any
+from typing import Any, TypeGuard
 
 from nutrition_ingest.common.schema import NUTRIENT_FIELDS
 from nutrition_ingest.nutrient_mapping import CORE_FIELD_UNITS, CORE_FOOD_FIELDS, USDA_FIELD_SPECS
@@ -17,6 +18,12 @@ from . import cofid as cofid_parser
 from . import nevo as nevo_parser
 from . import new_zealand as new_zealand_parser
 from . import usda as usda_parser
+
+MAX_DISPLAY_NAME_LENGTH = 160
+MAX_CALORIES_PER_100G = 1000.0
+MAX_MACRO_GRAMS_PER_100G = 100.0
+MAX_MACRO_TOTAL_PER_100G = 120.0
+SEMANTIC_NAME_PUNCTUATION = frozenset({"/", "%", "+", "<", ">"})
 
 
 def build_default_paths(inputs_dir: Path) -> dict[str, Path]:
@@ -66,7 +73,15 @@ def iter_rows(paths: dict[str, Path]):
 def normalize_name_key(value: Any) -> str | None:
     if not isinstance(value, str):
         return None
-    key = " ".join(value.casefold().split())
+    normalized = unicodedata.normalize("NFKC", value.casefold())
+    key = " ".join(
+        "".join(
+            character
+            if character.isalnum() or character in SEMANTIC_NAME_PUNCTUATION
+            else " "
+            for character in normalized
+        ).split()
+    )
     return key or None
 
 
@@ -80,7 +95,55 @@ def enforce_defined_names(rows: Iterable[dict[str, Any]]) -> Iterator[dict[str, 
             yield row
 
 
-def _is_valid_nutrient_value(value: Any) -> bool:
+def has_display_name(value: Any) -> bool:
+    return (
+        isinstance(value, str)
+        and bool(value.strip())
+        and len(value) <= MAX_DISPLAY_NAME_LENGTH
+        and sum(character.isalpha() for character in value) >= 2
+    )
+
+
+def resolved_carbohydrates(row: dict[str, Any]) -> Any:
+    total = row.get("carbohydrates_total")
+    return total if total is not None else row.get("carbohydrates_available")
+
+
+def has_valid_core_nutrition(row: dict[str, Any]) -> bool:
+    calories_value = row.get("calories")
+    protein_value = row.get("protein")
+    fat_value = row.get("total_fat")
+    carbohydrates_value = resolved_carbohydrates(row)
+    if not _is_valid_nutrient_value(calories_value):
+        return False
+    if not _is_valid_nutrient_value(protein_value):
+        return False
+    if not _is_valid_nutrient_value(fat_value):
+        return False
+    if not _is_valid_nutrient_value(carbohydrates_value):
+        return False
+
+    calories = float(calories_value)
+    protein = float(protein_value)
+    fat = float(fat_value)
+    carbohydrates = float(carbohydrates_value)
+    macros = (protein, fat, carbohydrates)
+    if not 0 <= calories <= MAX_CALORIES_PER_100G:
+        return False
+    if any(not 0 <= value <= MAX_MACRO_GRAMS_PER_100G for value in macros):
+        return False
+    if sum(macros) > MAX_MACRO_TOTAL_PER_100G:
+        return False
+    return calories > 0 or sum(macros) == 0
+
+
+def enforce_display_safety(rows: Iterable[dict[str, Any]]) -> Iterator[dict[str, Any]]:
+    for row in rows:
+        if has_display_name(row.get("name")) and has_valid_core_nutrition(row):
+            yield row
+
+
+def _is_valid_nutrient_value(value: Any) -> TypeGuard[int | float]:
     if isinstance(value, bool):
         return False
     if isinstance(value, int):

@@ -312,7 +312,9 @@ def build_release(
         candidate_manifest = workspace / RELEASE_MANIFEST.name
         candidate_rejects = workspace / REJECTS_JSONL.name
 
-        raw_rows = normalize_raw.enforce_unique_names(normalize_raw.iter_rows(raw_paths))
+        raw_rows = normalize_raw.enforce_unique_names(
+            normalize_raw.enforce_display_safety(normalize_raw.iter_rows(raw_paths))
+        )
         branded_rows = merge_off_branded.iter_rows(
             branded_paths["usda_branded"],
             branded_paths["off_parquet"],

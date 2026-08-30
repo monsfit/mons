@@ -14,8 +14,21 @@ npx pnpm@11.20.0 dev
 ```
 
 `dev` runs the API as the Cloudflare Worker declared in `sst.config.ts`. SST uses its default
-personal stage for live development while linking the development Hyperdrive, Workers AI, R2, and
+personal stage for live development while linking the personal Hyperdrive, Workers AI, R2, and
 Clerk resources through native bindings.
+
+## Catalog caching
+
+Food search stays uncached because typed queries are high-cardinality and the PostgreSQL prefix and
+full-text indexes are already fast. Authenticated food-by-ID and barcode lookups use the Workers
+Cache API after authentication: successful entries live for 30 days, misses for 5 minutes, and
+every key includes the immutable catalog release ID. The active release ID is refreshed every 60
+seconds, so publishing a new catalog naturally moves lookups into a fresh namespace without a cache
+purge. Hyperdrive query caching remains disabled; Hyperdrive is used only for connection pooling.
+
+The iOS client keeps up to 500 resolved catalog foods in its own 30-day, release-scoped disk cache.
+Search responses carry the active release ID, and selecting a search result resolves the complete
+food before it is displayed or logged.
 
 ## Architecture
 

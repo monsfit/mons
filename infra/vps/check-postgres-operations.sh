@@ -52,7 +52,7 @@ fail() {
   exit 1
 }
 
-for service in postgres-dev postgres-prod; do
+for service in postgres-personal postgres-dev postgres-prod; do
   state=$("${compose[@]}" ps --format json "${service}" | jq -r '.State // empty')
   [[ ${state} == running ]] || fail "${service} is not running (state=${state:-missing})"
   health=$("${compose[@]}" ps --format json "${service}" | jq -r '.Health // empty')

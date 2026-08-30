@@ -73,6 +73,7 @@ private actor MealStoreAPISpy: MealStoreAPI {
     }
 
     func searchFoods(query _: String, kind _: DatasetKind?, limit _: Int) async throws -> [CatalogFood] { [] }
+    func food(datasetKind _: DatasetKind, foodId _: String) async throws -> CatalogFood { throw StubError.unimplemented }
     func food(gtin _: String) async throws -> CatalogFood { throw StubError.unimplemented }
     func logFood(profileId _: UUID, entry _: CreateFoodLogEntryRequest) async throws -> FoodLogEntry { throw StubError.unimplemented }
     func deleteFoodLogEntry(profileId _: UUID, entryId _: UUID) async throws {}

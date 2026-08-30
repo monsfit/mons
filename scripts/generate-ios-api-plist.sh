@@ -17,9 +17,6 @@ case "$environment" in
     fi
     api_url=$(node "$repository_root/scripts/deployment-identity.ts" --stage "$stage" --format url)
     ;;
-  preview)
-    api_url=$(node "$repository_root/scripts/deployment-identity.ts" --environment preview --format url)
-    ;;
   dev)
     api_url=https://api.dev.mons.fit
     ;;

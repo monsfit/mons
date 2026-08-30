@@ -2,6 +2,7 @@ import Foundation
 
 actor MonsAPIClient {
     private let authorizationTokenProvider: any AuthorizationTokenProviding
+    private let catalogFoodCache: CatalogFoodCache
     private let decoder: JSONDecoder
     private let encoder: JSONEncoder
     private let requestBuilder: AuthenticatedRequestBuilder
@@ -10,10 +11,12 @@ actor MonsAPIClient {
     init(
         configuration: APIConfiguration,
         session: URLSession = .shared,
+        catalogFoodCache: CatalogFoodCache = CatalogFoodCache(),
         authorizationTokenProvider: any AuthorizationTokenProviding = ClerkAuthorizationTokenProvider()
     ) {
         requestBuilder = AuthenticatedRequestBuilder(baseURL: configuration.baseURL)
         self.session = session
+        self.catalogFoodCache = catalogFoodCache
         self.authorizationTokenProvider = authorizationTokenProvider
 
         let decoder = JSONDecoder()
@@ -67,11 +70,30 @@ actor MonsAPIClient {
             path: ["v1", "foods", "search"],
             query: queryItems
         )
-        return response.foods
+        await catalogFoodCache.activate(releaseId: response.catalogReleaseId)
+        return response.foods.map(\.catalogFood)
     }
 
     func food(gtin: String) async throws -> CatalogFood {
-        try await request(path: ["v1", "foods", "by-gtin", gtin])
+        if let cached = await catalogFoodCache.food(gtin: gtin) {
+            return cached
+        }
+        let response: FoodItemResponse = try await request(
+            path: ["v1", "foods", "by-gtin", gtin]
+        )
+        await catalogFoodCache.insert(response.food, releaseId: response.catalogReleaseId)
+        return response.food
+    }
+
+    func food(datasetKind: DatasetKind, foodId: String) async throws -> CatalogFood {
+        if let cached = await catalogFoodCache.food(datasetKind: datasetKind, foodId: foodId) {
+            return cached
+        }
+        let response: FoodItemResponse = try await request(
+            path: ["v1", "foods", datasetKind.rawValue, foodId]
+        )
+        await catalogFoodCache.insert(response.food, releaseId: response.catalogReleaseId)
+        return response.food
     }
 
     func foodLog(profileId: UUID, from: Date, to: Date) async throws -> [FoodLogEntry] {

@@ -35,26 +35,32 @@ const fixtureLayer = Layer.effectDiscard(
       const catalog = sql(schema)
       const application = sql(appSchema)
       const foods = sql(`${schema}.foods`)
+      const rawFoods = sql(`${schema}.raw_foods`)
+      const brandedFoods = sql(`${schema}.branded_foods`)
       const portions = sql(`${schema}.portions`)
       const nutrients = sql(`${schema}.nutrient_definitions`)
+      const catalogMetadata = sql(`${schema}.catalog_metadata`)
       yield* sql`DROP SCHEMA IF EXISTS ${catalog} CASCADE`
       yield* sql`DROP SCHEMA IF EXISTS ${application} CASCADE`
-      yield* sql`CREATE EXTENSION IF NOT EXISTS pg_trgm`
       yield* sql`CREATE SCHEMA ${catalog}`
+      yield* sql`CREATE TABLE ${catalogMetadata} (release_id text PRIMARY KEY)`
+      yield* sql`INSERT INTO ${catalogMetadata} VALUES ('2026-08-27-test0001')`
       yield* sql`CREATE TABLE ${foods} (
         brand text, calories double precision, carbohydrates_available double precision,
-        carbohydrates_total double precision, dataset_kind text NOT NULL, food_id bigint PRIMARY KEY,
+        carbohydrates_total double precision, dataset_kind text NOT NULL, food_id bigint NOT NULL,
         fiber double precision, gtin char(14), name text NOT NULL,
         protein double precision, source text NOT NULL, source_id text NOT NULL,
         sodium double precision, total_fat double precision,
         search_document tsvector GENERATED ALWAYS AS (
           setweight(to_tsvector('simple', coalesce(name, '')), 'A') ||
           setweight(to_tsvector('simple', coalesce(brand, '')), 'B')
-        ) STORED
-      )`
+        ) STORED,
+        PRIMARY KEY (dataset_kind, food_id)
+      ) PARTITION BY LIST (dataset_kind)`
+      yield* sql`CREATE TABLE ${rawFoods} PARTITION OF ${foods} FOR VALUES IN ('raw')`
+      yield* sql`CREATE TABLE ${brandedFoods} PARTITION OF ${foods} FOR VALUES IN ('branded')`
       yield* sql`CREATE INDEX foods_search_document_idx ON ${foods} USING gin (search_document)`
-      yield* sql`CREATE VIEW ${sql(`${schema}.branded_foods`)} AS
-        SELECT * FROM ${foods} WHERE dataset_kind = 'branded'`
+      yield* sql`CREATE INDEX foods_name_prefix_idx ON ${foods} ((lower(name) COLLATE "C"), food_id)`
       yield* sql`CREATE TABLE ${portions} (
         amount double precision NOT NULL, dataset_kind text NOT NULL, food_id bigint NOT NULL,
         name text NOT NULL, ordinal integer NOT NULL, unit text NOT NULL,
@@ -141,6 +147,7 @@ integration('feature repositories with PostgreSQL', () => {
     it.effect('resolves complete barcode nutrition', () =>
       Effect.gen(function* () {
         const catalog = yield* CatalogReader
+        expect(yield* catalog.activeReleaseId()).toBe('2026-08-27-test0001')
         const food = yield* catalog.findByGtin('00000000000001')
         expect(food).toMatchObject({
           food_id: '1',
@@ -150,6 +157,10 @@ integration('feature repositories with PostgreSQL', () => {
             { amount: 2.4, field: 'fiber', name: 'Dietary fibre', unit: 'g' },
             { amount: 1, field: 'sodium', name: 'Sodium', unit: 'mg' },
           ],
+        })
+        expect(yield* catalog.findById('branded', '1')).toMatchObject({
+          food_id: '1',
+          name: 'Apple',
         })
       }),
     )
@@ -165,8 +176,17 @@ integration('feature repositories with PostgreSQL', () => {
         expect(broken).toEqual([])
         const eggs = yield* catalog.search({ kind: 'branded', limit: 10, query: 'egg fried' })
         expect(eggs.map((food) => food.food_id)).toEqual(['5', '6'])
+        const partial = yield* catalog.search({ kind: 'branded', limit: 10, query: 'egg fri' })
+        expect(partial.map((food) => food.food_id)).toEqual(['5', '6'])
+        expect(partial[0]).toMatchObject({
+          calories: 90,
+          carbohydrates_total: 0.4,
+          default_portion: null,
+          protein: 6.3,
+          total_fat: 6.8,
+        })
         const typo = yield* catalog.search({ kind: 'branded', limit: 10, query: 'egg friedd' })
-        expect(typo.map((food) => food.food_id)).toEqual(['5', '6'])
+        expect(typo).toEqual([])
       }),
     )
 

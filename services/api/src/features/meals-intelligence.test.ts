@@ -15,6 +15,8 @@ import {
 } from './meals.ts'
 
 const catalog: CatalogReaderService = {
+  activeReleaseId: () => Effect.succeed('2026-08-27-test0001'),
+  findById: () => Effect.succeed(undefined),
   findByGtin: () => Effect.succeed(undefined),
   search: () =>
     Effect.succeed([
@@ -23,14 +25,10 @@ const catalog: CatalogReaderService = {
         calories: 120,
         carbohydrates_total: 18,
         dataset_kind: 'branded',
+        default_portion: null,
         food_id: 'food-42',
-        gtin: null,
         name: 'Example Food',
-        nutrients: [],
-        portions: [],
         protein: 5,
-        source: 'usda',
-        source_id: '42',
         total_fat: 2,
       },
     ]),

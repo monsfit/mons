@@ -79,6 +79,10 @@ class ValidationOutputTests(unittest.TestCase):
         indexes = "\n".join(_index_ddl("mons_stage_test"))
         self.assertIn("raw_foods_search_document_idx", indexes)
         self.assertIn("branded_foods_search_document_idx", indexes)
+        self.assertIn("raw_foods_name_prefix_idx", indexes)
+        self.assertIn("branded_foods_name_prefix_idx", indexes)
+        self.assertIn("branded_foods_brand_prefix_idx", indexes)
+        self.assertIn("WHERE brand IS NOT NULL AND char_length(name) <= 160", indexes)
         self.assertNotIn("UNIQUE (dataset_kind, source, source_id)", ddl)
 
 

@@ -1,6 +1,33 @@
 name: mons
 
 services:
+  postgres-personal:
+    build:
+      context: ./postgres
+    environment:
+      POSTGRES_DB: mons_personal
+      POSTGRES_USER: mons_personal_admin
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
+      MONS_APP_DATABASE_USER: mons_personal_app
+      MONS_MIGRATION_DATABASE_USER: mons_personal_migration
+    ports:
+      - '127.0.0.1:5432:5432'
+    volumes:
+      - mons-postgres-personal:/var/lib/postgresql
+      - /etc/mons/postgres/personal:/run/mons-secrets:ro
+      - /etc/mons/postgres/personal/tls:/run/mons-tls:ro
+    networks:
+      database:
+        aliases:
+          - postgres-personal.internal.mons.fit
+      tailscale-publish:
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
   postgres-dev:
     build:
       context: ./postgres
@@ -62,6 +89,8 @@ services:
     command: tunnel --no-autoupdate run --token-file /run/secrets/tunnel-token
     profiles: [cloudflare]
     depends_on:
+      postgres-personal:
+        condition: service_healthy
       postgres-dev:
         condition: service_healthy
       postgres-prod:
@@ -81,5 +110,6 @@ networks:
   backup-egress:
 
 volumes:
+  mons-postgres-personal:
   mons-postgres-dev:
   mons-postgres-prod:

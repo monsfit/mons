@@ -37,9 +37,11 @@ import {
   r2StorageUnavailableLayer,
 } from './infrastructure/storage/r2-storage.ts'
 import { clerkAuthenticatorLayer } from './infrastructure/auth/clerk-authenticator.ts'
+import { CatalogCache, catalogCacheDisabledLayer } from './infrastructure/cache/catalog-cache.ts'
 
 export interface ApiRuntimeOptions {
   readonly aiClient?: AiGatewayClient
+  readonly catalogCache?: Layer.Layer<CatalogCache>
   readonly databaseMaxConnections?: number
   readonly mealAiClient?: MealAiClient
   readonly storage?: Layer.Layer<R2Storage>
@@ -68,6 +70,7 @@ export const makeApiApplication = (config: ApiConfig, options: ApiRuntimeOptions
     mealLogRepositoryLayer({ appSchema: config.appSchema, catalogSchema: config.schema }),
   ).pipe(Layer.provideMerge(database))
   const profileAccess = profileAccessServiceLayer.pipe(Layer.provide(repositories))
+  const catalogCache = options.catalogCache ?? catalogCacheDisabledLayer
   const featureServices = Layer.mergeAll(
     systemServiceLayer,
     catalogServiceLayer,
@@ -77,7 +80,7 @@ export const makeApiApplication = (config: ApiConfig, options: ApiRuntimeOptions
     libraryServiceLayer,
     weightServiceLayer,
     workoutServiceLayer,
-  ).pipe(Layer.provide(Layer.mergeAll(repositories, profileAccess)))
+  ).pipe(Layer.provide(Layer.mergeAll(repositories, profileAccess, catalogCache)))
   const authentication = clerkAuthenticatorLayer({
     publishableKey: config.clerkPublishableKey,
     secretKey: config.clerkSecretKey,

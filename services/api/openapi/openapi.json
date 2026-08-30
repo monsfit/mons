@@ -66,11 +66,116 @@
         ],
         "responses": {
           "200": {
-            "description": "Snapshot-scoped normalized food summary",
+            "description": "FoodItemResponse",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/FoodSummary"
+                  "$ref": "#/components/schemas/FoodItemResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ValidationError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorEncoded"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/UnauthorizedErrorEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/UnauthorizedErrorEncoded"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundErrorEncoded"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "InternalApiError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalApiErrorEncoded"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/foods/{datasetKind}/{foodId}": {
+      "get": {
+        "tags": [
+          "catalog"
+        ],
+        "operationId": "catalog.foodById",
+        "parameters": [
+          {
+            "name": "datasetKind",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "raw",
+                "branded"
+              ]
+            },
+            "required": true
+          },
+          {
+            "name": "foodId",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "allOf": [
+                {
+                  "minLength": 1
+                },
+                {
+                  "maxLength": 19
+                },
+                {
+                  "pattern": "^[1-9]\\d*$"
+                }
+              ]
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "FoodItemResponse",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FoodItemResponse"
                 }
               }
             }
@@ -4022,6 +4127,30 @@
         "additionalProperties": false,
         "description": "Snapshot-scoped normalized food summary"
       },
+      "FoodItemResponse": {
+        "type": "object",
+        "properties": {
+          "catalogReleaseId": {
+            "type": "string",
+            "allOf": [
+              {
+                "minLength": 1
+              },
+              {
+                "maxLength": 100
+              }
+            ]
+          },
+          "food": {
+            "$ref": "#/components/schemas/FoodSummary"
+          }
+        },
+        "required": [
+          "catalogReleaseId",
+          "food"
+        ],
+        "additionalProperties": false
+      },
       "UnauthorizedErrorEncoded": {
         "type": "object",
         "properties": {
@@ -4101,17 +4230,170 @@
         ],
         "additionalProperties": false
       },
+      "FoodSearchResult": {
+        "type": "object",
+        "properties": {
+          "brand": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "calories": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string",
+                    "enum": [
+                      "Infinity",
+                      "-Infinity",
+                      "NaN"
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "carbohydrates": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string",
+                    "enum": [
+                      "Infinity",
+                      "-Infinity",
+                      "NaN"
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "datasetKind": {
+            "type": "string",
+            "enum": [
+              "raw",
+              "branded",
+              "custom",
+              "recipe"
+            ]
+          },
+          "defaultPortion": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FoodPortion"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "foodId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "protein": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string",
+                    "enum": [
+                      "Infinity",
+                      "-Infinity",
+                      "NaN"
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "totalFat": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string",
+                    "enum": [
+                      "Infinity",
+                      "-Infinity",
+                      "NaN"
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "brand",
+          "calories",
+          "carbohydrates",
+          "datasetKind",
+          "defaultPortion",
+          "foodId",
+          "name",
+          "protein",
+          "totalFat"
+        ],
+        "additionalProperties": false,
+        "description": "Minimal food search-list result"
+      },
       "FoodSearchResponse": {
         "type": "object",
         "properties": {
+          "catalogReleaseId": {
+            "type": "string",
+            "allOf": [
+              {
+                "minLength": 1
+              },
+              {
+                "maxLength": 100
+              }
+            ]
+          },
           "foods": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/FoodSummary"
+              "$ref": "#/components/schemas/FoodSearchResult"
             }
           }
         },
         "required": [
+          "catalogReleaseId",
           "foods"
         ],
         "additionalProperties": false

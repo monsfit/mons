@@ -31,6 +31,13 @@ data/outputs/v2/
 `dataset_kind` column distinguishes `raw` and `branded` rows. `rejects.jsonl` is a local build
 diagnostic and is not published.
 
+Raw catalog rows must have a display-safe name plus calories, protein, fat, and carbohydrates per
+100 g within the supported product bounds. Raw names are deduplicated across sources after Unicode,
+case, whitespace, and non-semantic punctuation normalization; punctuation that changes food meaning
+(`/`, `%`, `+`, `<`, and `>`) is preserved. The highest-priority, most nutritionally complete row
+wins. Branded rows remain unique by source identity and GTIN because repeated product names are
+legitimate.
+
 `publish` verifies the current build, archives every original input by SHA-256, uploads the
 Parquet artifact to the private `mons-nutrition` R2 bucket, and uploads `manifest.json` last. A
 completed release cannot be overwritten.
@@ -46,14 +53,14 @@ Release IDs use `<UTC-date>-<content-hash>`, for example `2026-08-27-a1b2c3d4`.
 
 ## Database promotion
 
-Run the **Load nutrition release** GitHub workflow with a release ID and either `dev` or
+Run the **Load nutrition release** GitHub workflow with a release ID and `personal`, `dev`, or
 `production`. The workflow downloads and verifies the release over R2, joins Tailscale, loads a
 staging schema, validates it, grants the runtime role access, and atomically swaps it to
 `mons_catalog`.
 
-Personal and preview SST stages share the dev database's `mons_catalog`. They never copy or rebuild
-the nutrition catalog. Production loads the exact release already tested in dev. Loading an older
-release is the rollback procedure.
+Personal Live reads the personal database's catalog. Staging reads the dev database's catalog.
+Production loads the exact release already tested in dev. Loading an older release is the rollback
+procedure.
 
 For a direct status check:
 

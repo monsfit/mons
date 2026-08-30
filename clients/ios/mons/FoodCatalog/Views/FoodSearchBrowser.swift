@@ -373,7 +373,14 @@ struct FoodSearchBrowser: View {
 
     private func selectFood(_ food: CatalogFood) {
         guard !isSelectingIngredient || food.datasetKind != .recipe else { return }
-        navigationPath.append(food)
+        Task {
+            let resolved = await store.meals.food(
+                datasetKind: food.datasetKind,
+                foodId: food.foodId
+            ) ?? food
+            guard !Task.isCancelled else { return }
+            navigationPath.append(resolved)
+        }
     }
 
     private func addToPending(_ item: PendingFoodLogItem) {

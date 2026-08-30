@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  appSchemaFromBranchId,
-  branchIdFromName,
-  deploymentIdentity,
-  previewStageFromBranch,
-} from './deployment.ts'
+import { deploymentIdentity, stageIdFromName } from './deployment.ts'
 
 describe('deployment identity', () => {
   it('uses fixed canonical environments', () => {
@@ -23,27 +18,18 @@ describe('deployment identity', () => {
     })
   })
 
-  it('shares a feature branch schema between Live and Preview', () => {
-    const live = deploymentIdentity({ stage: 'jeremy', branch: 'feature/meal-logging' })
-    const preview = deploymentIdentity({ stage: previewStageFromBranch('feature/meal-logging') })
+  it('uses the stable personal database for Live development', () => {
+    const live = deploymentIdentity({ stage: 'jeremy' })
     expect(live.apiDomain).toBe('jeremy.api.dev.mons.fit')
-    expect(preview.apiDomain).toBe(`${live.branchId}.api.dev.mons.fit`)
-    expect(live.appSchema).toBe(preview.appSchema)
-    expect(live.r2Prefix).toBe(preview.r2Prefix)
+    expect(live.database).toBe('personal')
+    expect(live.appSchema).toBe('mons_app')
+    expect(live.r2Prefix).toBe('live/jeremy')
   })
 
-  it('keeps hostile and long branch names within PostgreSQL and DNS limits', () => {
-    const id = branchIdFromName('Feature/THIS is a very long branch name with $hell metacharacters')
-    const schema = appSchemaFromBranchId(id)
+  it('keeps arbitrary personal stage names DNS-safe', () => {
+    const id = stageIdFromName('Jeremy / Local Development')
+    expect(id).toBe('jeremy-local-development')
     expect(id).toMatch(/^[a-z0-9][a-z0-9-]*$/)
-    expect(id.length).toBeLessThanOrEqual(23)
-    expect(schema).toMatch(/^[a-z_][a-z0-9_]*$/)
-    expect(schema.length).toBeLessThanOrEqual(32)
-  })
-
-  it('isolates personal work on a protected branch', () => {
-    const identity = deploymentIdentity({ stage: 'jeremy', branch: 'main' })
-    expect(identity.appSchema).not.toBe('mons_app')
-    expect(identity.r2Prefix).toBe('live/jeremy')
+    expect(id.length).toBeLessThanOrEqual(50)
   })
 })
