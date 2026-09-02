@@ -86,8 +86,9 @@ Search accepts `q`, optional `kind=raw|branded`, and optional `limit=1..100`. Ti
 routes require an inclusive `from` and exclusive `to` ISO timestamp. Weight is persisted in
 kilograms; clients may convert it for localized display.
 
-Application migrations run before deployment. The API never migrates on startup. Catalog ingestion
-and catalog indexes are owned entirely by the nutrition-ingest service.
+Application migrations run before deployment. The API never migrates on startup. Production
+catalog ingestion and catalog indexes are owned by the separately maintained Mons data pipeline;
+the public read contract and sample catalog remain in `@mons/database`.
 
 All `/v1` routes require a Clerk session token in the `Authorization: Bearer <token>` header.
 `PUT /v1/profile` creates or returns the database profile mapped to the authenticated Clerk user.

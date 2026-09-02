@@ -1,1 +1,0 @@
-"""Shared nutrition ingestion primitives."""

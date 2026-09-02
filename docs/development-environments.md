@@ -49,28 +49,25 @@ switch.
 
 ## GitHub setup
 
-Create `personal`, `dev`, and `production` GitHub environments. `personal` is used by the manually
-dispatched nutrition loader. Configure the appropriate values in each environment:
+Create `dev` and `production` GitHub environments for canonical API deployments. Configure the
+appropriate values in each environment:
 
 ```text
 MIGRATION_DATABASE_URL
 MONS_DATABASE_RUNTIME_USER
 CLOUDFLARE_ACCOUNT_ID
 CLOUDFLARE_API_TOKEN
-R2_ACCESS_KEY_ID
-R2_SECRET_ACCESS_KEY
 ```
 
-Use the personal migration URL on port `5432`, staging on `5433`, and production on `5434`:
+Use the staging migration URL on port `5433` and production on `5434`:
 
 ```text
-personal:   postgresql://mons_personal_migration:...@<VPS_MAGICDNS_NAME>:5432/mons_personal?uselibpqcompat=true&sslmode=require
 dev:        postgresql://mons_dev_migration:...@<VPS_MAGICDNS_NAME>:5433/mons_dev?uselibpqcompat=true&sslmode=require
 production: postgresql://mons_prod_migration:...@<VPS_MAGICDNS_NAME>:5434/mons_prod?uselibpqcompat=true&sslmode=require
 ```
 
-The deployment and nutrition jobs also use `TS_OAUTH_CLIENT_ID` and `TS_AUDIENCE` repository
-secrets to reach PostgreSQL over Tailscale. The workload identity subject is:
+The deployment job also uses `TS_OAUTH_CLIENT_ID` and `TS_AUDIENCE` repository secrets to reach
+PostgreSQL over Tailscale. The workload identity subject is:
 
 ```text
 repo:monsfit@321544628/mons@1166968122:environment:*
@@ -78,6 +75,10 @@ repo:monsfit@321544628/mons@1166968122:environment:*
 
 Allow `tag:ci` to reach `tag:database` only on the three PostgreSQL ports, and protect the
 `production` environment with required approval.
+
+Catalog construction and promotion are owned by the private `monsfit/mons-data` repository. That
+repository has its own `personal`, `dev`, and `production` environments and R2 credentials; do not
+add ingestion credentials or source artifacts to this public repository.
 
 Configure Clerk as an SST fallback secret so the personal, staging, and production stages share
 the intended development instance unless explicitly overridden:
