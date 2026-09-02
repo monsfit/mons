@@ -1,16 +1,15 @@
 # Mons
 
-Mons is a food-data and fitness application maintained as a polyglot monorepo.
+Mons is an open-source food and fitness application with SwiftUI clients, an Effect API, and a
+public database contract. Mons operates its production food catalog through a separately maintained
+data pipeline.
 
 ```text
-source datasets ──► Nutrition ingest (Python) ──► immutable Parquet release ──► PostgreSQL
-                                                                                 │
-                                                                                 ▼
-                                                                      Effect API (TypeScript)
-                                                                                 │
-                                                                 ┌───────────────┴──────────────┐
-                                                                 ▼                              ▼
-                                                          Mons (SwiftUI)           Marketing (TanStack Start)
+Mons data pipeline ──► PostgreSQL catalog ──► Effect API (TypeScript)
+                                                   │
+                                   ┌───────────────┴──────────────┐
+                                   ▼                              ▼
+                            Mons (SwiftUI)           Marketing (TanStack Start)
 ```
 
 ## Repository layout
@@ -24,17 +23,14 @@ packages/
   database/            Effect SQL migrations and repositories
 services/
   api/                 TypeScript HTTP API and generated OpenAPI document
-  nutrition-ingest/    Python normalization and PostgreSQL ingestion library
-data/                   Local inputs and generated snapshots; intentionally ignored
 ```
 
-See [the API guide](services/api/README.md), [the marketing guide](clients/web/README.md), and
-[the nutrition-ingest guide](services/nutrition-ingest/README.md) for component-specific details.
+See [the API guide](services/api/README.md), [the marketing guide](clients/web/README.md), and the
+[database guide](packages/database/README.md) for component-specific details.
 
 ## Requirements
 
 - Node.js 24 or newer
-- Python 3.11 or newer and `uv`
 - Xcode 26 for the Mons app
 
 The workspace pins pnpm, TypeScript 7 native preview, Turborepo, Oxfmt, Oxlint, Effect,
@@ -47,7 +43,6 @@ Run commands from the repository root:
 ```bash
 nvm use
 pnpm install
-uv sync --project services/nutrition-ingest --locked
 npx clerk@latest env pull --app app_2ydgnHRPQ7JmVCswcMHsCCx0PMZ --instance dev --file .env
 pnpm dev
 ```
@@ -66,6 +61,24 @@ a reproducible local reference without vendoring framework source into this repo
 
 The Clerk CLI command writes the development publishable and secret keys to the ignored `.env`
 file. Never commit that file.
+
+The API reads the stable `mons_catalog` PostgreSQL contract and does not depend on the production
+ingestion pipeline at build time. For development without an existing catalog, point
+`MIGRATION_DATABASE_URL` at a disposable PostgreSQL database, set
+`MONS_CATALOG_SCHEMA=mons_catalog_sample`, and run `pnpm db:catalog:seed`. The command only replaces
+schemas ending in `_sample` or `_test`.
+
+## Open-source boundary
+
+This repository contains the Mons clients, HTTP API, shared contracts, application migrations,
+catalog reader, infrastructure definitions, and deterministic development fixtures under
+Apache-2.0. The source acquisition, normalization, deduplication, catalog release, and promotion
+pipeline is maintained separately. Production datasets, user data, credentials, and operational
+state are never part of this repository.
+
+The public API contract is generated into `services/api/openapi/openapi.json`. A compatible catalog
+implementation needs only to satisfy the read-side PostgreSQL contract exercised by
+`packages/database/src/catalog-fixture.ts` and the database integration tests.
 
 The VPS owns the PostgreSQL containers, Cloudflare Tunnel connector, and backups. Their
 version-controlled configuration lives under `infra/vps`; these commands are intended to run from
@@ -149,10 +162,8 @@ standalone Node server needs remote media access during local development.
 | -------------------------- | ---------------------------------------------------------------------------- |
 | `pnpm dev`                 | Run `sst dev` against the personal database and migrate it automatically     |
 | `pnpm dev:marketing`       | Run the TanStack Start marketing website on port 3001                        |
-| `pnpm db:status`           | Inspect the active PostgreSQL catalog release                                |
+| `pnpm db:catalog:seed`     | Install the deterministic sample catalog into an explicitly safe schema     |
 | `pnpm db:migrate`          | Migrate stable application tables                                            |
-| `pnpm nutrition build`     | Build the local immutable nutrition release                                  |
-| `pnpm nutrition publish`   | Publish the verified nutrition release to private R2                         |
 | `pnpm monitoring:up`       | Start the private VPS monitoring stack                                       |
 | `pnpm monitoring:logs`     | Follow logs for Prometheus, Grafana, and all exporters                       |
 | `pnpm vps:backup`          | Create a full production backup from the VPS                                 |
@@ -166,12 +177,8 @@ standalone Node server needs remote media access during local development.
 - Dependency versions are exact and resolved by one pnpm lockfile.
 - HTTP routes, OpenAPI, request validation, errors, layers, logging, and PostgreSQL access use
   Effect 4 modules end to end; the generated contract and runtime share one declaration.
-- Nutrition ingest emits one validated Parquet catalog with source hashes, row counts, rejection
-  details, and field coverage in one manifest.
-- PostgreSQL ingestion uses staging schemas and an atomic schema swap.
-- Raw and branded foods share one schema while remaining separate table partitions.
-- USDA branded records win valid GTIN duplicates before Open Food Facts records are considered.
-- Branded snapshots require valid product identity and complete, bounded core nutrition per 100 g.
+- The production data pipeline publishes a versioned catalog satisfying the public read contract.
+- Raw and branded foods share one read schema while remaining separate table partitions.
 - Catalog names and brands use weighted PostgreSQL full-text search with trigram fallback and
   a defensive quality predicate.
 - Catalog search and barcode responses include every available normalized nutrient and household
@@ -184,12 +191,12 @@ standalone Node server needs remote media access during local development.
   calculates RMR, TDEE, goal velocity, and the daily calorie target on the server.
 - Food logs snapshot nutrients per 100 g so historical totals survive catalog refreshes.
 - OpenAPI artifacts are generated deterministically and checked in CI.
-- CI independently verifies TypeScript, Python 3.11, PostgreSQL, and Mons.
+- CI independently verifies TypeScript, PostgreSQL, and Mons.
 
 The former standalone Mons repository history is retained locally under
 `.history/mons.git` and is intentionally excluded from the monorepo working tree.
 
 ## Data licensing
 
-Apache-2.0 covers the software only. Input and derived datasets retain their providers' terms;
-the upstream sources are listed in the nutrition-ingest guide.
+Apache-2.0 covers this repository's software only. Catalog datasets retain their providers' terms
+and are not distributed from this repository.

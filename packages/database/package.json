@@ -12,6 +12,7 @@
   "scripts": {
     "build": "tsgo -p tsconfig.build.json",
     "lint": "oxlint src --deny-warnings",
+    "catalog:seed": "node --env-file-if-exists=../../.env src/seed-catalog.ts",
     "migrate": "node --env-file-if-exists=../../.env src/migrate.ts",
     "test": "vitest run src",
     "typecheck": "tsgo -p tsconfig.json"

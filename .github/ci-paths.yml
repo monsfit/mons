@@ -45,19 +45,6 @@ api:
   - 'services/api/**'
   - 'packages/contracts/**'
 
-python:
-  - '.github/ci-paths.yml'
-  - '.github/workflows/ci.yml'
-  - 'services/nutrition-ingest/**'
-  - 'packages/contracts/schema/**'
-  - 'uv.lock'
-
-python_postgres:
-  - '.github/ci-paths.yml'
-  - '.github/workflows/ci.yml'
-  - 'services/nutrition-ingest/**'
-  - 'uv.lock'
-
 mons:
   - '.github/ci-paths.yml'
   - '.github/workflows/ci.yml'
