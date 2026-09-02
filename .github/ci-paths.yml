@@ -45,12 +45,6 @@ api:
   - 'services/api/**'
   - 'packages/contracts/**'
 
-mons:
-  - '.github/ci-paths.yml'
-  - '.github/workflows/ci.yml'
-  - 'clients/ios/**'
-  - 'scripts/generate-ios-api-plist.sh'
-
 infrastructure:
   - '.github/ci-paths.yml'
   - '.github/workflows/ci.yml'

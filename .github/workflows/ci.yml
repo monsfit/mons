@@ -23,7 +23,6 @@ jobs:
       ci: ${{ steps.filter.outputs.ci }}
       database: ${{ steps.filter.outputs.database }}
       infrastructure: ${{ steps.filter.outputs.infrastructure }}
-      mons: ${{ steps.filter.outputs.mons }}
       postgres: ${{ steps.filter.outputs.postgres }}
       typescript: ${{ steps.filter.outputs.typescript }}
     steps:
@@ -98,27 +97,6 @@ jobs:
         if: needs.changes.outputs.api == 'true'
         run: pnpm openapi:check
 
-  mons:
-    name: Mons iOS
-    needs: changes
-    if: needs.changes.outputs.mons == 'true'
-    runs-on: macos-26
-    steps:
-      - uses: actions/checkout@v4
-      - run: swift test --package-path clients/ios -Xswiftc -warnings-as-errors
-      - run: >-
-          xcodebuild build -quiet
-          -project clients/ios/mons.xcodeproj
-          -scheme 'Mons Dev'
-          -destination 'generic/platform=iOS Simulator'
-          CODE_SIGNING_ALLOWED=NO
-      - run: >-
-          xcodebuild test
-          -project clients/ios/mons.xcodeproj
-          -scheme 'Mons Dev'
-          -destination 'platform=macOS'
-          CODE_SIGNING_ALLOWED=NO
-
   infrastructure:
     name: VPS infrastructure
     needs: changes
@@ -139,7 +117,6 @@ jobs:
     needs:
       - changes
       - infrastructure
-      - mons
       - typescript
     runs-on: ubuntu-latest
     steps:
@@ -147,13 +124,11 @@ jobs:
         env:
           CHANGES_RESULT: ${{ needs.changes.result }}
           INFRASTRUCTURE_RESULT: ${{ needs.infrastructure.result }}
-          MONS_RESULT: ${{ needs.mons.result }}
           TYPESCRIPT_RESULT: ${{ needs.typescript.result }}
         run: |
           for result in \
             "$CHANGES_RESULT" \
             "$INFRASTRUCTURE_RESULT" \
-            "$MONS_RESULT" \
             "$TYPESCRIPT_RESULT"; do
             if [[ "$result" != 'success' && "$result" != 'skipped' ]]; then
               echo "Required CI job finished with result: $result"

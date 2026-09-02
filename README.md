@@ -191,7 +191,8 @@ standalone Node server needs remote media access during local development.
   calculates RMR, TDEE, goal velocity, and the daily calorie target on the server.
 - Food logs snapshot nutrients per 100 g so historical totals survive catalog refreshes.
 - OpenAPI artifacts are generated deterministically and checked in CI.
-- CI independently verifies TypeScript, PostgreSQL, and Mons.
+- CI verifies TypeScript, PostgreSQL, and infrastructure. iOS validation remains available through
+  the local `pnpm mons:check` command.
 
 The former standalone Mons repository history is retained locally under
 `.history/mons.git` and is intentionally excluded from the monorepo working tree.
