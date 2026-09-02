@@ -1,0 +1,22 @@
+name: mons-local
+
+services:
+  postgres:
+    image: postgres:18.4-alpine
+    environment:
+      POSTGRES_DB: mons
+      POSTGRES_PASSWORD: mons_local
+      POSTGRES_USER: mons
+    ports:
+      - '127.0.0.1:5432:5432'
+    volumes:
+      - mons-postgres:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U mons -d mons']
+      interval: 2s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+
+volumes:
+  mons-postgres:

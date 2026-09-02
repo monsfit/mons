@@ -31,6 +31,7 @@ See [the API guide](services/api/README.md), [the marketing guide](clients/web/R
 ## Requirements
 
 - Node.js 24 or newer
+- Docker
 - Xcode 26 for the Mons app
 
 The workspace pins pnpm, TypeScript 7 native preview, Turborepo, Oxfmt, Oxlint, Effect,
@@ -43,14 +44,14 @@ Run commands from the repository root:
 ```bash
 nvm use
 pnpm install
-npx clerk@latest env pull --app app_2ydgnHRPQ7JmVCswcMHsCCx0PMZ --instance dev --file .env
+npx clerk@latest env pull --app app_2ydgnHRPQ7JmVCswcMHsCCx0PMZ --instance dev --file .dev.vars
 pnpm dev
 ```
 
-Normal development is remote-first: `pnpm dev` is exactly `sst dev`. It automatically migrates the
-application schema in the personal database and exposes the personal stage at
-`https://<stage>.api.dev.mons.fit`. See [the development environment flow](docs/development-environments.md)
-for personal development, staging, production, iPhone schemes, and CI secrets.
+`pnpm dev` starts PostgreSQL 18 in Docker, migrates it, and runs the Worker locally with Wrangler.
+Hyperdrive connects straight to that local database, Workers AI remains a remote binding, and R2
+uses Wrangler's local state. See [the development environment flow](docs/development-environments.md)
+for iPhone tunnels, staging, production, and CI secrets.
 
 Run `pnpm dev:marketing` in a second terminal to start the marketing website at
 <http://localhost:3001>.
@@ -59,13 +60,12 @@ The pnpm prepare lifecycle clones the exact Effect 4 source tag used by the work
 ignored `.repos/effect`. `scripts/prepare-effect.sh` verifies the pinned commit, giving contributors
 a reproducible local reference without vendoring framework source into this repository.
 
-The Clerk CLI command writes the development publishable and secret keys to the ignored `.env`
+The Clerk CLI command writes the development publishable and secret keys to the ignored `.dev.vars`
 file. Never commit that file.
 
 The API reads the stable `mons_catalog` PostgreSQL contract and does not depend on the production
-ingestion pipeline at build time. For development without an existing catalog, point
-`MIGRATION_DATABASE_URL` at a disposable PostgreSQL database, set
-`MONS_CATALOG_SCHEMA=mons_catalog_sample`, and run `pnpm db:catalog:seed`. The command only replaces
+ingestion pipeline at build time. For development without an existing catalog, set
+`MONS_CATALOG_SCHEMA=mons_catalog_sample` and run `pnpm db:catalog:seed`. The command only replaces
 schemas ending in `_sample` or `_test`.
 
 ## Open-source boundary
@@ -73,8 +73,8 @@ schemas ending in `_sample` or `_test`.
 This repository contains the Mons clients, HTTP API, shared contracts, application migrations,
 catalog reader, infrastructure definitions, and deterministic development fixtures under
 Apache-2.0. The source acquisition, normalization, deduplication, catalog release, and promotion
-pipeline is maintained separately. Production datasets, user data, credentials, and operational
-state are never part of this repository.
+pipeline is maintained separately in the private `monsfit/mons-data` repository. Production
+datasets, user data, credentials, and operational state are never part of this repository.
 
 The public API contract is generated into `services/api/openapi/openapi.json`. A compatible catalog
 implementation needs only to satisfy the read-side PostgreSQL contract exercised by
@@ -84,30 +84,28 @@ The VPS owns the PostgreSQL containers, Cloudflare Tunnel connector, and backups
 version-controlled configuration lives under `infra/vps`; these commands are intended to run from
 a checkout on that host. Application traffic follows Worker → Hyperdrive → VPC Service → Tunnel →
 PostgreSQL. A separate operator path exposes localhost-bound PostgreSQL through Tailscale Serve and
-the VPS's private MagicDNS name: personal development uses port `5432`, staging uses port `5433`,
-and production uses port `5434` for migrations and operator access. Tailscale policy should
-restrict production access to CI and operators.
+the VPS's private MagicDNS name: development uses port `5433`, and production uses port `5434` for
+deployment migrations. Tailscale policy should restrict production access to CI and operators.
 
 ```bash
 pnpm vps:provision
 pnpm vps:up
 ```
 
-On the VPS, retrieve the personal application password without printing any other secret:
+For operator access to the staging database, retrieve its application password on the VPS without
+printing any other secret:
 
 ```bash
-sudo cat /etc/mons/postgres/personal/app-password
+sudo cat /etc/mons/postgres/dev/app-password
 ```
 
-Put that value into the ignored `.env` using the URL shape in `.env.example`.
+Use that value only for explicit staging operations; ordinary development uses the local database.
 
 Cloudflare connectivity uses the shared `mons-postgres` Tunnel. The
-`mons-postgres-personal`, `mons-postgres-dev`, and `mons-postgres-prod` Workers VPC services resolve
-the corresponding Docker-internal hostnames and enforce `verify_full` against their Cloudflare
-Origin CA certificates. Hyperdrive configurations `mons-personal`, `mons-development`, and
-`mons-production` use the environment-specific application roles. Keep application Hyperdrive
-query caching disabled so reads after writes remain consistent. `pnpm vps:up` starts the connector
-alongside PostgreSQL.
+`mons-postgres-dev` and `mons-postgres-prod` Workers VPC services resolve the corresponding
+Docker-internal hostnames and enforce `verify_full` against their Cloudflare Origin CA
+certificates. Hyperdrive configurations `mons-development` and `mons-production` use the
+environment-specific application roles. `pnpm vps:up` starts the connector alongside PostgreSQL.
 
 The private `mons-postgres-backups` R2 bucket is reserved for production pgBackRest backups.
 Production continuously archives completed WAL segments to R2, and pgBackRest retains four full
@@ -151,34 +149,35 @@ cannot create schemas or tables, and API startup never applies migrations. CI ap
 migration twice against PostgreSQL 18 to verify both forward execution and idempotency. Production
 uses `pnpm deploy:production` only after its migration job succeeds.
 
-SST provisions the stage-specific Cloudflare AI Gateway and links the existing `mons` R2 bucket as
-the native `Media` binding. Deployed Workers therefore need neither an AI provider token nor R2
-access keys. The S3-compatible R2 variables in `.env.example` are optional and apply only when the
-standalone Node server needs remote media access during local development.
+Wrangler deploys the Worker and binds the existing environment-specific Hyperdrive, AI Gateway,
+Workers AI, and `mons` R2 bucket. Deployed Workers therefore need neither an AI provider token nor
+R2 access keys. The S3-compatible R2 variables in `.env.example` are optional and apply only to
+standalone Node tooling.
 
 ## Common commands
 
-| Command                    | Purpose                                                                      |
-| -------------------------- | ---------------------------------------------------------------------------- |
-| `pnpm dev`                 | Run `sst dev` against the personal database and migrate it automatically     |
-| `pnpm dev:marketing`       | Run the TanStack Start marketing website on port 3001                        |
-| `pnpm db:catalog:seed`     | Install the deterministic sample catalog into an explicitly safe schema     |
-| `pnpm db:migrate`          | Migrate stable application tables                                            |
-| `pnpm monitoring:up`       | Start the private VPS monitoring stack                                       |
-| `pnpm monitoring:logs`     | Follow logs for Prometheus, Grafana, and all exporters                       |
-| `pnpm vps:backup`          | Create a full production backup from the VPS                                 |
-| `pnpm openapi`             | Regenerate the OpenAPI document                                              |
-| `pnpm mons:test`           | Build and test the Mons Xcode project on macOS                               |
-| `pnpm mons:build:ios`      | Compile the iOS app and barcode scanner path                                 |
-| `pnpm verify`              | Run every local formatting, build, test, contract, database, and Xcode check |
+| Command                  | Purpose                                                                      |
+| ------------------------ | ---------------------------------------------------------------------------- |
+| `pnpm dev`               | Start local PostgreSQL, migrate it, and run the Worker with Wrangler         |
+| `pnpm dev:database:stop` | Stop the local PostgreSQL container                                          |
+| `pnpm dev:marketing`     | Run the TanStack Start marketing website on port 3001                        |
+| `pnpm db:catalog:seed`   | Install the deterministic sample catalog into a safe local schema            |
+| `pnpm db:migrate`        | Migrate stable application tables                                            |
+| `pnpm monitoring:up`     | Start the private VPS monitoring stack                                       |
+| `pnpm monitoring:logs`   | Follow logs for Prometheus, Grafana, and all exporters                       |
+| `pnpm vps:backup`        | Create a full production backup from the VPS                                 |
+| `pnpm openapi`           | Regenerate the OpenAPI document                                              |
+| `pnpm mons:test`         | Build and test the Mons Xcode project on macOS                               |
+| `pnpm mons:build:ios`    | Compile the iOS app and barcode scanner path                                 |
+| `pnpm verify`            | Run every local formatting, build, test, contract, database, and Xcode check |
 
 ## Development guarantees
 
 - Dependency versions are exact and resolved by one pnpm lockfile.
 - HTTP routes, OpenAPI, request validation, errors, layers, logging, and PostgreSQL access use
   Effect 4 modules end to end; the generated contract and runtime share one declaration.
-- The production data pipeline publishes a versioned catalog satisfying the public read contract.
-- Raw and branded foods share one read schema while remaining separate table partitions.
+- The private data pipeline publishes a versioned catalog satisfying the public read contract.
+- Raw and branded foods share one schema while remaining separate table partitions.
 - Catalog names and brands use weighted PostgreSQL full-text search with trigram fallback and
   a defensive quality predicate.
 - Catalog search and barcode responses include every available normalized nutrient and household

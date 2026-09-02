@@ -1,9 +1,9 @@
 # Mons VPS infrastructure
 
 This directory is the version-controlled runbook for the Mons VPS. It owns the PostgreSQL 18
-personal, staging, and production containers, the Cloudflare Tunnel connector, TLS and database-role
-provisioning, and pgBackRest backups. Run these commands from a repository checkout on the VPS,
-not as part of ordinary local application development.
+staging and production containers, the retained legacy personal container, the Cloudflare Tunnel
+connector, TLS and database-role provisioning, and pgBackRest backups. Run these commands from a
+repository checkout on the VPS, not as part of ordinary local application development.
 
 ## Layout
 
@@ -41,16 +41,15 @@ at `/etc/mons/pgbackrest/pgbackrest.conf` with mode `0600`.
 
 The environments are independent PostgreSQL containers and volumes:
 
-| Environment | Database | Tailscale port | Docker hostname |
-| --- | --- | --- | --- |
-| Personal | `mons_personal` | `5432` | `postgres-personal.internal.mons.fit` |
-| Staging | `mons_dev` | `5433` | `postgres-dev.internal.mons.fit` |
-| Production | `mons_prod` | `5434` | `postgres-prod.internal.mons.fit` |
+| Environment | Database        | Tailscale port | Docker hostname                       |
+| ----------- | --------------- | -------------- | ------------------------------------- |
+| Personal    | `mons_personal` | `5432`         | `postgres-personal.internal.mons.fit` |
+| Staging     | `mons_dev`      | `5433`         | `postgres-dev.internal.mons.fit`      |
+| Production  | `mons_prod`     | `5434`         | `postgres-prod.internal.mons.fit`     |
 
-After provisioning, create a `mons-postgres-personal` Workers VPC service for the personal Docker
-hostname, then create a cache-disabled `mons-personal` Hyperdrive configuration using database
-`mons_personal` and role `mons_personal_app`. Put its ID in local `.env` as
-`MONS_PERSONAL_HYPERDRIVE_ID`. The existing staging and production Hyperdrive IDs remain unchanged.
+The personal database is retained for recovery but is no longer targeted by application workflows;
+ordinary development uses the local Docker database. Wrangler references the existing
+`mons-development` and `mons-production` Hyperdrive configurations directly.
 
 ## Operations
 

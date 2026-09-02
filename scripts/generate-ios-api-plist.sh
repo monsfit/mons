@@ -7,15 +7,7 @@ repository_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 
 case "$environment" in
   live)
-    if [[ -n "${SST_STAGE:-}" ]]; then
-      stage=$SST_STAGE
-    elif [[ -f "$repository_root/.sst/stage" ]]; then
-      stage=$(tr -d '[:space:]' < "$repository_root/.sst/stage")
-    else
-      echo "Run sst dev once, or set SST_STAGE, before building Mons Live." >&2
-      exit 1
-    fi
-    api_url=$(node "$repository_root/scripts/deployment-identity.ts" --stage "$stage" --format url)
+    api_url=${MONS_API_URL:-http://127.0.0.1:8787}
     ;;
   dev)
     api_url=https://api.dev.mons.fit

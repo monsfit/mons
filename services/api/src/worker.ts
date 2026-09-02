@@ -1,6 +1,5 @@
 import { HttpRouter, HttpServer } from 'effect/unstable/http'
 import { Layer, Option } from 'effect'
-import { Resource } from 'sst'
 import { createWorkersAI } from 'workers-ai-provider'
 
 import { defaultAiGatewayModel, makeAiSdkClient } from './infrastructure/ai/gateway.ts'
@@ -12,33 +11,8 @@ import {
   defaultMealTranscriptionModel,
   makeMealAiClient,
 } from './features/meals.ts'
-import {
-  type R2BucketBinding,
-  makeR2BindingStorageLayer,
-} from './infrastructure/storage/r2-storage.ts'
+import { makeR2BindingStorageLayer } from './infrastructure/storage/r2-storage.ts'
 import { makeApiApplication } from './runtime.ts'
-
-const resources = Resource as unknown as {
-  readonly Ai: unknown
-  readonly App: { readonly stage: string }
-  readonly ClerkSecretKey: { readonly value: string }
-  readonly DatabaseConfig: {
-    readonly appSchema: string
-    readonly catalogSchema: string
-    readonly r2Prefix: string
-    readonly scope: string
-  }
-  readonly Media: R2BucketBinding & { readonly name: string }
-  readonly PublicConfig: { readonly clerkPublishableKey: string }
-}
-
-interface WorkerBindings {
-  readonly Database: { readonly connectionString: string }
-}
-
-interface WorkerExecutionContext {
-  readonly waitUntil: (promise: Promise<unknown>) => void
-}
 
 declare global {
   interface CacheStorage {
@@ -46,30 +20,25 @@ declare global {
   }
 }
 
-const makeHandler = (
-  bindings: WorkerBindings,
-  context: WorkerExecutionContext,
-  requestOrigin: string,
-) => {
-  const gatewayId = `mons-${resources.App.stage}`
+const makeHandler = (environment: Env, context: ExecutionContext, requestOrigin: string) => {
   const workersAi = createWorkersAI({
-    binding: resources.Ai,
-    gateway: { id: gatewayId },
-  } as unknown as Parameters<typeof createWorkersAI>[0])
+    binding: environment.Ai,
+    gateway: { id: environment.AI_GATEWAY_ID },
+  })
   const config: ApiConfig = {
     aiModel: defaultAiGatewayModel,
-    appSchema: resources.DatabaseConfig.appSchema,
-    clerkPublishableKey: resources.PublicConfig.clerkPublishableKey,
-    clerkSecretKey: resources.ClerkSecretKey.value,
-    databaseUrl: bindings.Database.connectionString,
+    appSchema: environment.MONS_APP_SCHEMA,
+    clerkPublishableKey: environment.CLERK_PUBLISHABLE_KEY,
+    clerkSecretKey: environment.CLERK_SECRET_KEY,
+    databaseUrl: environment.Database.connectionString,
     host: '0.0.0.0',
     mealObservationModel: defaultMealObservationModel,
     mealResolutionModel: defaultMealResolutionModel,
     mealTranscriptionModel: defaultMealTranscriptionModel,
     port: 3000,
     r2: Option.none(),
-    schema: resources.DatabaseConfig.catalogSchema,
-    storagePrefix: resources.DatabaseConfig.r2Prefix,
+    schema: environment.MONS_CATALOG_SCHEMA,
+    storagePrefix: environment.MONS_STORAGE_PREFIX,
   }
   const application = makeApiApplication(config, {
     aiClient: makeAiSdkClient((model) => workersAi(model)),
@@ -78,7 +47,7 @@ const makeHandler = (
     databaseMaxConnections: 1,
     catalogCache: makeWorkerCatalogCacheLayer({
       cache: caches.default,
-      namespace: resources.App.stage,
+      namespace: environment.MONS_STAGE,
       origin: requestOrigin,
       waitUntil: context.waitUntil.bind(context),
     }),
@@ -86,20 +55,16 @@ const makeHandler = (
       languageModel: (model) => workersAi(model),
     }),
     storage: makeR2BindingStorageLayer({
-      binding: resources.Media,
-      bucket: resources.Media.name,
+      binding: environment.Media,
+      bucket: environment.R2_BUCKET_NAME,
     }),
   })
   return HttpRouter.toWebHandler(application.pipe(Layer.provide(HttpServer.layerServices)))
 }
 
 export default {
-  async fetch(
-    request: Request,
-    bindings: WorkerBindings,
-    context: WorkerExecutionContext,
-  ): Promise<Response> {
-    const { dispose, handler } = makeHandler(bindings, context, new URL(request.url).origin)
+  async fetch(request, environment, context): Promise<Response> {
+    const { dispose, handler } = makeHandler(environment, context, new URL(request.url).origin)
     try {
       return await handler(request)
     } catch (error) {
@@ -109,4 +74,4 @@ export default {
       await dispose()
     }
   },
-}
+} satisfies ExportedHandler<Env>
