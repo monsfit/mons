@@ -128,7 +128,7 @@ VPS monitoring runs separately from the application database stack:
 - Prometheus stores at most 30 days or 15 GB of metrics.
 - Grafana displays the provisioned VPS dashboard.
 
-Prometheus and all three exporters remain on a private Docker network. Grafana is reachable only through
+Prometheus and both PostgreSQL exporters remain on a private Docker network. Grafana is reachable only through
 Tailscale at `http://<VPS_MAGICDNS_NAME>:3000`.
 
 Create the Grafana administrator password once, then start the stack:

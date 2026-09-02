@@ -19,7 +19,7 @@ fi
 chown root:472 "${secret_root}/grafana-admin-password"
 chmod 0640 "${secret_root}/grafana-admin-password"
 
-for environment in personal dev prod; do
+for environment in dev prod; do
   password_file="${secret_root}/postgres-${environment}-password"
   if [[ ! -s "${password_file}" ]]; then
     openssl rand -base64 48 | tr -d '\n' > "${password_file}"

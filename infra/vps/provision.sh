@@ -61,7 +61,6 @@ provision_postgres() {
   echo "${environment}: provisioned PostgreSQL credentials and TLS certificate"
 }
 
-provision_postgres personal postgres-personal.internal.mons.fit
 provision_postgres dev postgres-dev.internal.mons.fit
 provision_postgres prod postgres-prod.internal.mons.fit
 
@@ -84,11 +83,11 @@ fi
 install -m 0600 "${backup_config}" /etc/mons/pgbackrest/pgbackrest.conf
 
 cd "${repository_directory}"
-"${compose[@]}" up -d --wait --build postgres-personal postgres-dev postgres-prod
+"${compose[@]}" up -d --wait --build postgres-dev postgres-prod
 
 # Publish only through the tailnet. The backing ports remain bound to localhost,
 # so none of the PostgreSQL environments are reachable from the public network or LAN.
-tailscale serve --bg --tcp=5432 tcp://127.0.0.1:5432
+tailscale serve --tcp=5432 off
 tailscale serve --bg --tcp=5433 tcp://127.0.0.1:5433
 tailscale serve --bg --tcp=5434 tcp://127.0.0.1:5434
 
@@ -100,7 +99,7 @@ tailscale serve --bg --tcp=5434 tcp://127.0.0.1:5434
   /run/mons-pgbackrest/pgbackrest.conf \
   /var/lib/postgresql/pgbackrest/pgbackrest.conf
 
-for environment in personal dev prod; do
+for environment in dev prod; do
   app_password=$(< "${secret_root}/${environment}/app-password")
   migration_password=$(< "${secret_root}/${environment}/migration-password")
   "${compose[@]}" exec -T --user postgres "postgres-${environment}" psql \
