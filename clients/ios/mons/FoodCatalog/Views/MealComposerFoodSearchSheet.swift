@@ -196,7 +196,14 @@ struct MealComposerFoodSearchSheet: View {
     private func select(_ food: CatalogFood) {
         isSearchFocused = false
         selectedDetent = .large
-        navigationPath.append(food)
+        Task {
+            let resolved = await store.meals.food(
+                datasetKind: food.datasetKind,
+                foodId: food.foodId
+            ) ?? food
+            guard !Task.isCancelled else { return }
+            navigationPath.append(resolved)
+        }
     }
 
     private func quickAdd(_ food: CatalogFood) {

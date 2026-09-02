@@ -20,13 +20,13 @@ services:
   grafana:
     image: grafana/grafana:13.1.0
     environment:
-      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: 'false'
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD__FILE: /run/secrets/admin-password
       GF_SERVER_HTTP_ADDR: 0.0.0.0
-      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_USERS_ALLOW_SIGN_UP: 'false'
     ports:
-      - "127.0.0.1:3000:3000"
+      - '127.0.0.1:3000:3000'
     volumes:
       - mons-grafana:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
@@ -80,6 +80,26 @@ services:
     privileged: true
     mem_limit: 256m
     cpus: 0.5
+    restart: unless-stopped
+
+  postgres-exporter-personal:
+    image: ghcr.io/prometheus-community/postgres-exporter:v0.20.1
+    command:
+      - --collector.stat_statements
+      - --collector.stat_statements.include_query
+      - --collector.stat_statements.limit=50
+      - --collector.stat_statements.query_length=160
+    environment:
+      DATA_SOURCE_URI: postgres-personal:5432/postgres?sslmode=require
+      DATA_SOURCE_USER: mons_personal_monitoring
+      DATA_SOURCE_PASS_FILE: /run/secrets/postgres-password
+    volumes:
+      - /etc/mons/monitoring/postgres-personal-password:/run/secrets/postgres-password:ro
+    networks:
+      - monitoring
+      - database
+    mem_limit: 128m
+    cpus: 0.25
     restart: unless-stopped
 
   postgres-exporter-dev:

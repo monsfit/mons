@@ -54,7 +54,7 @@ import {
   CatalogReader,
   type CustomFoodRecord,
   type FoodLogEntryRecord,
-  type FoodRecord,
+  type FoodSearchRecord,
   LegacyFoodLogRepository,
   LibraryRepository,
   type MealEstimateRecord,
@@ -922,7 +922,7 @@ const completeNutrition = (
     ? undefined
     : { calories, carbohydrates, protein, totalFat }
 
-const fromCatalogFood = (food: FoodRecord): MealSearchCandidate | undefined => {
+const fromCatalogFood = (food: FoodSearchRecord): MealSearchCandidate | undefined => {
   const nutrition = completeNutrition(
     food.calories,
     food.protein,

@@ -5,6 +5,7 @@ import { createWorkersAI } from 'workers-ai-provider'
 
 import { defaultAiGatewayModel, makeAiSdkClient } from './infrastructure/ai/gateway.ts'
 import type { ApiConfig } from './core/config.ts'
+import { makeWorkerCatalogCacheLayer } from './infrastructure/cache/catalog-cache.ts'
 import {
   defaultMealObservationModel,
   defaultMealResolutionModel,
@@ -21,7 +22,6 @@ const resources = Resource as unknown as {
   readonly Ai: unknown
   readonly App: { readonly stage: string }
   readonly ClerkSecretKey: { readonly value: string }
-  readonly Database: { readonly connectionString: string }
   readonly DatabaseConfig: {
     readonly appSchema: string
     readonly catalogSchema: string
@@ -32,7 +32,25 @@ const resources = Resource as unknown as {
   readonly PublicConfig: { readonly clerkPublishableKey: string }
 }
 
-const makeHandler = () => {
+interface WorkerBindings {
+  readonly Database: { readonly connectionString: string }
+}
+
+interface WorkerExecutionContext {
+  readonly waitUntil: (promise: Promise<unknown>) => void
+}
+
+declare global {
+  interface CacheStorage {
+    readonly default: Cache
+  }
+}
+
+const makeHandler = (
+  bindings: WorkerBindings,
+  context: WorkerExecutionContext,
+  requestOrigin: string,
+) => {
   const gatewayId = `mons-${resources.App.stage}`
   const workersAi = createWorkersAI({
     binding: resources.Ai,
@@ -43,7 +61,7 @@ const makeHandler = () => {
     appSchema: resources.DatabaseConfig.appSchema,
     clerkPublishableKey: resources.PublicConfig.clerkPublishableKey,
     clerkSecretKey: resources.ClerkSecretKey.value,
-    databaseUrl: resources.Database.connectionString,
+    databaseUrl: bindings.Database.connectionString,
     host: '0.0.0.0',
     mealObservationModel: defaultMealObservationModel,
     mealResolutionModel: defaultMealResolutionModel,
@@ -58,6 +76,12 @@ const makeHandler = () => {
     // This Effect pg pool is rebuilt by provideRequest for every fetch. One
     // connection is sufficient because Hyperdrive performs the shared pooling.
     databaseMaxConnections: 1,
+    catalogCache: makeWorkerCatalogCacheLayer({
+      cache: caches.default,
+      namespace: resources.App.stage,
+      origin: requestOrigin,
+      waitUntil: context.waitUntil.bind(context),
+    }),
     mealAiClient: makeMealAiClient({
       languageModel: (model) => workersAi(model),
     }),
@@ -70,10 +94,19 @@ const makeHandler = () => {
 }
 
 export default {
-  async fetch(request: Request): Promise<Response> {
-    const { dispose, handler } = makeHandler()
-    const response = await handler(request)
-    await dispose()
-    return response
+  async fetch(
+    request: Request,
+    bindings: WorkerBindings,
+    context: WorkerExecutionContext,
+  ): Promise<Response> {
+    const { dispose, handler } = makeHandler(bindings, context, new URL(request.url).origin)
+    try {
+      return await handler(request)
+    } catch (error) {
+      console.error('Mons Worker request failed', error)
+      throw error
+    } finally {
+      await dispose()
+    }
   },
 }

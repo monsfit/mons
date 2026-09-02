@@ -30,6 +30,7 @@ import { NodeHttpServer } from '@effect/platform-node'
 import { apiLayer } from './app.ts'
 import { RequestAuthenticator } from './core/auth.ts'
 import { catalogServiceLayer } from './features/catalog.ts'
+import { catalogCacheDisabledLayer } from './infrastructure/cache/catalog-cache.ts'
 import { libraryServiceLayer } from './features/library.ts'
 import { legacyFoodLogServiceLayer, MealEstimation, MealLogging } from './features/meals.ts'
 import { nutritionServiceLayer } from './features/nutrition.ts'
@@ -191,8 +192,24 @@ const mealEstimate: MealEstimate = {
 }
 
 const catalog: CatalogReaderService = {
+  activeReleaseId: () => Effect.succeed('2026-08-27-test0001'),
+  findById: (datasetKind, foodId) =>
+    Effect.succeed(datasetKind === food.dataset_kind && foodId === food.food_id ? food : undefined),
   findByGtin: (gtin) => Effect.succeed(gtin === food.gtin ? food : undefined),
-  search: () => Effect.succeed([food]),
+  search: () =>
+    Effect.succeed([
+      {
+        brand: food.brand,
+        calories: food.calories,
+        carbohydrates_total: food.carbohydrates_total,
+        dataset_kind: food.dataset_kind,
+        default_portion: food.portions[0] ?? null,
+        food_id: food.food_id,
+        name: food.name,
+        protein: food.protein,
+        total_fat: food.total_fat,
+      },
+    ]),
 }
 const profiles: ProfileRepositoryService = {
   belongsToClerkUser: (candidate, candidateUser) =>
@@ -257,7 +274,7 @@ const featureServices = Layer.mergeAll(
   libraryServiceLayer,
   weightServiceLayer,
   workoutServiceLayer,
-).pipe(Layer.provide(Layer.mergeAll(repositories, profileAccess)))
+).pipe(Layer.provide(Layer.mergeAll(repositories, profileAccess, catalogCacheDisabledLayer)))
 const requestServices = Layer.mergeAll(
   repositories,
   profileAccess,
@@ -345,9 +362,32 @@ layer(webHandlerLayer)('Mons Effect HTTP API', (it) => {
     Effect.gen(function* () {
       const handler = yield* TestWebHandler
       const search = yield* request(handler, '/v1/foods/search?q=egg')
-      expect(yield* json(search)).toMatchObject({ foods: [{ foodId: '42', name: 'Example Food' }] })
+      expect(yield* json(search)).toEqual({
+        catalogReleaseId: '2026-08-27-test0001',
+        foods: [
+          {
+            brand: 'Example Brand',
+            calories: 120,
+            carbohydrates: 18,
+            datasetKind: 'branded',
+            defaultPortion: { amount: 30, name: '1 bar', unit: 'g' },
+            foodId: '42',
+            name: 'Example Food',
+            protein: 5,
+            totalFat: 2,
+          },
+        ],
+      })
       const gtin = yield* request(handler, '/v1/foods/by-gtin/00012345678905')
-      expect(yield* json(gtin)).toMatchObject({ foodId: '42', portions: [{ name: '1 bar' }] })
+      expect(yield* json(gtin)).toMatchObject({
+        catalogReleaseId: '2026-08-27-test0001',
+        food: { foodId: '42', portions: [{ name: '1 bar' }] },
+      })
+      const byId = yield* request(handler, '/v1/foods/branded/42')
+      expect(yield* json(byId)).toMatchObject({
+        catalogReleaseId: '2026-08-27-test0001',
+        food: { foodId: '42', name: 'Example Food' },
+      })
       const invalid = yield* request(handler, '/v1/foods/search?q=x')
       expect(invalid.status).toBe(400)
       expect(yield* json(invalid)).toEqual({
@@ -445,6 +485,7 @@ layer(webHandlerLayer)('Mons Effect HTTP API', (it) => {
       expect(document.paths).toHaveProperty('/v1/profiles/{profileId}/custom-foods/{foodId}')
       expect(document.paths).toHaveProperty('/v1/profiles/{profileId}/recipes/{recipeId}')
       expect(document.paths).toHaveProperty('/v1/profiles/{profileId}/meal-estimates')
+      expect(document.paths).toHaveProperty('/v1/foods/{datasetKind}/{foodId}')
     }),
   )
 })

@@ -52,10 +52,10 @@ npx clerk@latest env pull --app app_2ydgnHRPQ7JmVCswcMHsCCx0PMZ --instance dev -
 pnpm dev
 ```
 
-Normal development is remote-first: `pnpm dev` is exactly `sst dev`. It automatically migrates an
-isolated schema in the development database and exposes the personal stage at
+Normal development is remote-first: `pnpm dev` is exactly `sst dev`. It automatically migrates the
+application schema in the personal database and exposes the personal stage at
 `https://<stage>.api.dev.mons.fit`. See [the development environment flow](docs/development-environments.md)
-for branch previews, schema resets, iPhone schemes, CI secrets, and cleanup.
+for personal development, staging, production, iPhone schemes, and CI secrets.
 
 Run `pnpm dev:marketing` in a second terminal to start the marketing website at
 <http://localhost:3001>.
@@ -71,27 +71,30 @@ The VPS owns the PostgreSQL containers, Cloudflare Tunnel connector, and backups
 version-controlled configuration lives under `infra/vps`; these commands are intended to run from
 a checkout on that host. Application traffic follows Worker → Hyperdrive → VPC Service → Tunnel →
 PostgreSQL. A separate operator path exposes localhost-bound PostgreSQL through Tailscale Serve and
-the VPS's private MagicDNS name: development uses port `5433`, and production uses port `5434` for
-deployment migrations. Tailscale policy should restrict production access to CI and operators.
+the VPS's private MagicDNS name: personal development uses port `5432`, staging uses port `5433`,
+and production uses port `5434` for migrations and operator access. Tailscale policy should
+restrict production access to CI and operators.
 
 ```bash
 pnpm vps:provision
 pnpm vps:up
 ```
 
-On the VPS, retrieve the development application password without printing any other secret:
+On the VPS, retrieve the personal application password without printing any other secret:
 
 ```bash
-sudo cat /etc/mons/postgres/dev/app-password
+sudo cat /etc/mons/postgres/personal/app-password
 ```
 
 Put that value into the ignored `.env` using the URL shape in `.env.example`.
 
 Cloudflare connectivity uses the shared `mons-postgres` Tunnel. The
-`mons-postgres-dev` and `mons-postgres-prod` Workers VPC services resolve the corresponding
-Docker-internal hostnames and enforce `verify_full` against their Cloudflare Origin CA
-certificates. Hyperdrive configurations `mons-development` and `mons-production` use the
-environment-specific application roles. `pnpm vps:up` starts the connector alongside PostgreSQL.
+`mons-postgres-personal`, `mons-postgres-dev`, and `mons-postgres-prod` Workers VPC services resolve
+the corresponding Docker-internal hostnames and enforce `verify_full` against their Cloudflare
+Origin CA certificates. Hyperdrive configurations `mons-personal`, `mons-development`, and
+`mons-production` use the environment-specific application roles. Keep application Hyperdrive
+query caching disabled so reads after writes remain consistent. `pnpm vps:up` starts the connector
+alongside PostgreSQL.
 
 The private `mons-postgres-backups` R2 bucket is reserved for production pgBackRest backups.
 Production continuously archives completed WAL segments to R2, and pgBackRest retains four full
@@ -114,7 +117,7 @@ VPS monitoring runs separately from the application database stack:
 - Prometheus stores at most 30 days or 15 GB of metrics.
 - Grafana displays the provisioned VPS dashboard.
 
-Prometheus and both exporters remain on a private Docker network. Grafana is reachable only through
+Prometheus and all three exporters remain on a private Docker network. Grafana is reachable only through
 Tailscale at `http://<VPS_MAGICDNS_NAME>:3000`.
 
 Create the Grafana administrator password once, then start the stack:
@@ -144,11 +147,10 @@ standalone Node server needs remote media access during local development.
 
 | Command                    | Purpose                                                                      |
 | -------------------------- | ---------------------------------------------------------------------------- |
-| `pnpm dev`                 | Run `sst dev` with an automatically migrated branch schema                   |
+| `pnpm dev`                 | Run `sst dev` against the personal database and migrate it automatically     |
 | `pnpm dev:marketing`       | Run the TanStack Start marketing website on port 3001                        |
 | `pnpm db:status`           | Inspect the active PostgreSQL catalog release                                |
 | `pnpm db:migrate`          | Migrate stable application tables                                            |
-| `pnpm db:branch:reset`     | Recreate and migrate only the current feature branch schema                  |
 | `pnpm nutrition build`     | Build the local immutable nutrition release                                  |
 | `pnpm nutrition publish`   | Publish the verified nutrition release to private R2                         |
 | `pnpm monitoring:up`       | Start the private VPS monitoring stack                                       |

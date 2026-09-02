@@ -2,6 +2,7 @@ import Foundation
 
 protocol MealStoreAPI: Actor {
     func searchFoods(query: String, kind: DatasetKind?, limit: Int) async throws -> [CatalogFood]
+    func food(datasetKind: DatasetKind, foodId: String) async throws -> CatalogFood
     func food(gtin: String) async throws -> CatalogFood
     func logFood(profileId: UUID, entry: CreateFoodLogEntryRequest) async throws -> FoodLogEntry
     func deleteFoodLogEntry(profileId: UUID, entryId: UUID) async throws

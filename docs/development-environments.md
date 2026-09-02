@@ -1,126 +1,86 @@
 # Development environments
 
-Mons uses the remote development PostgreSQL database for every normal development flow. There is
-no local PostgreSQL requirement and no runtime environment picker in the app.
+Mons has three remote environments: personal development, shared staging, and production. Each
+uses its own PostgreSQL container, Hyperdrive configuration, application schema, nutrition
+catalog, and media prefix. There is no local PostgreSQL requirement and no branch-preview
+infrastructure.
 
-## The four environments
+## Environment routing
 
-| Use            | API URL                                | PostgreSQL database | Application schema                      | Lifetime                    |
-| -------------- | -------------------------------------- | ------------------- | --------------------------------------- | --------------------------- |
-| Personal Live  | `https://<sst-stage>.api.dev.mons.fit` | `mons_dev`          | Derived from the current feature branch | While `sst dev` is running  |
-| Branch Preview | `https://<branch-id>.api.dev.mons.fit` | `mons_dev`          | The same schema as Personal Live        | Until the branch is deleted |
-| Shared Dev     | `https://api.dev.mons.fit`             | `mons_dev`          | `mons_app`                              | Permanent                   |
-| Production     | `https://api.mons.fit`                 | `mons_prod`         | `mons_app`                              | Permanent                   |
+| Use           | API URL                                | Database        | Schema     | Media prefix       |
+| ------------- | -------------------------------------- | --------------- | ---------- | ------------------ |
+| Personal Live | `https://<sst-stage>.api.dev.mons.fit` | `mons_personal` | `mons_app` | `live/<sst-stage>` |
+| Staging       | `https://api.dev.mons.fit`             | `mons_dev`      | `mons_app` | `dev`              |
+| Production    | `https://api.mons.fit`                 | `mons_prod`     | `mons_app` | `production`       |
 
-The catalog is shared inside each database as `mons_catalog`. Only application data is isolated by
-branch. The branch identifier is deterministic, capped to fit PostgreSQL's identifier limit, and
-used consistently for its schema, preview stage, hostname, and `preview/<branch-id>` R2 prefix.
+Personal Live is the ordinary development loop. Staging is the durable environment deployed from
+the `dev` branch, and Production is deployed from `main`. Feature branches do not create Workers,
+schemas, or media namespaces.
 
 ## Ordinary development
 
-Put the direct development migration-role URL in the ignored root `.env`:
+Put the personal migration-role URL and personal Hyperdrive ID in the ignored root `.env`:
 
 ```dotenv
-MIGRATION_DATABASE_URL=postgresql://mons_dev_migration:...@<VPS_MAGICDNS_NAME>:5433/mons_dev?uselibpqcompat=true&sslmode=require
-MONS_DATABASE_RUNTIME_USER=mons_dev_app
+MIGRATION_DATABASE_URL=postgresql://mons_personal_migration:...@<VPS_MAGICDNS_NAME>:5432/mons_personal?uselibpqcompat=true&sslmode=require
+MONS_DATABASE_RUNTIME_USER=mons_personal_app
+MONS_PERSONAL_HYPERDRIVE_ID=<personal-hyperdrive-id>
 ```
 
-Then run either command from the repository root:
+Then run `pnpm dev`. SST uses your saved stage (for example, `jeremy`), links the personal
+Hyperdrive, migrates `mons_app`, and starts Live at `https://jeremy.api.dev.mons.fit`. Personal data
+persists across branches and development sessions. Migration files can be edited while they are
+still personal; after a migration reaches staging, fix it with a new forward migration.
 
-```bash
-sst dev
-# or
-pnpm dev
-```
-
-That is the entire startup flow. SST determines your saved personal stage (for example, `jeremy`),
-derives the branch schema, runs the Effect SQL migrator automatically, and starts Live at
-`https://jeremy.api.dev.mons.fit`. Edit an uncommitted migration as often as necessary while it is
-only in your isolated branch schema. If the migration history needs to be replayed from scratch:
-
-```bash
-pnpm db:branch:reset
-```
-
-The reset command derives the current branch itself and refuses `main`, `dev`, `production`, or a
-detached checkout. It cannot accept an arbitrary schema name. `pnpm db:branch:drop` applies the same
-guard and removes an abandoned branch schema.
-
-Once a migration is merged into `dev`, treat the migration file as immutable. Fixes after that point
-are new forward migrations. The canonical deploy workflows always migrate before deploying the
-Worker, and the runtime database role cannot perform DDL.
+To test the durable shared environment, merge or push to `dev`. The deployment workflow migrates
+`mons_dev` before deploying the Worker. Pushing `main` does the same for Production. The runtime
+roles cannot perform DDL.
 
 ## Testing on an iPhone
 
-Select one of the shared Xcode schemes before building:
+Select one of the shared Xcode schemes:
 
-- `Mons Live` embeds the personal Live URL. It is the fastest edit/test loop and works on a physical
-  phone while `sst dev` is running. Because Live forwards development execution, it is not the mode
-  to use after shutting the laptop.
-- `Mons Preview` embeds the current branch preview URL. Push the branch first; GitHub deploys the
-  complete Worker and migrates the same branch schema. The installed app then works with the laptop
-  completely off.
-- `Mons Dev` embeds the fixed shared development URL. Use it to test what has already reached `dev`.
-- `Mons Prod` embeds the fixed production URL and uses the Release build configuration.
+- `Mons Live` embeds the personal Live URL and works while `sst dev` is running.
+- `Mons Dev` embeds the durable staging URL and works with the laptop off.
+- `Mons Prod` embeds the production URL and uses a Release build.
 
-There is no dynamic URL check. Each scheme selects a build configuration, and a normal Xcode build
-phase writes a tiny environment plist into the app bundle. That URL remains embedded in the
-installed application.
+The selected URL is written into the app bundle at build time; there is no runtime environment
+switch.
 
-## Push and cleanup flow
+## GitHub setup
 
-Every push to a non-`main`, non-`dev` branch runs the branch preview workflow:
-
-1. Run the repository checks.
-2. Join the private database network through Tailscale workload identity federation.
-3. Apply all Effect SQL migrations to the deterministic branch schema.
-4. Deploy the Cloudflare Worker at the deterministic preview hostname.
-5. Verify `/health` through the public hostname.
-
-Pushing `dev` migrates and deploys Shared Dev. Pushing `main` migrates and deploys Production. These
-jobs use GitHub environments named `preview`, `dev`, and `production`, so their database URLs and
-Cloudflare credentials remain distinct even though the secret keys have the same names.
-
-Deleting a feature branch removes the Worker and route, deletes only its guarded R2 prefix, and
-drops only its derived PostgreSQL schema. Canonical schemas and prefixes are rejected by the cleanup
-commands.
-
-## One-time GitHub setup
-
-Create the `preview`, `dev`, and `production` GitHub environments. Configure these secrets in each
-environment as appropriate:
+Create `personal`, `dev`, and `production` GitHub environments. `personal` is used by the manually
+dispatched nutrition loader. Configure the appropriate values in each environment:
 
 ```text
 MIGRATION_DATABASE_URL
 MONS_DATABASE_RUNTIME_USER
 CLOUDFLARE_ACCOUNT_ID
 CLOUDFLARE_API_TOKEN
+R2_ACCESS_KEY_ID
+R2_SECRET_ACCESS_KEY
 ```
 
-Use the development migration URL on port `5433` for `preview` and `dev`. Use the production
-migration URL on the Tailscale-only port `5434` for `production`:
+Use the personal migration URL on port `5432`, staging on `5433`, and production on `5434`:
 
 ```text
-preview/dev: postgresql://mons_dev_migration:...@<VPS_MAGICDNS_NAME>:5433/mons_dev?uselibpqcompat=true&sslmode=require
-production:  postgresql://mons_prod_migration:...@<VPS_MAGICDNS_NAME>:5434/mons_prod?uselibpqcompat=true&sslmode=require
+personal:   postgresql://mons_personal_migration:...@<VPS_MAGICDNS_NAME>:5432/mons_personal?uselibpqcompat=true&sslmode=require
+dev:        postgresql://mons_dev_migration:...@<VPS_MAGICDNS_NAME>:5433/mons_dev?uselibpqcompat=true&sslmode=require
+production: postgresql://mons_prod_migration:...@<VPS_MAGICDNS_NAME>:5434/mons_prod?uselibpqcompat=true&sslmode=require
 ```
 
-The `preview` environment also needs `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` scoped to the
-`mons` bucket for branch cleanup. Add `TS_OAUTH_CLIENT_ID` and `TS_AUDIENCE` as repository secrets.
-Create the Tailscale workload identity with the GitHub issuer and this subject:
+The deployment and nutrition jobs also use `TS_OAUTH_CLIENT_ID` and `TS_AUDIENCE` repository
+secrets to reach PostgreSQL over Tailscale. The workload identity subject is:
 
 ```text
 repo:monsfit@321544628/mons@1166968122:environment:*
 ```
 
-Give it Auth keys write access for `tag:ci`. The numeric values are GitHub's stable public
-organization and repository IDs; including them prevents a renamed or recreated repository from
-assuming this identity. Tailnet policy should allow `tag:ci` to reach `tag:database` only on the
-PostgreSQL ports above.
-Protect the `production` environment with required approval.
+Allow `tag:ci` to reach `tag:database` only on the three PostgreSQL ports, and protect the
+`production` environment with required approval.
 
-Finally, configure the Clerk secret as an SST fallback secret so new personal and preview stages do
-not need their own copy:
+Configure Clerk as an SST fallback secret so the personal, staging, and production stages share
+the intended development instance unless explicitly overridden:
 
 ```bash
 sst secret set ClerkSecretKey <value> --fallback

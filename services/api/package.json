@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "build": "tsgo -p tsconfig.build.json",
-    "cleanup:preview-media": "node src/cleanup-preview-media.ts",
     "lint": "oxlint src --deny-warnings",
     "openapi": "node src/generate-openapi.ts",
     "openapi:check": "node src/generate-openapi.ts --check",

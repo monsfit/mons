@@ -17,6 +17,20 @@ export const gtinPathSchema = Schema.Struct({
   gtin: Schema.String.check(Schema.isPattern(/^\d{14}$/)),
 })
 
+export const catalogFoodPathSchema = Schema.Struct({
+  datasetKind: catalogDatasetKindSchema,
+  foodId: Schema.String.check(
+    Schema.isMinLength(1),
+    Schema.isMaxLength(19),
+    Schema.isPattern(/^[1-9]\d*$/),
+  ),
+})
+
+export const catalogReleaseIdSchema = Schema.String.check(
+  Schema.isMinLength(1),
+  Schema.isMaxLength(100),
+)
+
 export const foodSearchQuerySchema = Schema.Struct({
   kind: Schema.optionalKey(catalogDatasetKindSchema),
   limit: Schema.optionalKey(
@@ -54,9 +68,27 @@ export const foodSummarySchema = Schema.Struct({
   totalFat: Schema.NullOr(Schema.Number),
 }).pipe(identifier('FoodSummary', 'Snapshot-scoped normalized food summary'))
 
+export const foodSearchResultSchema = Schema.Struct({
+  brand: Schema.NullOr(Schema.String),
+  calories: Schema.NullOr(Schema.Number),
+  carbohydrates: Schema.NullOr(Schema.Number),
+  datasetKind: foodSourceKindSchema,
+  defaultPortion: Schema.NullOr(foodPortionSchema),
+  foodId: Schema.String,
+  name: Schema.String,
+  protein: Schema.NullOr(Schema.Number),
+  totalFat: Schema.NullOr(Schema.Number),
+}).pipe(identifier('FoodSearchResult', 'Minimal food search-list result'))
+
 export const foodSearchResponseSchema = Schema.Struct({
-  foods: Schema.Array(foodSummarySchema),
+  catalogReleaseId: catalogReleaseIdSchema,
+  foods: Schema.Array(foodSearchResultSchema),
 }).pipe(identifier('FoodSearchResponse'))
+
+export const foodItemResponseSchema = Schema.Struct({
+  catalogReleaseId: catalogReleaseIdSchema,
+  food: foodSummarySchema,
+}).pipe(identifier('FoodItemResponse'))
 
 export const createFoodLogEntrySchema = Schema.Struct({
   datasetKind: foodSourceKindSchema,
@@ -94,5 +126,8 @@ export type DatasetKind = typeof datasetKindSchema.Type
 export type FoodLogEntry = typeof foodLogEntrySchema.Type
 export type FoodNutrient = typeof foodNutrientSchema.Type
 export type FoodPortion = typeof foodPortionSchema.Type
+export type FoodItemResponse = typeof foodItemResponseSchema.Type
 export type FoodSearchQuery = typeof foodSearchQuerySchema.Type
+export type FoodSearchResult = typeof foodSearchResultSchema.Type
+export type FoodSearchResponse = typeof foodSearchResponseSchema.Type
 export type FoodSummary = typeof foodSummarySchema.Type

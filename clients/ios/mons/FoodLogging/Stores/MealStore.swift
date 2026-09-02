@@ -82,6 +82,24 @@ final class MealStore {
         }
     }
 
+    func food(datasetKind: DatasetKind, foodId: String) async -> CatalogFood? {
+        if datasetKind == .custom, let identifier = UUID(uuidString: foodId) {
+            return customFoods.first(where: { $0.id == identifier })?.catalogFood
+        }
+        if datasetKind == .recipe, let identifier = UUID(uuidString: foodId) {
+            return recipes.first(where: { $0.id == identifier })?.catalogFood
+        }
+        guard networkEnabled else { return nil }
+        do {
+            return try await api.food(datasetKind: datasetKind, foodId: foodId)
+        } catch APIClientError.rejected(let status, _) where status == 404 {
+            return nil
+        } catch {
+            report(error)
+            return nil
+        }
+    }
+
     func loadLibrary() async {
         guard networkEnabled else { return }
         do {

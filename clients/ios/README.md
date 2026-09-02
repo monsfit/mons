@@ -72,12 +72,11 @@ all use the `mons` name. Local Xcode user state and Derived Data are intentional
 Choose the API at build time with one of the shared schemes:
 
 - `Mons Live` targets the active personal `sst dev` stage;
-- `Mons Preview` targets the persistent preview for the current branch;
 - `Mons Dev` targets `https://api.dev.mons.fit`;
 - `Mons Prod` targets `https://api.mons.fit` with a Release build.
 
-The selected URL is embedded in the app, with no runtime environment switch. Use Preview or Dev
-when the installed phone build must continue working after the laptop is off. The complete flow is
+The selected URL is embedded in the app, with no runtime environment switch. Use Dev when the
+installed phone build must continue working after the laptop is off. The complete flow is
 documented in [Development environments](../../docs/development-environments.md). Barcode scanning
 requires a physical device.
 

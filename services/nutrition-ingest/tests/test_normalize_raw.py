@@ -132,6 +132,44 @@ class NormalizeRawTests(unittest.TestCase):
         self.assertEqual(deduped[0]["source"], "usda_fooddata_central_survey")
         self.assertEqual(deduped[1]["name"], "Banana, raw")
 
+    def test_enforce_unique_names_ignores_nonsemantic_punctuation(self):
+        rows = [
+            {"name": "Oregano, dried", "source": "cofid", "calories": 265.0},
+            {
+                "name": "Oregano dried",
+                "source": "usda_fooddata_central_sr_legacy",
+                "calories": 265.0,
+            },
+        ]
+
+        deduped = list(normalize_raw.enforce_unique_names(rows))
+
+        self.assertEqual(len(deduped), 1)
+        self.assertEqual(deduped[0]["source"], "usda_fooddata_central_sr_legacy")
+
+    def test_name_key_preserves_semantically_meaningful_symbols(self):
+        self.assertNotEqual(
+            normalize_raw.normalize_name_key("Margarine <17% saturated fat"),
+            normalize_raw.normalize_name_key("Margarine >17% saturated fat"),
+        )
+
+    def test_enforce_display_safety_requires_calories_and_macros(self):
+        valid = {
+            "name": "Apple raw",
+            "calories": 52.0,
+            "protein": 0.3,
+            "total_fat": 0.2,
+            "carbohydrates_total": 14.0,
+        }
+        rows = [
+            valid,
+            {**valid, "name": "Missing carbs", "carbohydrates_total": None},
+            {**valid, "name": "Impossible energy", "calories": 0.0},
+            {**valid, "name": "Too much fat", "total_fat": 101.0},
+        ]
+
+        self.assertEqual(list(normalize_raw.enforce_display_safety(rows)), [valid])
+
     def test_enforce_unique_names_prefers_more_complete_non_usda(self):
         rows = [
             {"name": "Apple, raw", "source": "cofid", "calories": 52.0},

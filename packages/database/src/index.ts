@@ -8,6 +8,7 @@ export type {
   FoodNutrientRecord,
   FoodPortionRecord,
   FoodRecord,
+  FoodSearchRecord,
   FoodSearchOptions,
 } from './features/catalog/repository.ts'
 export { createDatabaseLayer, DatabaseHealth, databaseHealthLayer } from './core/client.ts'

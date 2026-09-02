@@ -11,26 +11,20 @@ export default $config({
     }
   },
   async run() {
-    const { execFileSync } = await import('node:child_process')
     const { deploymentIdentity } = await import('./packages/database/src/deployment.ts')
-    const currentBranch = () => {
-      const fromEnvironment = process.env.GITHUB_HEAD_REF || process.env.GITHUB_REF_NAME
-      if (fromEnvironment) return fromEnvironment
-      try {
-        return (
-          execFileSync('git', ['branch', '--show-current'], { encoding: 'utf8' }).trim() ||
-          undefined
-        )
-      } catch {
-        return undefined
-      }
-    }
     const accountId = '59724eca0ed8946b29fdf2319593fd1b'
-    const deployment = deploymentIdentity({ stage: $app.stage, branch: currentBranch() })
+    const deployment = deploymentIdentity({ stage: $app.stage })
     const hyperdriveId =
       deployment.database === 'production'
         ? '0d5ed6f6c3c94a6c8efca2deb51ea2ea'
-        : '8c533f1b36d644fab96b3ebe4cb5bc08'
+        : deployment.database === 'dev'
+          ? '8c533f1b36d644fab96b3ebe4cb5bc08'
+          : process.env.MONS_PERSONAL_HYPERDRIVE_ID
+    if (!hyperdriveId) {
+      throw new Error(
+        'MONS_PERSONAL_HYPERDRIVE_ID is required for personal SST stages. See docs/development-environments.md.',
+      )
+    }
 
     const database = sst.cloudflare.Hyperdrive.get('Database', {
       hyperdriveId,
@@ -99,7 +93,6 @@ export default $config({
       aiGatewayId: aiGateway.aiGatewayId,
       apiUrl: `https://${deployment.apiDomain}`,
       appSchema: deployment.appSchema,
-      branchId: deployment.branchId,
       r2Prefix: deployment.r2Prefix,
       workerUrl: api.url,
     }

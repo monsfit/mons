@@ -157,13 +157,38 @@ CREATE TABLE "{schema}".nutrient_definitions (
 
 
 def _index_ddl(schema: str) -> tuple[str, ...]:
+    searchable = """
+            char_length(name) <= 160
+            AND calories IS NOT NULL AND calories BETWEEN 0 AND 1000
+            AND protein IS NOT NULL AND protein BETWEEN 0 AND 100
+            AND total_fat IS NOT NULL AND total_fat BETWEEN 0 AND 100
+            AND coalesce(carbohydrates_total, carbohydrates_available) IS NOT NULL
+            AND coalesce(carbohydrates_total, carbohydrates_available) BETWEEN 0 AND 100
+            AND protein + total_fat + coalesce(carbohydrates_total, carbohydrates_available) <= 120
+            AND (
+                calories > 0
+                OR protein + total_fat + coalesce(carbohydrates_total, carbohydrates_available) = 0
+            )
+            AND (dataset_kind = 'raw' OR gtin IS NOT NULL)
+    """.strip()
     return (
-        "CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public",
-        f'CREATE INDEX raw_foods_name_trgm_idx ON "{schema}".raw_foods USING gin (name gin_trgm_ops)',
-        f'CREATE INDEX branded_foods_name_trgm_idx ON "{schema}".branded_foods USING gin (name gin_trgm_ops)',
-        f'CREATE INDEX branded_foods_brand_trgm_idx ON "{schema}".branded_foods USING gin (brand gin_trgm_ops)',
         f'CREATE INDEX raw_foods_search_document_idx ON "{schema}".raw_foods USING gin (search_document)',
         f'CREATE INDEX branded_foods_search_document_idx ON "{schema}".branded_foods USING gin (search_document)',
+        f'''CREATE INDEX raw_foods_name_prefix_idx ON "{schema}".raw_foods (
+            (lower(name) COLLATE "C"),
+            (CASE source WHEN 'usda_fooddata_central_branded' THEN 0 WHEN 'open_food_facts' THEN 1 ELSE 2 END),
+            food_id
+        ) WHERE {searchable}''',
+        f'''CREATE INDEX branded_foods_name_prefix_idx ON "{schema}".branded_foods (
+            (lower(name) COLLATE "C"),
+            (CASE source WHEN 'usda_fooddata_central_branded' THEN 0 WHEN 'open_food_facts' THEN 1 ELSE 2 END),
+            food_id
+        ) WHERE {searchable}''',
+        f'''CREATE INDEX branded_foods_brand_prefix_idx ON "{schema}".branded_foods (
+            (lower(brand) COLLATE "C"),
+            (CASE source WHEN 'usda_fooddata_central_branded' THEN 0 WHEN 'open_food_facts' THEN 1 ELSE 2 END),
+            food_id
+        ) WHERE brand IS NOT NULL AND {searchable}''',
         f'CREATE UNIQUE INDEX branded_foods_gtin_idx ON "{schema}".branded_foods (gtin) WHERE gtin IS NOT NULL',
         f'CREATE INDEX raw_foods_source_idx ON "{schema}".raw_foods (source, source_id)',
         f'CREATE INDEX branded_foods_source_idx ON "{schema}".branded_foods (source, source_id)',
@@ -284,7 +309,6 @@ def ingest(
                         "loaded": False,
                     }
 
-            connection.execute("CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public")
             connection.execute(_schema_ddl(staging_schema))
             connection.commit()
 
@@ -331,7 +355,7 @@ def ingest(
                 f'ALTER TABLE "{staging_schema}".portions ADD CONSTRAINT portions_food_fk '
                 f'FOREIGN KEY (dataset_kind, food_id) REFERENCES "{staging_schema}".foods(dataset_kind, food_id) ON DELETE CASCADE'
             )
-            for statement in _index_ddl(staging_schema)[1:]:
+            for statement in _index_ddl(staging_schema):
                 connection.execute(statement)
             connection.execute(f'ANALYZE "{staging_schema}".foods')
             connection.execute(f'ANALYZE "{staging_schema}".portions')
