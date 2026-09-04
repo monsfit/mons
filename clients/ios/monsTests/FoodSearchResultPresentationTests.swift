@@ -37,6 +37,30 @@ struct FoodSearchResultPresentationTests {
         #expect(recipe.sourceIcon == "book.closed")
     }
 
+    @Test func presentsRestaurantNutritionPerServing() {
+        let restaurant = CatalogFood(
+            brand: "Example Grill",
+            calories: 640,
+            carbohydrates: 52,
+            datasetKind: .restaurant,
+            foodId: "menu-1",
+            gtin: nil,
+            name: "Big Burger",
+            nutrientBasis: NutrientBasis(amount: 1, unit: .serving),
+            nutrients: [],
+            portions: [FoodPortion(amount: 1, name: "1 burger", unit: .serving)],
+            protein: 31,
+            source: "fastfoodnutrition_org",
+            sourceId: "123",
+            totalFat: 35
+        )
+
+        let presentation = FoodSearchResultPresentation(food: restaurant)
+        #expect(presentation.nutritionSummary == "640 cal · 31 P · 35 F · 52 C")
+        #expect(presentation.sourceAndServingSummary == "Example Grill · 1 burger · 1 serving")
+        #expect(presentation.sourceIcon == "takeoutbag.and.cup.and.straw")
+    }
+
     private func food(
         brand: String?,
         datasetKind: DatasetKind? = nil,

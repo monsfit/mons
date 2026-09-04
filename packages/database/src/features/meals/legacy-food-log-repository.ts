@@ -10,7 +10,7 @@ const foodLogEntryRecordSchema = Schema.Struct({
   calories_per_100g: Schema.NullOr(Schema.Number),
   carbohydrates_per_100g: Schema.NullOr(Schema.Number),
   created_at: Schema.Date,
-  dataset_kind: Schema.Literals(['raw', 'branded', 'custom', 'recipe']),
+  dataset_kind: Schema.Literals(['raw', 'branded', 'restaurant', 'custom', 'recipe']),
   entry_id: Schema.String,
   fat_per_100g: Schema.NullOr(Schema.Number),
   food_id: Schema.String,
@@ -28,7 +28,7 @@ const foodSourceRecordSchema = Schema.Struct({
   brand: Schema.NullOr(Schema.String),
   calories: Schema.NullOr(Schema.Number),
   carbohydrates_total: Schema.NullOr(Schema.Number),
-  dataset_kind: Schema.Literals(['raw', 'branded', 'custom', 'recipe']),
+  dataset_kind: Schema.Literals(['raw', 'branded', 'restaurant', 'custom', 'recipe']),
   food_id: Schema.String,
   gtin: Schema.NullOr(Schema.String),
   name: Schema.String,
@@ -109,9 +109,12 @@ export const makeLegacyFoodLogRepository = (
                     FROM ${recipes}
                     WHERE profile_id = ${profileId} AND recipe_id = ${input.foodId}
                     LIMIT 1`
-                : yield* sql`SELECT brand, calories,
-                      coalesce(carbohydrates_total, carbohydrates_available) AS carbohydrates_total,
-                      dataset_kind, food_id, gtin, name, protein, total_fat
+                : yield* sql`SELECT brand,
+                      CASE WHEN dataset_kind = 'restaurant' THEN calories * 100 / nutrient_basis_amount ELSE calories END AS calories,
+                      CASE WHEN dataset_kind = 'restaurant' THEN coalesce(carbohydrates_total, carbohydrates_available) * 100 / nutrient_basis_amount ELSE coalesce(carbohydrates_total, carbohydrates_available) END AS carbohydrates_total,
+                      dataset_kind, food_id, gtin, name,
+                      CASE WHEN dataset_kind = 'restaurant' THEN protein * 100 / nutrient_basis_amount ELSE protein END AS protein,
+                      CASE WHEN dataset_kind = 'restaurant' THEN total_fat * 100 / nutrient_basis_amount ELSE total_fat END AS total_fat
                     FROM ${foods}
                     WHERE dataset_kind = ${input.datasetKind} AND food_id = ${input.foodId}
                     LIMIT 1`

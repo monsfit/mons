@@ -10,7 +10,7 @@ import {
   uuidSchema,
 } from '../../schema-helpers.ts'
 
-export const catalogDatasetKindSchema = Schema.Literals(['raw', 'branded'])
+export const catalogDatasetKindSchema = Schema.Literals(['raw', 'branded', 'restaurant'])
 export const datasetKindSchema = catalogDatasetKindSchema
 
 export const gtinPathSchema = Schema.Struct({
@@ -45,23 +45,35 @@ export const foodPortionSchema = Schema.Struct({
   unit: Schema.Literals(['g', 'ml']),
 }).pipe(identifier('FoodPortion', 'Normalized household portion'))
 
+export const catalogFoodPortionSchema = Schema.Struct({
+  amount: Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0.1)),
+  name: nonBlankTextSchema,
+  unit: Schema.Literals(['g', 'ml', 'serving']),
+}).pipe(identifier('CatalogFoodPortion', 'Normalized catalog portion'))
+
+export const nutrientBasisSchema = Schema.Struct({
+  amount: Schema.Finite.check(Schema.isGreaterThan(0)),
+  unit: Schema.Literals(['g', 'serving']),
+}).pipe(identifier('NutrientBasis', 'Quantity represented by the nutrient values'))
+
 export const foodNutrientSchema = Schema.Struct({
   amount: Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0)),
   field: nonBlankTextSchema,
   name: nonBlankTextSchema,
   unit: nonBlankTextSchema,
-}).pipe(identifier('FoodNutrient', 'Available normalized nutrient value per 100 grams'))
+}).pipe(identifier('FoodNutrient', 'Available normalized nutrient value for the food basis'))
 
 export const foodSummarySchema = Schema.Struct({
   brand: Schema.NullOr(Schema.String),
   calories: Schema.NullOr(Schema.Number),
   carbohydrates: Schema.NullOr(Schema.Number),
-  datasetKind: foodSourceKindSchema,
+  datasetKind: catalogDatasetKindSchema,
   foodId: Schema.String,
   gtin: Schema.NullOr(Schema.String),
   name: Schema.String,
+  nutrientBasis: nutrientBasisSchema,
   nutrients: Schema.Array(foodNutrientSchema),
-  portions: Schema.Array(foodPortionSchema),
+  portions: Schema.Array(catalogFoodPortionSchema),
   protein: Schema.NullOr(Schema.Number),
   source: Schema.String,
   sourceId: Schema.String,
@@ -72,10 +84,11 @@ export const foodSearchResultSchema = Schema.Struct({
   brand: Schema.NullOr(Schema.String),
   calories: Schema.NullOr(Schema.Number),
   carbohydrates: Schema.NullOr(Schema.Number),
-  datasetKind: foodSourceKindSchema,
-  defaultPortion: Schema.NullOr(foodPortionSchema),
+  datasetKind: catalogDatasetKindSchema,
+  defaultPortion: Schema.NullOr(catalogFoodPortionSchema),
   foodId: Schema.String,
   name: Schema.String,
+  nutrientBasis: nutrientBasisSchema,
   protein: Schema.NullOr(Schema.Number),
   totalFat: Schema.NullOr(Schema.Number),
 }).pipe(identifier('FoodSearchResult', 'Minimal food search-list result'))
@@ -127,6 +140,7 @@ export type FoodLogEntry = typeof foodLogEntrySchema.Type
 export type FoodNutrient = typeof foodNutrientSchema.Type
 export type FoodPortion = typeof foodPortionSchema.Type
 export type FoodItemResponse = typeof foodItemResponseSchema.Type
+export type NutrientBasis = typeof nutrientBasisSchema.Type
 export type FoodSearchQuery = typeof foodSearchQuerySchema.Type
 export type FoodSearchResult = typeof foodSearchResultSchema.Type
 export type FoodSearchResponse = typeof foodSearchResponseSchema.Type

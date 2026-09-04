@@ -89,6 +89,7 @@ export function toFoodSummary(food: FoodRecord): FoodSummary {
     foodId: food.food_id,
     gtin: food.gtin,
     name: food.name,
+    nutrientBasis: food.nutrient_basis,
     nutrients: food.nutrients,
     portions: food.portions,
     protein: food.protein,
@@ -107,6 +108,7 @@ export function toFoodSearchResult(food: FoodSearchRecord): FoodSearchResult {
     defaultPortion: food.default_portion,
     foodId: food.food_id,
     name: food.name,
+    nutrientBasis: food.nutrient_basis,
     protein: food.protein,
     totalFat: food.total_fat,
   }
@@ -114,14 +116,14 @@ export function toFoodSearchResult(food: FoodSearchRecord): FoodSearchResult {
 
 export interface CatalogServiceShape {
   readonly findById: (
-    datasetKind: 'raw' | 'branded',
+    datasetKind: 'raw' | 'branded' | 'restaurant',
     foodId: string,
   ) => Effect.Effect<FoodItemResponse | undefined, ServicePersistenceError>
   readonly findByGtin: (
     gtin: string,
   ) => Effect.Effect<FoodItemResponse | undefined, ServicePersistenceError>
   readonly search: (query: {
-    readonly kind?: 'raw' | 'branded'
+    readonly kind?: 'raw' | 'branded' | 'restaurant'
     readonly limit?: number
     readonly q: string
   }) => Effect.Effect<FoodSearchResponse, ServicePersistenceError>

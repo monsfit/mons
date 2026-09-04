@@ -103,7 +103,7 @@ enum MealComposerPrototypeFixtures {
                 entryId: deterministicEntryIDs[index],
                 food: food,
                 loggedAt: loggedAt,
-                quantityGrams: food.gramPortions.first?.gramAmount ?? 100
+                quantityGrams: food.portions.first?.amount ?? food.nutrientBasis.amount
             )
         )
     }

@@ -73,6 +73,8 @@ struct RecipeIngredientEditorRow: View {
             "person.crop.square.fill"
         case .recipe:
             "book.closed.fill"
+        case .restaurant:
+            "takeoutbag.and.cup.and.straw.fill"
         }
     }
 }

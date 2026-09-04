@@ -6,7 +6,7 @@ import type { FoodSourceKind } from '../../types.ts'
 
 const inputKindSchema = Schema.Literals(['text', 'photo', 'voice'])
 const statusSchema = Schema.Literals(['completed', 'failed'])
-const sourceKindSchema = Schema.Literals(['raw', 'branded', 'custom', 'recipe'])
+const sourceKindSchema = Schema.Literals(['raw', 'branded', 'restaurant', 'custom', 'recipe'])
 
 const estimateRowSchema = Schema.Struct({
   calories: Schema.Number,

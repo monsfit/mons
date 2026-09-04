@@ -24,7 +24,7 @@ struct FoodServingEditor: View {
                             Text(quantityGrams, format: .number.precision(.fractionLength(0...1)))
                                 .font(MonsTypography.title)
                                 .contentTransition(.numericText())
-                            Text("grams total")
+                            Text(selectedPortion?.unit == .serving ? "servings total" : "grams total")
                                 .font(MonsTypography.caption)
                                 .foregroundStyle(MonsColor.textSecondary)
                         }

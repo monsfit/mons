@@ -4,7 +4,7 @@ import { SqlClient, SqlError } from 'effect/unstable/sql'
 import { validateSchemaName } from '../../migrations.ts'
 import type { FoodSourceKind, MealCategory } from '../../types.ts'
 
-const sourceKindSchema = Schema.Literals(['raw', 'branded', 'custom', 'recipe'])
+const sourceKindSchema = Schema.Literals(['raw', 'branded', 'restaurant', 'custom', 'recipe'])
 const mealCategorySchema = Schema.Literals(['breakfast', 'lunch', 'dinner', 'snack'])
 const inputKindSchema = Schema.Literals(['text', 'photo', 'voice'])
 
@@ -219,9 +219,12 @@ export const makeMealLogRepository = (
                   protein_per_100g AS protein, fat_per_100g AS total_fat
                 FROM ${recipes}
                 WHERE profile_id = ${profileId} AND recipe_id = ${item.foodId} LIMIT 1`
-            : yield* sql`SELECT brand, calories,
-                  coalesce(carbohydrates_total, carbohydrates_available) AS carbohydrates,
-                  dataset_kind, food_id, gtin, name, protein, total_fat
+            : yield* sql`SELECT brand,
+                  CASE WHEN dataset_kind = 'restaurant' THEN calories * 100 / nutrient_basis_amount ELSE calories END AS calories,
+                  CASE WHEN dataset_kind = 'restaurant' THEN coalesce(carbohydrates_total, carbohydrates_available) * 100 / nutrient_basis_amount ELSE coalesce(carbohydrates_total, carbohydrates_available) END AS carbohydrates,
+                  dataset_kind, food_id, gtin, name,
+                  CASE WHEN dataset_kind = 'restaurant' THEN protein * 100 / nutrient_basis_amount ELSE protein END AS protein,
+                  CASE WHEN dataset_kind = 'restaurant' THEN total_fat * 100 / nutrient_basis_amount ELSE total_fat END AS total_fat
                 FROM ${foods}
                 WHERE dataset_kind = ${item.datasetKind} AND food_id = ${item.foodId} LIMIT 1`
       const food = (yield* decodeFoods(rows))[0]
