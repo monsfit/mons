@@ -102,6 +102,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
     const sql = yield* SqlClient.SqlClient
     const safeSchema = yield* validateSchemaName(schema)
     const foods = sql(`${safeSchema}.foods`)
+    const restaurants = sql(`${safeSchema}.restaurants`)
     const catalogMetadata = sql(`${safeSchema}.catalog_metadata`)
 
     const nutrientDefinitions = `
@@ -145,7 +146,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
 
     const selectedFoodColumns = (tableAlias: string) =>
       sql.literal(`
-      ${tableAlias}.brand,
+      coalesce(${tableAlias}.brand, r.name) AS brand,
       ${tableAlias}.calories,
       coalesce(${tableAlias}.carbohydrates_total, ${tableAlias}.carbohydrates_available) AS carbohydrates_total,
       ${tableAlias}.dataset_kind,
@@ -184,7 +185,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
 
     const selectedSearchColumns = (tableAlias: string) =>
       sql.literal(`
-      ${tableAlias}.brand,
+      coalesce(${tableAlias}.brand, r.name) AS brand,
       ${tableAlias}.calories,
       coalesce(${tableAlias}.carbohydrates_total, ${tableAlias}.carbohydrates_available) AS carbohydrates_total,
       ${tableAlias}.dataset_kind,
@@ -234,6 +235,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
       const rows = yield* sql`
         SELECT ${selectedFoodColumns('f')}
         FROM ${foods} AS f
+        LEFT JOIN ${restaurants} AS r ON r.restaurant_id = f.restaurant_id
         WHERE f.dataset_kind = 'branded' AND f.gtin = ${gtin} AND ${validFood}
         LIMIT 1
       `
@@ -257,6 +259,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
       const rows = yield* sql`
         SELECT ${selectedFoodColumns('f')}
         FROM ${foods} AS f
+        LEFT JOIN ${restaurants} AS r ON r.restaurant_id = f.restaurant_id
         WHERE f.dataset_kind = ${datasetKind} AND f.food_id = ${foodId} AND ${validFood}
         LIMIT 1
       `
@@ -281,6 +284,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
       const nameRows = yield* sql`
         SELECT ${selectedSearchColumns('f')}
         FROM ${foods} AS f
+        LEFT JOIN ${restaurants} AS r ON r.restaurant_id = f.restaurant_id
         WHERE (${options.kind ?? null}::text IS NULL OR f.dataset_kind = ${options.kind ?? null})
           AND (lower(f.name) COLLATE "C") LIKE ${escapedPrefix} ESCAPE '!'
           AND ${validFood}
@@ -298,14 +302,33 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
       )
       if (options.kind !== 'raw') {
         const brandRows = yield* sql`
+          WITH candidates AS MATERIALIZED (
+            (
+              SELECT f.food_id
+              FROM ${foods} AS f
+              WHERE (${options.kind ?? null}::text IS NULL OR ${options.kind ?? null} = 'branded')
+                AND f.dataset_kind = 'branded'
+                AND (lower(f.brand) COLLATE "C") LIKE ${escapedPrefix} ESCAPE '!'
+                AND ${validFood}
+              LIMIT ${options.limit}
+            )
+            UNION ALL
+            (
+              SELECT f.food_id
+              FROM ${restaurants} AS restaurant
+              INNER JOIN ${foods} AS f ON f.restaurant_id = restaurant.restaurant_id
+              WHERE (${options.kind ?? null}::text IS NULL OR ${options.kind ?? null} = 'restaurant')
+                AND (lower(restaurant.name) COLLATE "C") LIKE ${escapedPrefix} ESCAPE '!'
+                AND ${validFood}
+              LIMIT ${options.limit}
+            )
+          )
           SELECT ${selectedSearchColumns('f')}
           FROM ${foods} AS f
-          WHERE (${options.kind ?? null}::text IS NULL OR f.dataset_kind = ${options.kind ?? null})
-            AND f.dataset_kind <> 'raw'
-            AND (lower(f.brand) COLLATE "C") LIKE ${escapedPrefix} ESCAPE '!'
-            AND ${validFood}
+          INNER JOIN candidates AS candidate ON candidate.food_id = f.food_id
+          LEFT JOIN ${restaurants} AS r ON r.restaurant_id = f.restaurant_id
           ORDER BY
-            lower(f.brand) COLLATE "C" ASC,
+            lower(coalesce(f.brand, r.name)) COLLATE "C" ASC,
             ${sourcePriority} ASC,
             f.food_id ASC
           LIMIT ${options.limit}
@@ -326,21 +349,38 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
           ) AS value
           FROM unnest(tsvector_to_array(to_tsvector('simple', ${options.query}))) AS term
         ), candidates AS MATERIALIZED (
-          SELECT f.dataset_kind, f.food_id
-          FROM ${foods} AS f
-          CROSS JOIN search_query
-          WHERE (${options.kind ?? null}::text IS NULL OR f.dataset_kind = ${options.kind ?? null})
-            AND f.search_document @@ search_query.value
-            AND ${validFood}
-          LIMIT ${fallbackCandidateLimit}
+          (
+            SELECT f.dataset_kind, f.food_id
+            FROM ${foods} AS f
+            CROSS JOIN search_query
+            WHERE (${options.kind ?? null}::text IS NULL OR f.dataset_kind = ${options.kind ?? null})
+              AND f.search_document @@ search_query.value
+              AND ${validFood}
+            LIMIT ${fallbackCandidateLimit}
+          )
+          UNION
+          (
+            SELECT f.dataset_kind, f.food_id
+            FROM ${restaurants} AS restaurant
+            INNER JOIN ${foods} AS f ON f.restaurant_id = restaurant.restaurant_id
+            CROSS JOIN search_query
+            WHERE (${options.kind ?? null}::text IS NULL OR ${options.kind ?? null} = 'restaurant')
+              AND to_tsvector('simple', restaurant.name) @@ search_query.value
+              AND ${validFood}
+            LIMIT ${fallbackCandidateLimit}
+          )
         )
         SELECT ${selectedSearchColumns('f')}
         FROM ${foods} AS f
         INNER JOIN candidates AS candidate
           ON candidate.food_id = f.food_id
+        LEFT JOIN ${restaurants} AS r ON r.restaurant_id = f.restaurant_id
         CROSS JOIN search_query
         ORDER BY
-          ts_rank_cd(f.search_document, search_query.value) DESC,
+          greatest(
+            ts_rank_cd(f.search_document, search_query.value),
+            ts_rank_cd(to_tsvector('simple', coalesce(r.name, '')), search_query.value)
+          ) DESC,
           ${sourcePriority} ASC,
           f.food_id ASC
         LIMIT ${options.limit}
