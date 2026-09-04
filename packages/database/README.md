@@ -9,7 +9,8 @@ deterministic sample implementation.
 The repository supports:
 
 - exact branded-food lookup by normalized GTIN, guarded by the catalog quality contract;
-- weighted full-text food and brand search with trigram fallback and USDA-first branded ties;
+- weighted full-text food, brand, and restaurant search with USDA-first branded ties;
+- normalized food-group and brand dimensions with indexed ID filters and aggregate listings;
 - idempotent profile and food-log persistence with nutrient snapshots;
 - one server-calculated nutrition plan per profile, including its source inputs and calculation
   timestamp;
@@ -27,8 +28,8 @@ Application tables are intentionally separate from the `mons_catalog` catalog sc
 pipeline can atomically replace the catalog without deleting user history.
 
 The reader defensively excludes incomplete or out-of-range nutrition records even if an older
-snapshot is still loaded. Raw and branded searches can be requested separately so clients can
-present stable Common and Branded sections. When a raw composition source reports available
+snapshot is still loaded. Raw, branded, and restaurant searches can be requested separately and
+filtered by `food_group_id` or `brand_id`. When a raw composition source reports available
 carbohydrate but not total carbohydrate, the catalog reader exposes that source value as the
 API's generic carbohydrate summary without changing the normalized source field.
 

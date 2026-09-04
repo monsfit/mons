@@ -41,7 +41,9 @@ external-system compensation, or reproduced regressions—not file boundaries or
 | -------- | ------------------------------------------------------- | ------------------------------------------------ |
 | `GET`    | `/health`                                               | Process health                                   |
 | `GET`    | `/v1/foods/by-gtin/:gtin`                               | Branded-food lookup by normalized 14-digit GTIN  |
-| `GET`    | `/v1/foods/search`                                      | Weighted full-text and typo-tolerant search      |
+| `GET`    | `/v1/foods/search`                                      | Weighted food, brand, and restaurant search      |
+| `GET`    | `/v1/foods/groups`                                      | Supported food groups with food counts           |
+| `GET`    | `/v1/foods/brands`                                      | Prefix-filtered brands with food counts          |
 | `PUT`    | `/v1/profile`                                           | Resolve the authenticated account's profile      |
 | `GET`    | `/v1/profiles/:profileId/nutrition-plan`                | Read the saved onboarding result                 |
 | `PUT`    | `/v1/profiles/:profileId/nutrition-plan`                | Calculate and save a nutrition plan              |
@@ -68,9 +70,10 @@ external-system compensation, or reproduced regressions—not file boundaries or
 | `GET`    | `/openapi.json`                                         | Generated OpenAPI 3.1 document                   |
 | `GET`    | `/docs`                                                 | Interactive Scalar API reference                 |
 
-Search accepts `q`, optional `kind=raw|branded`, and optional `limit=1..100`. Time-range
-routes require an inclusive `from` and exclusive `to` ISO timestamp. Weight is persisted in
-kilograms; clients may convert it for localized display.
+Search accepts `q`, optional `kind=raw|branded|restaurant`, optional `foodGroupId` and `brandId`,
+and optional `limit=1..100`. Brand listing accepts optional `q` and `limit`. Time-range routes
+require an inclusive `from` and exclusive `to` ISO timestamp. Weight is persisted in kilograms;
+clients may convert it for localized display.
 
 Application migrations run before deployment. The API never migrates on startup. Catalog ingestion
 and catalog indexes are owned by the private `monsfit/mons-data` pipeline.

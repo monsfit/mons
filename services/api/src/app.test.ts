@@ -43,10 +43,13 @@ const userId = 'user_mons_test'
 const profileId = '00000000-0000-4000-8000-000000000001'
 const food: FoodRecord = {
   brand: 'Example Brand',
+  brand_id: '1',
   calories: 120,
   carbohydrates_total: 18,
   dataset_kind: 'branded',
   food_id: '42',
+  food_group: 'Prepared Foods',
+  food_group_id: '17',
   gtin: '00012345678905',
   name: 'Example Food',
   nutrient_basis: { amount: 100, unit: 'g' },
@@ -197,15 +200,23 @@ const catalog: CatalogReaderService = {
   findById: (datasetKind, foodId) =>
     Effect.succeed(datasetKind === food.dataset_kind && foodId === food.food_id ? food : undefined),
   findByGtin: (gtin) => Effect.succeed(gtin === food.gtin ? food : undefined),
+  listBrands: () => Effect.succeed([{ brand_id: '1', food_count: '1', name: 'Example Brand' }]),
+  listFoodGroups: () =>
+    Effect.succeed([
+      { food_count: '1', food_group_id: '17', name: 'Prepared Foods', slug: 'prepared_foods' },
+    ]),
   search: () =>
     Effect.succeed([
       {
         brand: food.brand,
+        brand_id: food.brand_id,
         calories: food.calories,
         carbohydrates_total: food.carbohydrates_total,
         dataset_kind: food.dataset_kind,
         default_portion: food.portions[0] ?? null,
         food_id: food.food_id,
+        food_group: food.food_group,
+        food_group_id: food.food_group_id,
         name: food.name,
         nutrient_basis: food.nutrient_basis,
         protein: food.protein,
@@ -369,17 +380,37 @@ layer(webHandlerLayer)('Mons Effect HTTP API', (it) => {
         foods: [
           {
             brand: 'Example Brand',
+            brandId: '1',
             calories: 120,
             carbohydrates: 18,
             datasetKind: 'branded',
             defaultPortion: { amount: 30, name: '1 bar', unit: 'g' },
             foodId: '42',
+            foodGroup: 'Prepared Foods',
+            foodGroupId: '17',
             name: 'Example Food',
             nutrientBasis: { amount: 100, unit: 'g' },
             protein: 5,
             totalFat: 2,
           },
         ],
+      })
+      const groups = yield* request(handler, '/v1/foods/groups')
+      expect(yield* json(groups)).toEqual({
+        catalogReleaseId: '2026-08-27-test0001',
+        foodGroups: [
+          {
+            foodCount: 1,
+            foodGroupId: '17',
+            name: 'Prepared Foods',
+            slug: 'prepared_foods',
+          },
+        ],
+      })
+      const brands = yield* request(handler, '/v1/foods/brands?q=example')
+      expect(yield* json(brands)).toEqual({
+        brands: [{ brandId: '1', foodCount: 1, name: 'Example Brand' }],
+        catalogReleaseId: '2026-08-27-test0001',
       })
       const gtin = yield* request(handler, '/v1/foods/by-gtin/00012345678905')
       expect(yield* json(gtin)).toMatchObject({
@@ -489,6 +520,8 @@ layer(webHandlerLayer)('Mons Effect HTTP API', (it) => {
       expect(document.paths).toHaveProperty('/v1/profiles/{profileId}/recipes/{recipeId}')
       expect(document.paths).toHaveProperty('/v1/profiles/{profileId}/meal-estimates')
       expect(document.paths).toHaveProperty('/v1/foods/{datasetKind}/{foodId}')
+      expect(document.paths).toHaveProperty('/v1/foods/groups')
+      expect(document.paths).toHaveProperty('/v1/foods/brands')
     }),
   )
 })

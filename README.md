@@ -177,9 +177,9 @@ standalone Node tooling.
 - HTTP routes, OpenAPI, request validation, errors, layers, logging, and PostgreSQL access use
   Effect 4 modules end to end; the generated contract and runtime share one declaration.
 - The private data pipeline publishes a versioned catalog satisfying the public read contract.
-- Raw and branded foods share one schema while remaining separate table partitions.
-- Catalog names and brands use weighted PostgreSQL full-text search with trigram fallback and
-  a defensive quality predicate.
+- Raw, branded, and restaurant foods share one table and are distinguished by `dataset_kind`.
+- Catalog foods reference normalized food-group, brand, or restaurant identities for filtering
+  while retaining one cross-source search surface and a defensive quality predicate.
 - Catalog search and barcode responses include every available normalized nutrient and household
   gram portion, while preserving raw and branded provenance.
 - Profiles, food logs, custom foods, measured-yield recipes, weight history, workout templates, and completed workouts live in
