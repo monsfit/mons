@@ -101,6 +101,7 @@ export function MarketingPage() {
         <nav aria-label="Primary navigation">
           <a href="#product">Product</a>
           <a href="#approach">Approach</a>
+          <a href="/foods">Food data</a>
           <a className="nav-cta" href="#early-access">
             Early access
           </a>

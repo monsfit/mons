@@ -52,6 +52,16 @@ jobs:
           CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      - name: Deploy web
+        run: |
+          if [[ "${{ steps.deployment.outputs.stage }}" == production ]]; then
+            pnpm deploy:web:production
+          else
+            pnpm deploy:web:dev
+          fi
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       - name: Verify API
         run: |
           api_url=$(node scripts/deployment-identity.ts --stage "${{ steps.deployment.outputs.stage }}" --format url)

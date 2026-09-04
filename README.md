@@ -6,10 +6,10 @@ data pipeline.
 
 ```text
 Mons data pipeline ──► PostgreSQL catalog ──► Effect API (TypeScript)
-                                                   │
-                                   ┌───────────────┴──────────────┐
-                                   ▼                              ▼
-                            Mons (SwiftUI)           Marketing (TanStack Start)
+                                 │                  │
+                                 ▼                  ▼
+                     Web data workspace       Mons (SwiftUI)
+                       (TanStack Start)
 ```
 
 ## Repository layout
@@ -17,7 +17,7 @@ Mons data pipeline ──► PostgreSQL catalog ──► Effect API (TypeScript
 ```text
 clients/
   ios/                 SwiftUI application and Xcode tests
-  web/                 TanStack Start marketing website
+  web/                 TanStack Start website and catalog workspace
 packages/
   contracts/           Effect Schema API contracts
   database/            Effect SQL migrations and repositories
@@ -25,7 +25,7 @@ services/
   api/                 TypeScript HTTP API and generated OpenAPI document
 ```
 
-See [the API guide](services/api/README.md), [the marketing guide](clients/web/README.md), and the
+See [the API guide](services/api/README.md), [the web guide](clients/web/README.md), and the
 [database guide](packages/database/README.md) for component-specific details.
 
 ## Requirements
@@ -53,8 +53,9 @@ Hyperdrive connects straight to that local database, Workers AI remains a remote
 uses Wrangler's local state. See [the development environment flow](docs/development-environments.md)
 for iPhone tunnels, staging, production, and CI secrets.
 
-Run `pnpm dev:marketing` in a second terminal to start the marketing website at
-<http://localhost:3001>.
+Run `pnpm dev:web` in a second terminal to start the website at <http://localhost:3001>. The
+catalog workspace at `/foods` reads the same local PostgreSQL catalog through a local Hyperdrive
+binding.
 
 The pnpm prepare lifecycle clones the exact Effect 4 source tag used by the workspace into
 ignored `.repos/effect`. `scripts/prepare-effect.sh` verifies the pinned commit, giving contributors
@@ -160,7 +161,8 @@ standalone Node tooling.
 | ------------------------ | ---------------------------------------------------------------------------- |
 | `pnpm dev`               | Start local PostgreSQL, migrate it, and run the Worker with Wrangler         |
 | `pnpm dev:database:stop` | Stop the local PostgreSQL container                                          |
-| `pnpm dev:marketing`     | Run the TanStack Start marketing website on port 3001                        |
+| `pnpm dev:web`           | Run the TanStack Start website and catalog workspace on port 3001            |
+| `pnpm deploy:web:dev`    | Build and deploy the development web Worker                                  |
 | `pnpm db:catalog:seed`   | Install the deterministic sample catalog into a safe local schema            |
 | `pnpm db:migrate`        | Migrate stable application tables                                            |
 | `pnpm monitoring:up`     | Start the private VPS monitoring stack                                       |

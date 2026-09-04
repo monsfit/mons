@@ -12,7 +12,7 @@
     "dev": "./scripts/dev-api.sh",
     "dev:database": "docker compose -f infra/local/compose.yaml up -d --wait",
     "dev:database:stop": "docker compose -f infra/local/compose.yaml down",
-    "dev:marketing": "turbo run dev --filter=@mons/marketing",
+    "dev:web": "turbo run dev --filter=@mons/web",
     "format": "oxfmt --write package.json pnpm-workspace.yaml turbo.json tsconfig.base.json clients/web services/api packages",
     "format:check": "oxfmt --check package.json pnpm-workspace.yaml turbo.json tsconfig.base.json clients/web services/api packages",
     "generated:check": "pnpm openapi:check && pnpm wrangler:types:check",
@@ -32,7 +32,9 @@
     "vps:up": "docker compose -f infra/vps/compose.yaml --profile cloudflare up -d --wait",
     "verify": "pnpm check && pnpm test:database && pnpm generated:check && pnpm mons:check",
     "wrangler:types": "wrangler types services/api/src/worker-configuration.d.ts --include-runtime false",
-    "wrangler:types:check": "wrangler types services/api/src/worker-configuration.d.ts --include-runtime false --check",
+    "wrangler:types:check": "wrangler types services/api/src/worker-configuration.d.ts --include-runtime false --check && pnpm --filter @mons/web types:check",
+    "deploy:web:dev": "pnpm --filter @mons/web deploy",
+    "deploy:web:production": "pnpm --filter @mons/web deploy:production",
     "mons:build:ios": "xcodebuild build -quiet -project clients/ios/mons.xcodeproj -scheme 'Mons Dev' -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO",
     "mons:check": "pnpm mons:test:packages && pnpm mons:build:ios && pnpm mons:test",
     "mons:test:packages": "swift test --package-path clients/ios -Xswiftc -warnings-as-errors",
@@ -46,7 +48,7 @@
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "turbo": "catalog:",
-    "wrangler": "4.128.0"
+    "wrangler": "4.129.0"
   },
   "engines": {
     "node": ">=24"
