@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { formatCompactCount, formatNutrient, parseCatalogSearch } from './catalog-search'
+import {
+  formatCompactCount,
+  formatNutrient,
+  parseCatalogSearch,
+  toCatalogQuery,
+} from './catalog-search'
 
 describe('catalog search presentation', () => {
   it('provides a useful deterministic first query', () => {
@@ -18,9 +23,28 @@ describe('catalog search presentation', () => {
   })
 
   it('drops unsupported dataset kinds and trims text', () => {
-    expect(parseCatalogSearch({ kind: 'private', q: '  salmon  ' })).toMatchObject({
+    expect(
+      parseCatalogSearch({ brandId: 'oops', foodGroupId: '-1', kind: 'private', q: '  salmon  ' }),
+    ).toMatchObject({
+      brandId: 'all',
+      foodGroupId: 'all',
       kind: 'all',
       q: 'salmon',
+    })
+  })
+
+  it('builds a bounded server query from active filters', () => {
+    const search = parseCatalogSearch({
+      brandId: '12',
+      brandQuery: 'ann',
+      kind: 'branded',
+      q: 'cookies',
+    })
+    expect(toCatalogQuery(search)).toEqual({
+      brandId: '12',
+      brandQuery: 'ann',
+      kind: 'branded',
+      q: 'cookies',
     })
   })
 

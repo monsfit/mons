@@ -237,6 +237,12 @@ integration('feature repositories with PostgreSQL', () => {
         expect(typo).toEqual([])
         const all = yield* catalog.search({ limit: 10, query: 'apple' })
         expect(all.map((food) => food.dataset_kind)).toContain('restaurant')
+        const firstPage = yield* catalog.search({ limit: 2, offset: 0, query: 'apple' })
+        const secondPage = yield* catalog.search({ limit: 2, offset: 2, query: 'apple' })
+        expect([...firstPage, ...secondPage].map((food) => food.food_id)).toEqual(
+          all.slice(0, 4).map((food) => food.food_id),
+        )
+        expect(new Set([...firstPage, ...secondPage].map((food) => food.food_id)).size).toBe(4)
         const fruit = yield* catalog.search({ foodGroupId: '1', limit: 10, query: 'apple' })
         expect(fruit.every((food) => food.food_group_id === '1')).toBe(true)
         const exampleBrand = yield* catalog.search({ brandId: '1', limit: 10, query: 'apple' })
@@ -266,11 +272,16 @@ integration('feature repositories with PostgreSQL', () => {
           source: 'fastfoodnutrition_org',
         })
         const filteredRestaurant = yield* catalog.search({
+          foodGroupId: '4',
+          kind: 'restaurant',
           limit: 10,
           query: 'apple',
           restaurantId: '1',
         })
         expect(filteredRestaurant.map((food) => food.food_id)).toEqual(['8'])
+        expect(
+          yield* catalog.search({ brandId: '1', kind: 'raw', limit: 10, query: 'apple' }),
+        ).toEqual([])
         expect(yield* catalog.findById('restaurant', '8')).toMatchObject({
           brand: null,
           name: 'Apple Burger',

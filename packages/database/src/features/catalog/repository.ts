@@ -99,6 +99,7 @@ export interface FoodSearchOptions {
   readonly foodGroupId?: string
   readonly kind?: DatasetKind
   readonly limit: number
+  readonly offset?: number
   readonly query: string
   readonly restaurantId?: string
 }
@@ -401,7 +402,9 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
     })
 
     const search = Effect.fn('CatalogReader.search')(function* (options: FoodSearchOptions) {
-      const fallbackCandidateLimit = Math.max(options.limit * 10, 100)
+      const offset = Math.max(options.offset ?? 0, 0)
+      const targetLimit = offset + options.limit
+      const fallbackCandidateLimit = Math.max(targetLimit * 10, 100)
       const escapedPrefix = `${options.query
         .trim()
         .toLocaleLowerCase()
@@ -411,6 +414,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
       yield* Effect.annotateCurrentSpan({
         'catalog.search.dataset_kind': options.kind ?? 'all',
         'catalog.search.limit': options.limit,
+        'catalog.search.offset': offset,
         'catalog.search.query_length': options.query.length,
       })
 
@@ -441,10 +445,10 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
           ts_rank_cd(to_tsvector('simple', f.search_aliases), search_query.value) DESC,
           ${sourcePriority} ASC,
           f.food_id ASC
-        LIMIT ${options.limit}
+        LIMIT ${targetLimit}
       `
       const aliasFoods = yield* decodeFoodSearchRows(aliasRows)
-      if (aliasFoods.length >= options.limit) return aliasFoods
+      if (aliasFoods.length >= targetLimit) return aliasFoods.slice(offset, targetLimit)
 
       const nameRows = yield* sql`
         SELECT ${selectedSearchColumns('f')}
@@ -463,7 +467,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
           lower(f.name) COLLATE "C" ASC,
           ${sourcePriority} ASC,
           f.food_id ASC
-        LIMIT ${options.limit}
+        LIMIT ${targetLimit}
       `
       const nameFoods = yield* decodeFoodSearchRows(nameRows)
       const foodsById = new Map<string, FoodSearchRecord>(
@@ -472,7 +476,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
       for (const food of nameFoods) {
         const id = `${food.dataset_kind}:${food.food_id}`
         if (!foodsById.has(id)) foodsById.set(id, food)
-        if (foodsById.size >= options.limit) return [...foodsById.values()]
+        if (foodsById.size >= targetLimit) return [...foodsById.values()].slice(offset, targetLimit)
       }
       if (options.kind !== 'raw') {
         const brandRows = yield* sql`
@@ -488,7 +492,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
                 AND (${options.foodGroupId ?? null}::bigint IS NULL OR f.food_group_id = ${options.foodGroupId ?? null})
                 AND (lower(brand.name) COLLATE "C") LIKE ${escapedPrefix} ESCAPE '!'
                 AND ${validFood}
-              LIMIT ${options.limit}
+              LIMIT ${targetLimit}
             )
             UNION ALL
             (
@@ -501,7 +505,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
                 AND (${options.foodGroupId ?? null}::bigint IS NULL OR f.food_group_id = ${options.foodGroupId ?? null})
                 AND (lower(restaurant.name) COLLATE "C") LIKE ${escapedPrefix} ESCAPE '!'
                 AND ${validFood}
-              LIMIT ${options.limit}
+              LIMIT ${targetLimit}
             )
           )
           SELECT ${selectedSearchColumns('f')}
@@ -515,13 +519,14 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
             lower(coalesce(b.name, r.name)) COLLATE "C" ASC,
             ${sourcePriority} ASC,
             f.food_id ASC
-          LIMIT ${options.limit}
+          LIMIT ${targetLimit}
         `
         const brandFoods = yield* decodeFoodSearchRows(brandRows)
         for (const food of brandFoods) {
           const id = `${food.dataset_kind}:${food.food_id}`
           if (!foodsById.has(id)) foodsById.set(id, food)
-          if (foodsById.size >= options.limit) return [...foodsById.values()]
+          if (foodsById.size >= targetLimit)
+            return [...foodsById.values()].slice(offset, targetLimit)
         }
       }
 
@@ -591,15 +596,15 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
           ) DESC,
           ${sourcePriority} ASC,
           f.food_id ASC
-        LIMIT ${options.limit}
+        LIMIT ${targetLimit}
       `
       const fallbackFoods = yield* decodeFoodSearchRows(fallbackRows)
       for (const food of fallbackFoods) {
         const id = `${food.dataset_kind}:${food.food_id}`
         if (!foodsById.has(id)) foodsById.set(id, food)
-        if (foodsById.size >= options.limit) break
+        if (foodsById.size >= targetLimit) break
       }
-      return [...foodsById.values()]
+      return [...foodsById.values()].slice(offset, targetLimit)
     })
 
     return CatalogReader.of({

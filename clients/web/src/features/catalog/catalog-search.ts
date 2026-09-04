@@ -17,23 +17,45 @@ const readText = (value: unknown, fallback: string, maximumLength = 200) =>
     ? value.trim().slice(0, maximumLength)
     : fallback
 
+const readId = (value: unknown) => {
+  const candidate = readText(value, 'all', 19)
+  return candidate === 'all' || /^\d{1,19}$/.test(candidate) ? candidate : 'all'
+}
+
 export function parseCatalogSearch(search: Record<string, unknown>): CatalogSearch {
   const candidateKind = readText(search.kind, 'all')
+  const candidateQuery = readText(search.q, 'chicken')
   const kind =
     candidateKind === 'raw' || candidateKind === 'branded' || candidateKind === 'restaurant'
       ? candidateKind
       : 'all'
 
   return {
-    brandId: readText(search.brandId, 'all', 19),
+    brandId: readId(search.brandId),
     brandName: readText(search.brandName, '', 160),
     brandQuery: readText(search.brandQuery, '', 160),
-    foodGroupId: readText(search.foodGroupId, 'all', 19),
+    foodGroupId: readId(search.foodGroupId),
     kind,
-    q: readText(search.q, 'chicken'),
-    restaurantId: readText(search.restaurantId, 'all', 19),
+    q: candidateQuery.length >= 2 ? candidateQuery : 'chicken',
+    restaurantId: readId(search.restaurantId),
     restaurantName: readText(search.restaurantName, '', 160),
     restaurantQuery: readText(search.restaurantQuery, '', 160),
+  }
+}
+
+export function toCatalogQuery(search: CatalogSearch) {
+  return {
+    q: search.q,
+    ...(search.brandId === 'all' ? {} : { brandId: search.brandId }),
+    ...(search.brandQuery.length === 0 ? {} : { brandQuery: search.brandQuery }),
+    ...(search.foodGroupId === 'all' ? {} : { foodGroupId: search.foodGroupId }),
+    ...(search.kind === 'all' ? {} : { kind: search.kind }),
+    ...(search.restaurantId === 'all' ? {} : { restaurantId: search.restaurantId }),
+    ...(search.restaurantQuery.length === 0
+      ? {}
+      : {
+          restaurantQuery: search.restaurantQuery,
+        }),
   }
 }
 

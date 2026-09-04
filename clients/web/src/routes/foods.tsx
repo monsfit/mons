@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { FoodExplorerPage } from '~/components/FoodExplorerPage'
 import { getCatalogWorkspace } from '~/features/catalog/catalog-functions'
-import { parseCatalogSearch } from '~/features/catalog/catalog-search'
+import { parseCatalogSearch, toCatalogQuery } from '~/features/catalog/catalog-search'
 
 export const Route = createFileRoute('/foods')({
   component: FoodsRoute,
@@ -14,18 +14,7 @@ export const Route = createFileRoute('/foods')({
   }),
   validateSearch: parseCatalogSearch,
   loaderDeps: ({ search }) => search,
-  loader: ({ deps }) =>
-    getCatalogWorkspace({
-      data: {
-        q: deps.q,
-        ...(deps.brandId === 'all' ? {} : { brandId: deps.brandId }),
-        ...(deps.brandQuery.length === 0 ? {} : { brandQuery: deps.brandQuery }),
-        ...(deps.foodGroupId === 'all' ? {} : { foodGroupId: deps.foodGroupId }),
-        ...(deps.kind === 'all' ? {} : { kind: deps.kind }),
-        ...(deps.restaurantId === 'all' ? {} : { restaurantId: deps.restaurantId }),
-        ...(deps.restaurantQuery.length === 0 ? {} : { restaurantQuery: deps.restaurantQuery }),
-      },
-    }),
+  loader: ({ deps }) => getCatalogWorkspace({ data: toCatalogQuery(deps) }),
   pendingComponent: FoodExplorerPending,
 })
 
