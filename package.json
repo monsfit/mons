@@ -12,7 +12,7 @@
     "dev": "./scripts/dev-api.sh",
     "dev:database": "docker compose -f infra/local/compose.yaml up -d --wait",
     "dev:database:stop": "docker compose -f infra/local/compose.yaml down",
-    "dev:web": "turbo run dev --filter=@mons/web",
+    "dev:web": "pnpm --filter @mons/web dev",
     "format": "oxfmt --write package.json pnpm-workspace.yaml turbo.json tsconfig.base.json clients/web services/api packages",
     "format:check": "oxfmt --check package.json pnpm-workspace.yaml turbo.json tsconfig.base.json clients/web services/api packages",
     "generated:check": "pnpm openapi:check && pnpm wrangler:types:check",
