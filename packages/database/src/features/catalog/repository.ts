@@ -281,6 +281,32 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
         'catalog.search.query_length': options.query.length,
       })
 
+      const aliasRows = yield* sql`
+        WITH search_query AS (
+          SELECT to_tsquery(
+            'simple',
+            string_agg(quote_literal(term) || ':*', ' & ')
+          ) AS value
+          FROM unnest(tsvector_to_array(to_tsvector('simple', ${options.query}))) AS term
+        )
+        SELECT ${selectedSearchColumns('f')}
+        FROM ${foods} AS f
+        LEFT JOIN ${restaurants} AS r ON r.restaurant_id = f.restaurant_id
+        CROSS JOIN search_query
+        WHERE (${options.kind ?? null}::text IS NULL OR f.dataset_kind = ${options.kind ?? null})
+          AND f.search_aliases <> ''
+          AND f.search_document @@ search_query.value
+          AND to_tsvector('simple', f.search_aliases) @@ search_query.value
+          AND ${validFood}
+        ORDER BY
+          ts_rank_cd(to_tsvector('simple', f.search_aliases), search_query.value) DESC,
+          ${sourcePriority} ASC,
+          f.food_id ASC
+        LIMIT ${options.limit}
+      `
+      const aliasFoods = yield* decodeFoodSearchRows(aliasRows)
+      if (aliasFoods.length >= options.limit) return aliasFoods
+
       const nameRows = yield* sql`
         SELECT ${selectedSearchColumns('f')}
         FROM ${foods} AS f
@@ -295,11 +321,14 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
         LIMIT ${options.limit}
       `
       const nameFoods = yield* decodeFoodSearchRows(nameRows)
-      if (nameFoods.length >= options.limit) return nameFoods
-
       const foodsById = new Map<string, FoodSearchRecord>(
-        nameFoods.map((food) => [`${food.dataset_kind}:${food.food_id}`, food] as const),
+        aliasFoods.map((food) => [`${food.dataset_kind}:${food.food_id}`, food] as const),
       )
+      for (const food of nameFoods) {
+        const id = `${food.dataset_kind}:${food.food_id}`
+        if (!foodsById.has(id)) foodsById.set(id, food)
+        if (foodsById.size >= options.limit) return [...foodsById.values()]
+      }
       if (options.kind !== 'raw') {
         const brandRows = yield* sql`
           WITH candidates AS MATERIALIZED (
