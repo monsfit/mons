@@ -139,7 +139,8 @@
               "type": "string",
               "enum": [
                 "raw",
-                "branded"
+                "branded",
+                "restaurant"
               ]
             },
             "required": true
@@ -244,7 +245,8 @@
               "type": "string",
               "enum": [
                 "raw",
-                "branded"
+                "branded",
+                "restaurant"
               ]
             },
             "required": false
@@ -3872,6 +3874,32 @@
         ],
         "additionalProperties": false
       },
+      "NutrientBasis": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "allOf": [
+              {
+                "exclusiveMinimum": 0
+              }
+            ]
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "g",
+              "serving"
+            ]
+          }
+        },
+        "required": [
+          "amount",
+          "unit"
+        ],
+        "additionalProperties": false,
+        "description": "Quantity represented by the nutrient values"
+      },
       "FoodNutrient": {
         "type": "object",
         "properties": {
@@ -3924,9 +3952,9 @@
           "unit"
         ],
         "additionalProperties": false,
-        "description": "Available normalized nutrient value per 100 grams"
+        "description": "Available normalized nutrient value for the food basis"
       },
-      "FoodPortion": {
+      "CatalogFoodPortion": {
         "type": "object",
         "properties": {
           "amount": {
@@ -3952,7 +3980,8 @@
             "type": "string",
             "enum": [
               "g",
-              "ml"
+              "ml",
+              "serving"
             ]
           }
         },
@@ -3962,7 +3991,7 @@
           "unit"
         ],
         "additionalProperties": false,
-        "description": "Normalized household portion"
+        "description": "Normalized catalog portion"
       },
       "FoodSummary": {
         "type": "object",
@@ -4026,8 +4055,7 @@
             "enum": [
               "raw",
               "branded",
-              "custom",
-              "recipe"
+              "restaurant"
             ]
           },
           "foodId": {
@@ -4046,6 +4074,9 @@
           "name": {
             "type": "string"
           },
+          "nutrientBasis": {
+            "$ref": "#/components/schemas/NutrientBasis"
+          },
           "nutrients": {
             "type": "array",
             "items": {
@@ -4055,7 +4086,7 @@
           "portions": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/FoodPortion"
+              "$ref": "#/components/schemas/CatalogFoodPortion"
             }
           },
           "protein": {
@@ -4117,6 +4148,7 @@
           "foodId",
           "gtin",
           "name",
+          "nutrientBasis",
           "nutrients",
           "portions",
           "protein",
@@ -4292,14 +4324,13 @@
             "enum": [
               "raw",
               "branded",
-              "custom",
-              "recipe"
+              "restaurant"
             ]
           },
           "defaultPortion": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/FoodPortion"
+                "$ref": "#/components/schemas/CatalogFoodPortion"
               },
               {
                 "type": "null"
@@ -4311,6 +4342,9 @@
           },
           "name": {
             "type": "string"
+          },
+          "nutrientBasis": {
+            "$ref": "#/components/schemas/NutrientBasis"
           },
           "protein": {
             "anyOf": [
@@ -4365,6 +4399,7 @@
           "defaultPortion",
           "foodId",
           "name",
+          "nutrientBasis",
           "protein",
           "totalFat"
         ],
@@ -4757,6 +4792,7 @@
             "enum": [
               "raw",
               "branded",
+              "restaurant",
               "custom",
               "recipe"
             ]
@@ -4909,6 +4945,7 @@
             "enum": [
               "raw",
               "branded",
+              "restaurant",
               "custom",
               "recipe"
             ]
@@ -5028,6 +5065,7 @@
             "enum": [
               "raw",
               "branded",
+              "restaurant",
               "custom",
               "recipe"
             ]
@@ -5316,6 +5354,7 @@
             "enum": [
               "raw",
               "branded",
+              "restaurant",
               "custom",
               "recipe"
             ]
@@ -5947,6 +5986,7 @@
                 "enum": [
                   "raw",
                   "branded",
+                  "restaurant",
                   "custom",
                   "recipe"
                 ]
@@ -6249,6 +6289,44 @@
           "unresolvedItems"
         ],
         "additionalProperties": false
+      },
+      "FoodPortion": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "allOf": [
+              {
+                "minimum": 0.1
+              }
+            ]
+          },
+          "name": {
+            "type": "string",
+            "allOf": [
+              {
+                "minLength": 1
+              },
+              {
+                "maxLength": 200
+              }
+            ]
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "g",
+              "ml"
+            ]
+          }
+        },
+        "required": [
+          "amount",
+          "name",
+          "unit"
+        ],
+        "additionalProperties": false,
+        "description": "Normalized household portion"
       },
       "CustomFood": {
         "type": "object",

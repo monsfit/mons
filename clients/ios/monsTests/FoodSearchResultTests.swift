@@ -14,6 +14,7 @@ struct FoodSearchResultTests {
               "defaultPortion": { "amount": 30, "name": "1 bar", "unit": "g" },
               "foodId": "42",
               "name": "Example Food",
+              "nutrientBasis": { "amount": 100, "unit": "g" },
               "protein": 5,
               "totalFat": 2
             }
@@ -29,6 +30,7 @@ struct FoodSearchResultTests {
         #expect(food.protein == 5)
         #expect(food.totalFat == 2)
         #expect(food.nutrients.isEmpty)
+        #expect(food.nutrientBasis == .standardHundredGrams)
         #expect(food.portions == [FoodPortion(amount: 30, name: "1 bar", unit: .grams)])
     }
 }

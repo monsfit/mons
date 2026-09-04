@@ -12,6 +12,7 @@ const food: FoodSummary = {
   foodId: '42',
   gtin: '00012345678905',
   name: 'Example Food',
+  nutrientBasis: { amount: 100, unit: 'g' },
   nutrients: [],
   portions: [{ amount: 30, name: '1 serving', unit: 'g' }],
   protein: 5,

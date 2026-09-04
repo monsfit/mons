@@ -8,6 +8,7 @@ nonisolated struct FoodSearchResult: Decodable, Sendable {
     let defaultPortion: FoodPortion?
     let foodId: String
     let name: String
+    let nutrientBasis: NutrientBasis
     let protein: Double?
     let totalFat: Double?
 
@@ -20,6 +21,7 @@ nonisolated struct FoodSearchResult: Decodable, Sendable {
             foodId: foodId,
             gtin: nil,
             name: name,
+            nutrientBasis: nutrientBasis,
             nutrients: [],
             portions: defaultPortion.map { [$0] } ?? [],
             protein: protein,

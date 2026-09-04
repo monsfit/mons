@@ -27,7 +27,7 @@ struct FoodLogEditorView: View {
     }
 
     private var selectablePortions: [FoodPortion] {
-        food.gramPortions.isEmpty ? [.standardHundredGrams] : food.gramPortions
+        food.portions.isEmpty ? [.standardHundredGrams] : food.portions
     }
 
     private var recipe: Recipe? {
@@ -48,7 +48,7 @@ struct FoodLogEditorView: View {
         self.onAdd = onAdd
         self.onLog = onLog
         onSelectIngredient = nil
-        let initialPortion = food.gramPortions.first ?? .standardHundredGrams
+        let initialPortion = food.portions.first ?? .standardHundredGrams
         _amount = State(initialValue: 1)
         _loggedAt = State(initialValue: loggedAt)
         _mealCategory = State(initialValue: MealCategory.inferred(from: loggedAt))
@@ -101,7 +101,7 @@ struct FoodLogEditorView: View {
         onAdd = { _ in }
         onLog = { _ in false }
         self.onSelectIngredient = onSelectIngredient
-        let initialPortion = food.gramPortions.first ?? .standardHundredGrams
+        let initialPortion = food.portions.first ?? .standardHundredGrams
         _amount = State(initialValue: 1)
         _loggedAt = State(initialValue: Date())
         _mealCategory = State(initialValue: .snack)

@@ -26,7 +26,7 @@ struct FoodNutritionHeroCard: View {
     }
 
     private var quantityText: String {
-        let grams = quantityGrams.formatted(.number.precision(.fractionLength(0...1)))
-        return "\(grams) g"
+        let quantity = quantityGrams.formatted(.number.precision(.fractionLength(0...1)))
+        return "\(quantity) \(food.nutrientBasis.unit.rawValue)"
     }
 }

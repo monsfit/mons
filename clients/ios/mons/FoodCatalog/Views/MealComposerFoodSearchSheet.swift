@@ -207,7 +207,7 @@ struct MealComposerFoodSearchSheet: View {
     }
 
     private func quickAdd(_ food: CatalogFood) {
-        let quantityGrams = food.gramPortions.first?.gramAmount ?? 100
+        let quantityGrams = food.portions.first?.amount ?? food.nutrientBasis.amount
         let pendingFood = PendingFoodLogItem(
             entryId: UUID(),
             food: food,

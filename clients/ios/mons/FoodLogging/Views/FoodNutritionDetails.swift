@@ -17,7 +17,7 @@ struct FoodNutritionDetails: View {
     }
 
     private var scaledNutrients: [FoodNutrient] {
-        let scale = max(quantityGrams, 0) / 100
+        let scale = max(quantityGrams, 0) / food.nutrientBasis.amount
         return food.availableNutrients.map { nutrient in
             FoodNutrient(
                 amount: nutrient.amount * scale,

@@ -8,6 +8,7 @@ nonisolated struct CatalogFood: Codable, Hashable, Identifiable, Sendable {
     let foodId: String
     let gtin: String?
     let name: String
+    let nutrientBasis: NutrientBasis
     let nutrients: [FoodNutrient]
     let portions: [FoodPortion]
     let protein: Double?
@@ -16,6 +17,38 @@ nonisolated struct CatalogFood: Codable, Hashable, Identifiable, Sendable {
     let totalFat: Double?
 
     var id: String { "\(datasetKind.rawValue)-\(foodId)" }
+
+    init(
+        brand: String?,
+        calories: Double?,
+        carbohydrates: Double?,
+        datasetKind: DatasetKind,
+        foodId: String,
+        gtin: String?,
+        name: String,
+        nutrientBasis: NutrientBasis = .standardHundredGrams,
+        nutrients: [FoodNutrient],
+        portions: [FoodPortion],
+        protein: Double?,
+        source: String,
+        sourceId: String,
+        totalFat: Double?
+    ) {
+        self.brand = brand
+        self.calories = calories
+        self.carbohydrates = carbohydrates
+        self.datasetKind = datasetKind
+        self.foodId = foodId
+        self.gtin = gtin
+        self.name = name
+        self.nutrientBasis = nutrientBasis
+        self.nutrients = nutrients
+        self.portions = portions
+        self.protein = protein
+        self.source = source
+        self.sourceId = sourceId
+        self.totalFat = totalFat
+    }
 
     var gramPortions: [FoodPortion] {
         portions.filter { $0.gramAmount != nil }
@@ -42,7 +75,7 @@ nonisolated struct CatalogFood: Codable, Hashable, Identifiable, Sendable {
 
     func scaled(_ nutrient: Double?, quantityGrams: Double) -> Double {
         guard let nutrient else { return 0 }
-        return nutrient * max(quantityGrams, 0) / 100
+        return nutrient * max(quantityGrams, 0) / nutrientBasis.amount
     }
 
     private func fallbackNutrient(

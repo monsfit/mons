@@ -24,7 +24,13 @@ export const isoTimestampSchema = Schema.String.annotate({ format: 'date-time' }
   }),
 )
 
-export const foodSourceKindSchema = Schema.Literals(['raw', 'branded', 'custom', 'recipe'])
+export const foodSourceKindSchema = Schema.Literals([
+  'raw',
+  'branded',
+  'restaurant',
+  'custom',
+  'recipe',
+])
 export const mealCategorySchema = Schema.Literals(['breakfast', 'lunch', 'dinner', 'snack'])
 
 export type FoodSourceKind = typeof foodSourceKindSchema.Type

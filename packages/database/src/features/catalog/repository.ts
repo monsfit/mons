@@ -7,7 +7,12 @@ import type { DatasetKind } from '../../types.ts'
 const foodPortionRecordSchema = Schema.Struct({
   amount: Schema.Number,
   name: Schema.String,
-  unit: Schema.Literals(['g', 'ml']),
+  unit: Schema.Literals(['g', 'ml', 'serving']),
+})
+
+const nutrientBasisRecordSchema = Schema.Struct({
+  amount: Schema.Number,
+  unit: Schema.Literals(['g', 'serving']),
 })
 
 const foodNutrientRecordSchema = Schema.Struct({
@@ -21,10 +26,11 @@ const foodRecordSchema = Schema.Struct({
   brand: Schema.NullOr(Schema.String),
   calories: Schema.NullOr(Schema.Number),
   carbohydrates_total: Schema.NullOr(Schema.Number),
-  dataset_kind: Schema.Literals(['raw', 'branded']),
+  dataset_kind: Schema.Literals(['raw', 'branded', 'restaurant']),
   food_id: Schema.String,
   gtin: Schema.NullOr(Schema.String),
   name: Schema.String,
+  nutrient_basis: nutrientBasisRecordSchema,
   nutrients: Schema.Array(foodNutrientRecordSchema),
   portions: Schema.Array(foodPortionRecordSchema),
   protein: Schema.NullOr(Schema.Number),
@@ -37,10 +43,11 @@ const foodSearchRecordSchema = Schema.Struct({
   brand: Schema.NullOr(Schema.String),
   calories: Schema.NullOr(Schema.Number),
   carbohydrates_total: Schema.NullOr(Schema.Number),
-  dataset_kind: Schema.Literals(['raw', 'branded']),
+  dataset_kind: Schema.Literals(['raw', 'branded', 'restaurant']),
   default_portion: Schema.NullOr(foodPortionRecordSchema),
   food_id: Schema.String,
   name: Schema.String,
+  nutrient_basis: nutrientBasisRecordSchema,
   protein: Schema.NullOr(Schema.Number),
   total_fat: Schema.NullOr(Schema.Number),
 })
@@ -80,14 +87,61 @@ const decodeCatalogReleaseRows = Schema.decodeUnknownEffect(
   Schema.NonEmptyArray(catalogReleaseRecordSchema),
 )
 
+const sourceCode = (tableAlias: string) =>
+  `CASE ${tableAlias}.source_key
+    WHEN 1 THEN 'usda_fooddata_central_branded' WHEN 2 THEN 'open_food_facts'
+    WHEN 3 THEN 'usda_fooddata_central_foundation' WHEN 4 THEN 'usda_fooddata_central_sr_legacy'
+    WHEN 5 THEN 'usda_fooddata_central_survey' WHEN 6 THEN 'canadian_nutrient_file'
+    WHEN 7 THEN 'cofid' WHEN 8 THEN 'nevo2025' WHEN 9 THEN 'australian_food_composition'
+    WHEN 10 THEN 'new_zealand_food_composition' WHEN 11 THEN 'fastfoodnutrition_org'
+    WHEN 30000 THEN 'integration_test' WHEN 30001 THEN 'mons_sample'
+    ELSE 'unknown' END`
+
 export const makeCatalogReader = (schema = 'mons_catalog') =>
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient
     const safeSchema = yield* validateSchemaName(schema)
     const foods = sql(`${safeSchema}.foods`)
-    const rawFoods = sql(`${safeSchema}.raw_foods`)
-    const brandedFoods = sql(`${safeSchema}.branded_foods`)
     const catalogMetadata = sql(`${safeSchema}.catalog_metadata`)
+
+    const nutrientDefinitions = `
+      (VALUES
+        ('calories', 'Food energy', 'kcal'), ('protein', 'Protein', 'g'),
+        ('total_fat', 'Total fat', 'g'), ('carbohydrates_total', 'Total carbohydrate', 'g'),
+        ('carbohydrates_available', 'Available carbohydrate', 'g'),
+        ('carbohydrates_net_calculated', 'Calculated net carbohydrate', 'g'),
+        ('fiber', 'Dietary fibre', 'g'), ('starch', 'Starch', 'g'),
+        ('total_sugars', 'Total sugars', 'g'), ('added_sugars', 'Added sugars', 'g'),
+        ('cysteine', 'Cysteine', 'g'), ('histidine', 'Histidine', 'g'),
+        ('isoleucine', 'Isoleucine', 'g'), ('leucine', 'Leucine', 'g'),
+        ('lysine', 'Lysine', 'g'), ('methionine', 'Methionine', 'g'),
+        ('phenylalanine', 'Phenylalanine', 'g'), ('threonine', 'Threonine', 'g'),
+        ('tryptophan', 'Tryptophan', 'g'), ('tyrosine', 'Tyrosine', 'g'),
+        ('valine', 'Valine', 'g'), ('monounsaturated_fat', 'Monounsaturated fat', 'g'),
+        ('polyunsaturated_fat', 'Polyunsaturated fat', 'g'),
+        ('omega_3_total_reported', 'Reported omega-3 fat', 'g'),
+        ('omega_3_ala_epa_dha_sum', 'ALA + EPA + DHA', 'g'),
+        ('omega_3_ala', 'Alpha-linolenic acid', 'g'), ('omega_3_epa', 'EPA', 'g'),
+        ('omega_3_dha', 'DHA', 'g'), ('omega_6_total_reported', 'Reported omega-6 fat', 'g'),
+        ('omega_6_linoleic_acid', 'Linoleic acid', 'g'),
+        ('saturated_fat', 'Saturated fat', 'g'), ('trans_fat', 'Trans fat', 'g'),
+        ('vitamin_a_retinol', 'Retinol', 'mcg'), ('vitamin_b1_thiamin', 'Thiamin', 'mg'),
+        ('vitamin_b2_riboflavin', 'Riboflavin', 'mg'), ('vitamin_b3_niacin', 'Niacin', 'mg'),
+        ('vitamin_b5_pantothenic_acid', 'Pantothenic acid', 'mg'),
+        ('vitamin_b6', 'Vitamin B6', 'mg'), ('vitamin_b12_cobalamin', 'Vitamin B12', 'mcg'),
+        ('folate_total', 'Total folate', 'mcg'), ('folate_dfe', 'Dietary folate equivalents', 'mcg'),
+        ('vitamin_c_ascorbic_acid', 'Vitamin C', 'mg'),
+        ('vitamin_d_calciferol', 'Vitamin D', 'mcg'),
+        ('vitamin_e_tocopherol', 'Vitamin E', 'mg'),
+        ('vitamin_k_phylloquinone', 'Phylloquinone', 'mcg'),
+        ('calcium', 'Calcium', 'mg'), ('copper', 'Copper', 'mg'), ('iron', 'Iron', 'mg'),
+        ('manganese', 'Manganese', 'mg'), ('magnesium', 'Magnesium', 'mg'),
+        ('phosphorus', 'Phosphorus', 'mg'), ('potassium', 'Potassium', 'mg'),
+        ('selenium', 'Selenium', 'mcg'), ('sodium', 'Sodium', 'mg'), ('zinc', 'Zinc', 'mg'),
+        ('dietary_cholesterol', 'Dietary cholesterol', 'mg'), ('caffeine', 'Caffeine', 'mg'),
+        ('alcohol', 'Alcohol', 'g'), ('water', 'Water', 'g'), ('choline', 'Choline', 'mg')
+      ) AS nutrient(field_name, description, unit)
+    `
 
     const selectedFoodColumns = (tableAlias: string) =>
       sql.literal(`
@@ -98,16 +152,20 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
       ${tableAlias}.food_id,
       ${tableAlias}.gtin,
       ${tableAlias}.name,
+      json_build_object(
+        'amount', ${tableAlias}.nutrient_basis_amount,
+        'unit', ${tableAlias}.nutrient_basis_unit
+      ) AS nutrient_basis,
       coalesce((
         SELECT json_agg(
           json_build_object(
             'amount', (to_jsonb(${tableAlias}) ->> nutrient.field_name)::double precision,
             'field', nutrient.field_name,
-            'name', regexp_replace(nutrient.description, ' per 100 g$', ''),
+            'name', nutrient.description,
             'unit', nutrient.unit
           ) ORDER BY nutrient.field_name
         )
-        FROM ${safeSchema}.nutrient_definitions AS nutrient
+        FROM ${nutrientDefinitions}
         WHERE to_jsonb(${tableAlias}) ->> nutrient.field_name IS NOT NULL
       ), '[]'::json) AS nutrients,
       ${tableAlias}.protein,
@@ -117,13 +175,9 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
           ORDER BY portion.ordinal
         )
         FROM ${safeSchema}.portions AS portion
-        WHERE portion.dataset_kind = ${tableAlias}.dataset_kind AND portion.food_id = ${tableAlias}.food_id
+        WHERE portion.food_id = ${tableAlias}.food_id
       ), '[]'::json) AS portions,
-      (
-        SELECT source.code
-        FROM ${safeSchema}.catalog_sources AS source
-        WHERE source.source_key = ${tableAlias}.source_key
-      ) AS source,
+      ${sourceCode(tableAlias)} AS source,
       ${tableAlias}.source_record_id AS source_id,
       ${tableAlias}.total_fat
     `)
@@ -141,28 +195,37 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
           'unit', portion.unit
         )
         FROM ${safeSchema}.portions AS portion
-        WHERE portion.dataset_kind = ${tableAlias}.dataset_kind
-          AND portion.food_id = ${tableAlias}.food_id
-          AND portion.unit = 'g'
+        WHERE portion.food_id = ${tableAlias}.food_id
         ORDER BY portion.ordinal
         LIMIT 1
       ) AS default_portion,
       ${tableAlias}.food_id,
       ${tableAlias}.name,
+      json_build_object(
+        'amount', ${tableAlias}.nutrient_basis_amount,
+        'unit', ${tableAlias}.nutrient_basis_unit
+      ) AS nutrient_basis,
       ${tableAlias}.protein,
       ${tableAlias}.total_fat
     `)
 
     const validFood = sql.literal(`
       char_length(f.name) <= 160
-      AND f.calories IS NOT NULL AND f.calories BETWEEN 0 AND 1000
-      AND f.protein IS NOT NULL AND f.protein BETWEEN 0 AND 100
-      AND f.total_fat IS NOT NULL AND f.total_fat BETWEEN 0 AND 100
+      AND f.calories IS NOT NULL AND f.calories >= 0
+      AND f.protein IS NOT NULL AND f.protein >= 0
+      AND f.total_fat IS NOT NULL AND f.total_fat >= 0
       AND coalesce(f.carbohydrates_total, f.carbohydrates_available) IS NOT NULL
-      AND coalesce(f.carbohydrates_total, f.carbohydrates_available) BETWEEN 0 AND 100
-      AND f.protein + f.total_fat + coalesce(f.carbohydrates_total, f.carbohydrates_available) <= 120
-      AND (f.calories > 0 OR f.protein + f.total_fat + coalesce(f.carbohydrates_total, f.carbohydrates_available) = 0)
-      AND (f.dataset_kind = 'raw' OR f.gtin IS NOT NULL)
+      AND coalesce(f.carbohydrates_total, f.carbohydrates_available) >= 0
+      AND (
+        f.dataset_kind = 'restaurant'
+        OR (
+          f.calories <= 1000 AND f.protein <= 100 AND f.total_fat <= 100
+          AND coalesce(f.carbohydrates_total, f.carbohydrates_available) <= 100
+          AND f.protein + f.total_fat + coalesce(f.carbohydrates_total, f.carbohydrates_available) <= 120
+          AND (f.calories > 0 OR f.protein + f.total_fat + coalesce(f.carbohydrates_total, f.carbohydrates_available) = 0)
+          AND (f.dataset_kind = 'raw' OR f.gtin IS NOT NULL)
+        )
+      )
     `)
 
     const sourcePriority = sql.literal('f.source_key')
@@ -170,8 +233,8 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
     const findByGtin = Effect.fn('CatalogReader.findByGtin')(function* (gtin: string) {
       const rows = yield* sql`
         SELECT ${selectedFoodColumns('f')}
-        FROM ${brandedFoods} AS f
-        WHERE f.gtin = ${gtin} AND ${validFood}
+        FROM ${foods} AS f
+        WHERE f.dataset_kind = 'branded' AND f.gtin = ${gtin} AND ${validFood}
         LIMIT 1
       `
       const decoded = yield* decodeFoodRows(rows)
@@ -179,7 +242,10 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
     })
 
     const activeReleaseId = Effect.fn('CatalogReader.activeReleaseId')(function* () {
-      const rows = yield* sql`SELECT release_id FROM ${catalogMetadata} LIMIT 1`
+      const rows = yield* sql`
+        SELECT release_id || coalesce('+' || restaurant_snapshot_id, '') AS release_id
+        FROM ${catalogMetadata} LIMIT 1
+      `
       const decoded = yield* decodeCatalogReleaseRows(rows)
       return decoded[0].release_id
     })
@@ -188,11 +254,10 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
       datasetKind: DatasetKind,
       foodId: string,
     ) {
-      const selectedFoods = datasetKind === 'raw' ? rawFoods : brandedFoods
       const rows = yield* sql`
         SELECT ${selectedFoodColumns('f')}
-        FROM ${selectedFoods} AS f
-        WHERE f.food_id = ${foodId} AND ${validFood}
+        FROM ${foods} AS f
+        WHERE f.dataset_kind = ${datasetKind} AND f.food_id = ${foodId} AND ${validFood}
         LIMIT 1
       `
       const decoded = yield* decodeFoodRows(rows)
@@ -200,8 +265,6 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
     })
 
     const search = Effect.fn('CatalogReader.search')(function* (options: FoodSearchOptions) {
-      const searchFoods =
-        options.kind === 'raw' ? rawFoods : options.kind === 'branded' ? brandedFoods : foods
       const fallbackCandidateLimit = Math.max(options.limit * 10, 100)
       const escapedPrefix = `${options.query
         .trim()
@@ -217,8 +280,9 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
 
       const nameRows = yield* sql`
         SELECT ${selectedSearchColumns('f')}
-        FROM ${searchFoods} AS f
-        WHERE (lower(f.name) COLLATE "C") LIKE ${escapedPrefix} ESCAPE '!'
+        FROM ${foods} AS f
+        WHERE (${options.kind ?? null}::text IS NULL OR f.dataset_kind = ${options.kind ?? null})
+          AND (lower(f.name) COLLATE "C") LIKE ${escapedPrefix} ESCAPE '!'
           AND ${validFood}
         ORDER BY
           lower(f.name) COLLATE "C" ASC,
@@ -235,8 +299,10 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
       if (options.kind !== 'raw') {
         const brandRows = yield* sql`
           SELECT ${selectedSearchColumns('f')}
-          FROM ${brandedFoods} AS f
-          WHERE (lower(f.brand) COLLATE "C") LIKE ${escapedPrefix} ESCAPE '!'
+          FROM ${foods} AS f
+          WHERE (${options.kind ?? null}::text IS NULL OR f.dataset_kind = ${options.kind ?? null})
+            AND f.dataset_kind <> 'raw'
+            AND (lower(f.brand) COLLATE "C") LIKE ${escapedPrefix} ESCAPE '!'
             AND ${validFood}
           ORDER BY
             lower(f.brand) COLLATE "C" ASC,
@@ -261,16 +327,17 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
           FROM unnest(tsvector_to_array(to_tsvector('simple', ${options.query}))) AS term
         ), candidates AS MATERIALIZED (
           SELECT f.dataset_kind, f.food_id
-          FROM ${searchFoods} AS f
+          FROM ${foods} AS f
           CROSS JOIN search_query
-          WHERE f.search_document @@ search_query.value
+          WHERE (${options.kind ?? null}::text IS NULL OR f.dataset_kind = ${options.kind ?? null})
+            AND f.search_document @@ search_query.value
             AND ${validFood}
           LIMIT ${fallbackCandidateLimit}
         )
         SELECT ${selectedSearchColumns('f')}
-        FROM ${searchFoods} AS f
+        FROM ${foods} AS f
         INNER JOIN candidates AS candidate
-          ON candidate.dataset_kind = f.dataset_kind AND candidate.food_id = f.food_id
+          ON candidate.food_id = f.food_id
         CROSS JOIN search_query
         ORDER BY
           ts_rank_cd(f.search_document, search_query.value) DESC,

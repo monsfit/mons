@@ -1,4 +1,4 @@
-export type DatasetKind = 'raw' | 'branded'
+export type DatasetKind = 'raw' | 'branded' | 'restaurant'
 export type FoodSourceKind = DatasetKind | 'custom' | 'recipe'
 export type DailyActivity = 'mostly_sedentary' | 'moderately_active' | 'very_active'
 export type ExerciseFrequency = 'none' | 'one_to_three' | 'four_to_six' | 'seven_plus'

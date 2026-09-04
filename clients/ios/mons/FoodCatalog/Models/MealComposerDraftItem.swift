@@ -44,7 +44,7 @@ struct MealComposerDraftItem: Equatable, Identifiable {
         let brand = food.brand?.trimmingCharacters(in: .whitespacesAndNewlines)
         let detail = [
             brand?.isEmpty == false ? brand : nil,
-            "\(pendingFood.quantityGrams.formatted(.number.precision(.fractionLength(0...1)))) g",
+            "\(pendingFood.quantityGrams.formatted(.number.precision(.fractionLength(0...1)))) \(food.nutrientBasis.unit.rawValue)",
         ]
         .compactMap { $0 }
         .joined(separator: " · ")
@@ -55,7 +55,7 @@ struct MealComposerDraftItem: Equatable, Identifiable {
             detail: detail,
             kind: .food,
             servings: pendingFood.quantityGrams,
-            unit: "g",
+            unit: food.nutrientBasis.unit.rawValue,
             caloriesPerServing: 0,
             systemImage: food.datasetKind == .branded ? "takeoutbag.and.cup.and.straw.fill" : "fork.knife",
             palette: palette(for: food),
@@ -69,6 +69,7 @@ struct MealComposerDraftItem: Equatable, Identifiable {
         case .custom: .orange
         case .raw: .green
         case .recipe: .grain
+        case .restaurant: .berry
         }
     }
 }

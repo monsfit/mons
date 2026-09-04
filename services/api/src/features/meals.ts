@@ -923,6 +923,9 @@ const completeNutrition = (
     : { calories, carbohydrates, protein, totalFat }
 
 const fromCatalogFood = (food: FoodSearchRecord): MealSearchCandidate | undefined => {
+  // Meal estimation currently resolves quantities in grams. Per-serving restaurant
+  // foods stay searchable but cannot be used as gram-based resolver candidates.
+  if (food.dataset_kind === 'restaurant') return undefined
   const nutrition = completeNutrition(
     food.calories,
     food.protein,
@@ -1265,7 +1268,7 @@ export interface LegacyFoodLogServiceShape {
     profileId: string,
     clerkUserId: string,
     input: {
-      readonly datasetKind: 'raw' | 'branded' | 'custom' | 'recipe'
+      readonly datasetKind: 'raw' | 'branded' | 'restaurant' | 'custom' | 'recipe'
       readonly entryId: string
       readonly foodId: string
       readonly loggedAt: string

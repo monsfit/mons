@@ -34,6 +34,10 @@ struct MealComposerFoodSearchResults: View {
         filteredFoods.filter { $0.datasetKind == .recipe }
     }
 
+    private var restaurantFoods: [CatalogFood] {
+        filteredFoods.filter { $0.datasetKind == .restaurant }
+    }
+
     var body: some View {
         Group {
             if filteredFoods.isEmpty {
@@ -67,6 +71,17 @@ struct MealComposerFoodSearchResults: View {
                         title: "Branded",
                         subtitle: "Packaged foods and restaurant items",
                         foods: brandedFoods,
+                        query: query,
+                        onSelect: onSelect,
+                        onQuickAdd: onQuickAdd
+                    )
+                }
+
+                if !restaurantFoods.isEmpty {
+                    MealComposerFoodSearchSection(
+                        title: "Restaurants",
+                        subtitle: "Menu items from restaurants",
+                        foods: restaurantFoods,
                         query: query,
                         onSelect: onSelect,
                         onQuickAdd: onQuickAdd

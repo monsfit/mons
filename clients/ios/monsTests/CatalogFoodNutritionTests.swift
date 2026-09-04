@@ -35,4 +35,27 @@ struct CatalogFoodNutritionTests {
         #expect(food.quantityGrams(amount: 75, portion: nil) == 75)
         #expect(food.nutrients.map(\.group) == [.other, .protein, .minerals])
     }
+
+    @Test func scalesRestaurantNutritionFromItsExplicitServingBasis() {
+        let food = CatalogFood(
+            brand: "Example Grill",
+            calories: 640,
+            carbohydrates: 52,
+            datasetKind: .restaurant,
+            foodId: "2",
+            gtin: nil,
+            name: "Big Burger",
+            nutrientBasis: NutrientBasis(amount: 1, unit: .serving),
+            nutrients: [],
+            portions: [FoodPortion(amount: 1, name: "1 burger", unit: .serving)],
+            protein: 31,
+            source: "fastfoodnutrition_org",
+            sourceId: "123",
+            totalFat: 35
+        )
+
+        #expect(food.scaled(food.calories, quantityGrams: 1) == 640)
+        #expect(food.scaled(food.protein, quantityGrams: 2) == 62)
+        #expect(food.quantityGrams(amount: 2, portion: food.portions.first) == 2)
+    }
 }

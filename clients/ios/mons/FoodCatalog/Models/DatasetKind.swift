@@ -5,6 +5,7 @@ nonisolated enum DatasetKind: String, Codable, Sendable {
     case custom
     case raw
     case recipe
+    case restaurant
 
     var title: String {
         switch self {
@@ -16,6 +17,8 @@ nonisolated enum DatasetKind: String, Codable, Sendable {
             "Common"
         case .recipe:
             "Recipe"
+        case .restaurant:
+            "Restaurant"
         }
     }
 }

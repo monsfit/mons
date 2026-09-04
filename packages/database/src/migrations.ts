@@ -9,6 +9,7 @@ import { up as structuredRecipeIngredients } from './migrations/005_structured_r
 import { up as mealEstimates } from './migrations/006_meal_estimates.ts'
 import { up as mealLogs } from './migrations/007_meal_logs.ts'
 import { up as mealMediaCleanup } from './migrations/008_meal_media_cleanup.ts'
+import { up as restaurantFoodLogs } from './migrations/009_restaurant_food_logs.ts'
 
 const schemaNameSchema = Schema.String.check(Schema.isPattern(/^[a-z_][a-z0-9_]{0,31}$/)).annotate({
   identifier: 'PostgreSQLSchemaName',
@@ -47,6 +48,7 @@ const applicationMigrationLoader = (schema: string): Migrator.Loader =>
     [6, 'meal_estimates', Effect.succeed(mealEstimates(schema))],
     [7, 'meal_logs', Effect.succeed(mealLogs(schema))],
     [8, 'meal_media_cleanup', Effect.succeed(mealMediaCleanup(schema))],
+    [9, 'restaurant_food_logs', Effect.succeed(restaurantFoodLogs(schema))],
   ])
 
 export const migrateApplicationDatabase = (schema = 'mons_app') =>

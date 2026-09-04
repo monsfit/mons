@@ -28,6 +28,7 @@ const catalog: CatalogReaderService = {
         default_portion: null,
         food_id: 'food-42',
         name: 'Example Food',
+        nutrient_basis: { amount: 100, unit: 'g' },
         protein: 5,
         total_fat: 2,
       },
