@@ -32,6 +32,8 @@ const catalog: CatalogReaderService = {
         food_id: 'food-42',
         food_group: 'Prepared Foods',
         food_group_id: '17',
+        food_subgroup: 'Ready Meals',
+        food_subgroup_id: '28',
         name: 'Example Food',
         nutrient_basis: { amount: 100, unit: 'g' },
         protein: 5,
