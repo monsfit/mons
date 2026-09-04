@@ -18,15 +18,20 @@ const catalog: CatalogReaderService = {
   activeReleaseId: () => Effect.succeed('2026-08-27-test0001'),
   findById: () => Effect.succeed(undefined),
   findByGtin: () => Effect.succeed(undefined),
+  listBrands: () => Effect.succeed([]),
+  listFoodGroups: () => Effect.succeed([]),
   search: () =>
     Effect.succeed([
       {
         brand: 'Example',
+        brand_id: '1',
         calories: 120,
         carbohydrates_total: 18,
         dataset_kind: 'branded',
         default_portion: null,
         food_id: 'food-42',
+        food_group: 'Prepared Foods',
+        food_group_id: '17',
         name: 'Example Food',
         nutrient_basis: { amount: 100, unit: 'g' },
         protein: 5,

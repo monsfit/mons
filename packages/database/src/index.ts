@@ -5,10 +5,12 @@ export {
 } from './features/catalog/repository.ts'
 export { replaceCatalogWithFixture } from './catalog-fixture.ts'
 export type {
+  BrandRecord,
   CatalogReaderService,
   FoodNutrientRecord,
   FoodPortionRecord,
   FoodRecord,
+  FoodGroupRecord,
   FoodSearchRecord,
   FoodSearchOptions,
 } from './features/catalog/repository.ts'

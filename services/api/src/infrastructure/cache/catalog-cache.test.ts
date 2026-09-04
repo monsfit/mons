@@ -6,10 +6,13 @@ import { CatalogCache, makeWorkerCatalogCacheLayer } from './catalog-cache.ts'
 
 const food: FoodSummary = {
   brand: 'Example',
+  brandId: '1',
   calories: 100,
   carbohydrates: 10,
   datasetKind: 'branded',
   foodId: '42',
+  foodGroup: 'Prepared Foods',
+  foodGroupId: '17',
   gtin: '00012345678905',
   name: 'Example Food',
   nutrientBasis: { amount: 100, unit: 'g' },

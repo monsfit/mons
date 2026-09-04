@@ -239,6 +239,44 @@
         "operationId": "catalog.searchFoods",
         "parameters": [
           {
+            "name": "brandId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "allOf": [
+                {
+                  "minLength": 1
+                },
+                {
+                  "maxLength": 19
+                },
+                {
+                  "pattern": "^[1-9]\\d*$"
+                }
+              ]
+            },
+            "required": false
+          },
+          {
+            "name": "foodGroupId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "allOf": [
+                {
+                  "minLength": 1
+                },
+                {
+                  "maxLength": 19
+                },
+                {
+                  "pattern": "^[1-9]\\d*$"
+                }
+              ]
+            },
+            "required": false
+          },
+          {
             "name": "kind",
             "in": "query",
             "schema": {
@@ -288,6 +326,157 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/FoodSearchResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ValidationError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorEncoded"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/UnauthorizedErrorEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/UnauthorizedErrorEncoded"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "InternalApiError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalApiErrorEncoded"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/foods/groups": {
+      "get": {
+        "tags": [
+          "catalog"
+        ],
+        "operationId": "catalog.listFoodGroups",
+        "parameters": [],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "FoodGroupsResponse",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FoodGroupsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ValidationError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorEncoded"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/UnauthorizedErrorEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/UnauthorizedErrorEncoded"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "InternalApiError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalApiErrorEncoded"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/foods/brands": {
+      "get": {
+        "tags": [
+          "catalog"
+        ],
+        "operationId": "catalog.listBrands",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "allOf": [
+                {
+                  "minLength": 1
+                },
+                {
+                  "maxLength": 200
+                }
+              ]
+            },
+            "required": false
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "BrandsResponse",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrandsResponse"
                 }
               }
             }
@@ -4006,6 +4195,27 @@
               }
             ]
           },
+          "brandId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "allOf": [
+                  {
+                    "minLength": 1
+                  },
+                  {
+                    "maxLength": 19
+                  },
+                  {
+                    "pattern": "^[1-9]\\d*$"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "calories": {
             "anyOf": [
               {
@@ -4060,6 +4270,23 @@
           },
           "foodId": {
             "type": "string"
+          },
+          "foodGroup": {
+            "type": "string"
+          },
+          "foodGroupId": {
+            "type": "string",
+            "allOf": [
+              {
+                "minLength": 1
+              },
+              {
+                "maxLength": 19
+              },
+              {
+                "pattern": "^[1-9]\\d*$"
+              }
+            ]
           },
           "gtin": {
             "anyOf": [
@@ -4142,10 +4369,13 @@
         },
         "required": [
           "brand",
+          "brandId",
           "calories",
           "carbohydrates",
           "datasetKind",
           "foodId",
+          "foodGroup",
+          "foodGroupId",
           "gtin",
           "name",
           "nutrientBasis",
@@ -4275,6 +4505,27 @@
               }
             ]
           },
+          "brandId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "allOf": [
+                  {
+                    "minLength": 1
+                  },
+                  {
+                    "maxLength": 19
+                  },
+                  {
+                    "pattern": "^[1-9]\\d*$"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "calories": {
             "anyOf": [
               {
@@ -4340,6 +4591,23 @@
           "foodId": {
             "type": "string"
           },
+          "foodGroup": {
+            "type": "string"
+          },
+          "foodGroupId": {
+            "type": "string",
+            "allOf": [
+              {
+                "minLength": 1
+              },
+              {
+                "maxLength": 19
+              },
+              {
+                "pattern": "^[1-9]\\d*$"
+              }
+            ]
+          },
           "name": {
             "type": "string"
           },
@@ -4393,11 +4661,14 @@
         },
         "required": [
           "brand",
+          "brandId",
           "calories",
           "carbohydrates",
           "datasetKind",
           "defaultPortion",
           "foodId",
+          "foodGroup",
+          "foodGroupId",
           "name",
           "nutrientBasis",
           "protein",
@@ -4430,6 +4701,160 @@
         "required": [
           "catalogReleaseId",
           "foods"
+        ],
+        "additionalProperties": false
+      },
+      "FoodGroup": {
+        "type": "object",
+        "properties": {
+          "foodCount": {
+            "type": "integer",
+            "allOf": [
+              {
+                "minimum": 0
+              }
+            ]
+          },
+          "foodGroupId": {
+            "type": "string",
+            "allOf": [
+              {
+                "minLength": 1
+              },
+              {
+                "maxLength": 19
+              },
+              {
+                "pattern": "^[1-9]\\d*$"
+              }
+            ]
+          },
+          "name": {
+            "type": "string",
+            "allOf": [
+              {
+                "minLength": 1
+              },
+              {
+                "maxLength": 200
+              }
+            ]
+          },
+          "slug": {
+            "type": "string",
+            "allOf": [
+              {
+                "minLength": 1
+              },
+              {
+                "maxLength": 200
+              }
+            ]
+          }
+        },
+        "required": [
+          "foodCount",
+          "foodGroupId",
+          "name",
+          "slug"
+        ],
+        "additionalProperties": false
+      },
+      "FoodGroupsResponse": {
+        "type": "object",
+        "properties": {
+          "catalogReleaseId": {
+            "type": "string",
+            "allOf": [
+              {
+                "minLength": 1
+              },
+              {
+                "maxLength": 100
+              }
+            ]
+          },
+          "foodGroups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FoodGroup"
+            }
+          }
+        },
+        "required": [
+          "catalogReleaseId",
+          "foodGroups"
+        ],
+        "additionalProperties": false
+      },
+      "Brand": {
+        "type": "object",
+        "properties": {
+          "brandId": {
+            "type": "string",
+            "allOf": [
+              {
+                "minLength": 1
+              },
+              {
+                "maxLength": 19
+              },
+              {
+                "pattern": "^[1-9]\\d*$"
+              }
+            ]
+          },
+          "foodCount": {
+            "type": "integer",
+            "allOf": [
+              {
+                "minimum": 0
+              }
+            ]
+          },
+          "name": {
+            "type": "string",
+            "allOf": [
+              {
+                "minLength": 1
+              },
+              {
+                "maxLength": 200
+              }
+            ]
+          }
+        },
+        "required": [
+          "brandId",
+          "foodCount",
+          "name"
+        ],
+        "additionalProperties": false
+      },
+      "BrandsResponse": {
+        "type": "object",
+        "properties": {
+          "brands": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Brand"
+            }
+          },
+          "catalogReleaseId": {
+            "type": "string",
+            "allOf": [
+              {
+                "minLength": 1
+              },
+              {
+                "maxLength": 100
+              }
+            ]
+          }
+        },
+        "required": [
+          "brands",
+          "catalogReleaseId"
         ],
         "additionalProperties": false
       },

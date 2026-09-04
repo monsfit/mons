@@ -10,17 +10,28 @@ import {
 import { fromService } from '../core/handler-errors.ts'
 import { type ServicePersistenceError, fromRepository } from '../core/service-errors.ts'
 import {
+  brandListQuerySchema,
+  type BrandsResponse,
+  brandsResponseSchema,
   catalogFoodPathSchema,
   type FoodItemResponse,
+  type FoodGroupsResponse,
   type FoodSearchResult,
   type FoodSearchResponse,
   type FoodSummary,
   foodItemResponseSchema,
+  foodGroupsResponseSchema,
   foodSearchQuerySchema,
   foodSearchResponseSchema,
   gtinPathSchema,
 } from '@mons/contracts'
-import { CatalogReader, type FoodRecord, type FoodSearchRecord } from '@mons/database'
+import {
+  type BrandRecord,
+  CatalogReader,
+  type FoodGroupRecord,
+  type FoodRecord,
+  type FoodSearchRecord,
+} from '@mons/database'
 import { Context, Effect, Layer } from 'effect'
 import { HttpApiBuilder, HttpApiEndpoint, HttpApiGroup } from 'effect/unstable/httpapi'
 
@@ -39,6 +50,15 @@ export const catalogApi = HttpApiGroup.make('catalog')
     HttpApiEndpoint.get('searchFoods', '/v1/foods/search', {
       query: foodSearchQuerySchema,
       success: foodSearchResponseSchema,
+      error: [UnauthorizedError, InternalApiError],
+    }),
+    HttpApiEndpoint.get('listFoodGroups', '/v1/foods/groups', {
+      success: foodGroupsResponseSchema,
+      error: [UnauthorizedError, InternalApiError],
+    }),
+    HttpApiEndpoint.get('listBrands', '/v1/foods/brands', {
+      query: brandListQuerySchema,
+      success: brandsResponseSchema,
       error: [UnauthorizedError, InternalApiError],
     }),
   )
@@ -77,16 +97,31 @@ export const catalogHandlers = (api: typeof MonsApi) =>
           const catalog = yield* CatalogService
           return yield* fromService(catalog.search(query))
         }),
+      )
+      .handle('listFoodGroups', () =>
+        Effect.gen(function* () {
+          const catalog = yield* CatalogService
+          return yield* fromService(catalog.listFoodGroups())
+        }),
+      )
+      .handle('listBrands', ({ query }) =>
+        Effect.gen(function* () {
+          const catalog = yield* CatalogService
+          return yield* fromService(catalog.listBrands(query))
+        }),
       ),
   )
 
 export function toFoodSummary(food: FoodRecord): FoodSummary {
   return {
     brand: food.brand,
+    brandId: food.brand_id,
     calories: food.calories,
     carbohydrates: food.carbohydrates_total,
     datasetKind: food.dataset_kind,
     foodId: food.food_id,
+    foodGroup: food.food_group,
+    foodGroupId: food.food_group_id,
     gtin: food.gtin,
     name: food.name,
     nutrientBasis: food.nutrient_basis,
@@ -102,15 +137,35 @@ export function toFoodSummary(food: FoodRecord): FoodSummary {
 export function toFoodSearchResult(food: FoodSearchRecord): FoodSearchResult {
   return {
     brand: food.brand,
+    brandId: food.brand_id,
     calories: food.calories,
     carbohydrates: food.carbohydrates_total,
     datasetKind: food.dataset_kind,
     defaultPortion: food.default_portion,
     foodId: food.food_id,
+    foodGroup: food.food_group,
+    foodGroupId: food.food_group_id,
     name: food.name,
     nutrientBasis: food.nutrient_basis,
     protein: food.protein,
     totalFat: food.total_fat,
+  }
+}
+
+function toFoodGroup(group: FoodGroupRecord) {
+  return {
+    foodCount: Number(group.food_count),
+    foodGroupId: group.food_group_id,
+    name: group.name,
+    slug: group.slug,
+  }
+}
+
+function toBrand(brand: BrandRecord) {
+  return {
+    brandId: brand.brand_id,
+    foodCount: Number(brand.food_count),
+    name: brand.name,
   }
 }
 
@@ -122,7 +177,14 @@ export interface CatalogServiceShape {
   readonly findByGtin: (
     gtin: string,
   ) => Effect.Effect<FoodItemResponse | undefined, ServicePersistenceError>
+  readonly listBrands: (query: {
+    readonly limit?: number
+    readonly q?: string
+  }) => Effect.Effect<BrandsResponse, ServicePersistenceError>
+  readonly listFoodGroups: () => Effect.Effect<FoodGroupsResponse, ServicePersistenceError>
   readonly search: (query: {
+    readonly brandId?: string
+    readonly foodGroupId?: string
     readonly kind?: 'raw' | 'branded' | 'restaurant'
     readonly limit?: number
     readonly q: string
@@ -176,11 +238,32 @@ export const catalogServiceLayer = Layer.effect(
         yield* cache.putFood(cacheKey, summary)
         return summary === undefined ? undefined : { catalogReleaseId, food: summary }
       }),
+      listBrands: Effect.fn('CatalogService.listBrands')(function* (query) {
+        const catalogReleaseId = yield* activeReleaseId()
+        const brands = yield* fromRepository(
+          'CatalogReader.listBrands',
+          catalog.listBrands({
+            limit: query.limit ?? 50,
+            ...(query.q === undefined ? {} : { query: query.q }),
+          }),
+        )
+        return { brands: brands.map(toBrand), catalogReleaseId }
+      }),
+      listFoodGroups: Effect.fn('CatalogService.listFoodGroups')(function* () {
+        const catalogReleaseId = yield* activeReleaseId()
+        const foodGroups = yield* fromRepository(
+          'CatalogReader.listFoodGroups',
+          catalog.listFoodGroups(),
+        )
+        return { catalogReleaseId, foodGroups: foodGroups.map(toFoodGroup) }
+      }),
       search: Effect.fn('CatalogService.search')(function* (query) {
         const catalogReleaseId = yield* activeReleaseId()
         const foods = yield* fromRepository(
           'CatalogReader.search',
           catalog.search({
+            ...(query.brandId === undefined ? {} : { brandId: query.brandId }),
+            ...(query.foodGroupId === undefined ? {} : { foodGroupId: query.foodGroupId }),
             ...(query.kind === undefined ? {} : { kind: query.kind }),
             limit: query.limit ?? 20,
             query: query.q,

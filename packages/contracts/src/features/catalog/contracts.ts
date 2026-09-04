@@ -31,13 +31,41 @@ export const catalogReleaseIdSchema = Schema.String.check(
   Schema.isMaxLength(100),
 )
 
+export const catalogDimensionIdSchema = Schema.String.check(
+  Schema.isMinLength(1),
+  Schema.isMaxLength(19),
+  Schema.isPattern(/^[1-9]\d*$/),
+)
+
 export const foodSearchQuerySchema = Schema.Struct({
+  brandId: Schema.optionalKey(catalogDimensionIdSchema),
+  foodGroupId: Schema.optionalKey(catalogDimensionIdSchema),
   kind: Schema.optionalKey(catalogDatasetKindSchema),
   limit: Schema.optionalKey(
     Schema.NumberFromString.check(Schema.isInt(), Schema.isBetween({ minimum: 1, maximum: 100 })),
   ),
   q: Schema.String.check(Schema.isMinLength(2), Schema.isMaxLength(200)),
 })
+
+export const brandListQuerySchema = Schema.Struct({
+  limit: Schema.optionalKey(
+    Schema.NumberFromString.check(Schema.isInt(), Schema.isBetween({ minimum: 1, maximum: 100 })),
+  ),
+  q: Schema.optionalKey(Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(200))),
+})
+
+export const foodGroupSchema = Schema.Struct({
+  foodCount: Schema.Number.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
+  foodGroupId: catalogDimensionIdSchema,
+  name: nonBlankTextSchema,
+  slug: nonBlankTextSchema,
+}).pipe(identifier('FoodGroup'))
+
+export const brandSchema = Schema.Struct({
+  brandId: catalogDimensionIdSchema,
+  foodCount: Schema.Number.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
+  name: nonBlankTextSchema,
+}).pipe(identifier('Brand'))
 
 export const foodPortionSchema = Schema.Struct({
   amount: Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0.1)),
@@ -65,10 +93,13 @@ export const foodNutrientSchema = Schema.Struct({
 
 export const foodSummarySchema = Schema.Struct({
   brand: Schema.NullOr(Schema.String),
+  brandId: Schema.NullOr(catalogDimensionIdSchema),
   calories: Schema.NullOr(Schema.Number),
   carbohydrates: Schema.NullOr(Schema.Number),
   datasetKind: catalogDatasetKindSchema,
   foodId: Schema.String,
+  foodGroup: Schema.String,
+  foodGroupId: catalogDimensionIdSchema,
   gtin: Schema.NullOr(Schema.String),
   name: Schema.String,
   nutrientBasis: nutrientBasisSchema,
@@ -82,11 +113,14 @@ export const foodSummarySchema = Schema.Struct({
 
 export const foodSearchResultSchema = Schema.Struct({
   brand: Schema.NullOr(Schema.String),
+  brandId: Schema.NullOr(catalogDimensionIdSchema),
   calories: Schema.NullOr(Schema.Number),
   carbohydrates: Schema.NullOr(Schema.Number),
   datasetKind: catalogDatasetKindSchema,
   defaultPortion: Schema.NullOr(catalogFoodPortionSchema),
   foodId: Schema.String,
+  foodGroup: Schema.String,
+  foodGroupId: catalogDimensionIdSchema,
   name: Schema.String,
   nutrientBasis: nutrientBasisSchema,
   protein: Schema.NullOr(Schema.Number),
@@ -102,6 +136,16 @@ export const foodItemResponseSchema = Schema.Struct({
   catalogReleaseId: catalogReleaseIdSchema,
   food: foodSummarySchema,
 }).pipe(identifier('FoodItemResponse'))
+
+export const foodGroupsResponseSchema = Schema.Struct({
+  catalogReleaseId: catalogReleaseIdSchema,
+  foodGroups: Schema.Array(foodGroupSchema),
+}).pipe(identifier('FoodGroupsResponse'))
+
+export const brandsResponseSchema = Schema.Struct({
+  brands: Schema.Array(brandSchema),
+  catalogReleaseId: catalogReleaseIdSchema,
+}).pipe(identifier('BrandsResponse'))
 
 export const createFoodLogEntrySchema = Schema.Struct({
   datasetKind: foodSourceKindSchema,
@@ -136,6 +180,8 @@ export const foodLogResponseSchema = Schema.Struct({
 export const foodLogEntryPathSchema = Schema.Struct({ entryId: uuidSchema, profileId: uuidSchema })
 
 export type DatasetKind = typeof datasetKindSchema.Type
+export type Brand = typeof brandSchema.Type
+export type BrandsResponse = typeof brandsResponseSchema.Type
 export type FoodLogEntry = typeof foodLogEntrySchema.Type
 export type FoodNutrient = typeof foodNutrientSchema.Type
 export type FoodPortion = typeof foodPortionSchema.Type
@@ -145,3 +191,5 @@ export type FoodSearchQuery = typeof foodSearchQuerySchema.Type
 export type FoodSearchResult = typeof foodSearchResultSchema.Type
 export type FoodSearchResponse = typeof foodSearchResponseSchema.Type
 export type FoodSummary = typeof foodSummarySchema.Type
+export type FoodGroup = typeof foodGroupSchema.Type
+export type FoodGroupsResponse = typeof foodGroupsResponseSchema.Type

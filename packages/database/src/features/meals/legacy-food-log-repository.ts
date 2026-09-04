@@ -82,6 +82,8 @@ export const makeLegacyFoodLogRepository = (
     const customFoods = sql(`${appSchema}.custom_foods`)
     const recipes = sql(`${appSchema}.recipes`)
     const foods = sql(`${catalogSchema}.foods`)
+    const brands = sql(`${catalogSchema}.brands`)
+    const restaurants = sql(`${catalogSchema}.restaurants`)
 
     const save = Effect.fn('LegacyFoodLogRepository.save')(function* (
       profileId: string,
@@ -109,14 +111,16 @@ export const makeLegacyFoodLogRepository = (
                     FROM ${recipes}
                     WHERE profile_id = ${profileId} AND recipe_id = ${input.foodId}
                     LIMIT 1`
-                : yield* sql`SELECT brand,
-                      CASE WHEN dataset_kind = 'restaurant' THEN calories * 100 / nutrient_basis_amount ELSE calories END AS calories,
-                      CASE WHEN dataset_kind = 'restaurant' THEN coalesce(carbohydrates_total, carbohydrates_available) * 100 / nutrient_basis_amount ELSE coalesce(carbohydrates_total, carbohydrates_available) END AS carbohydrates_total,
-                      dataset_kind, food_id, gtin, name,
-                      CASE WHEN dataset_kind = 'restaurant' THEN protein * 100 / nutrient_basis_amount ELSE protein END AS protein,
-                      CASE WHEN dataset_kind = 'restaurant' THEN total_fat * 100 / nutrient_basis_amount ELSE total_fat END AS total_fat
-                    FROM ${foods}
-                    WHERE dataset_kind = ${input.datasetKind} AND food_id = ${input.foodId}
+                : yield* sql`SELECT coalesce(b.name, r.name) AS brand,
+                      CASE WHEN f.dataset_kind = 'restaurant' THEN f.calories * 100 / f.nutrient_basis_amount ELSE f.calories END AS calories,
+                      CASE WHEN f.dataset_kind = 'restaurant' THEN coalesce(f.carbohydrates_total, f.carbohydrates_available) * 100 / f.nutrient_basis_amount ELSE coalesce(f.carbohydrates_total, f.carbohydrates_available) END AS carbohydrates_total,
+                      f.dataset_kind, f.food_id, f.gtin, f.name,
+                      CASE WHEN f.dataset_kind = 'restaurant' THEN f.protein * 100 / f.nutrient_basis_amount ELSE f.protein END AS protein,
+                      CASE WHEN f.dataset_kind = 'restaurant' THEN f.total_fat * 100 / f.nutrient_basis_amount ELSE f.total_fat END AS total_fat
+                    FROM ${foods} AS f
+                    LEFT JOIN ${brands} AS b ON b.brand_id = f.brand_id
+                    LEFT JOIN ${restaurants} AS r ON r.restaurant_id = f.restaurant_id
+                    WHERE f.dataset_kind = ${input.datasetKind} AND f.food_id = ${input.foodId}
                     LIMIT 1`
           const food = (yield* decodeRows(foodSourceRecordSchema, foodRows))[0]
           if (food === undefined) return undefined
