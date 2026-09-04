@@ -9,26 +9,12 @@ contract from the same declarative endpoint definitions.
 From the repository root:
 
 ```bash
-npx pnpm@11.20.0 db:migrate
 npx pnpm@11.20.0 dev
 ```
 
-`dev` runs the API as the Cloudflare Worker declared in `sst.config.ts`. SST uses its default
-personal stage for live development while linking the personal Hyperdrive, Workers AI, R2, and
-Clerk resources through native bindings.
-
-## Catalog caching
-
-Food search stays uncached because typed queries are high-cardinality and the PostgreSQL prefix and
-full-text indexes are already fast. Authenticated food-by-ID and barcode lookups use the Workers
-Cache API after authentication: successful entries live for 30 days, misses for 5 minutes, and
-every key includes the immutable catalog release ID. The active release ID is refreshed every 60
-seconds, so publishing a new catalog naturally moves lookups into a fresh namespace without a cache
-purge. Hyperdrive query caching remains disabled; Hyperdrive is used only for connection pooling.
-
-The iOS client keeps up to 500 resolved catalog foods in its own 30-day, release-scoped disk cache.
-Search responses carry the active release ID, and selecting a search result resolves the complete
-food before it is displayed or logged.
+`dev` starts the local PostgreSQL container, applies migrations, and runs the API with Wrangler.
+The Worker uses a local Hyperdrive connection string, remote Workers AI, local R2 state, and the
+Clerk secret loaded from the ignored root `.env` or `.dev.vars` file.
 
 ## Architecture
 
@@ -86,9 +72,8 @@ Search accepts `q`, optional `kind=raw|branded`, and optional `limit=1..100`. Ti
 routes require an inclusive `from` and exclusive `to` ISO timestamp. Weight is persisted in
 kilograms; clients may convert it for localized display.
 
-Application migrations run before deployment. The API never migrates on startup. Production
-catalog ingestion and catalog indexes are owned by the separately maintained Mons data pipeline;
-the public read contract and sample catalog remain in `@mons/database`.
+Application migrations run before deployment. The API never migrates on startup. Catalog ingestion
+and catalog indexes are owned by the private `monsfit/mons-data` pipeline.
 
 All `/v1` routes require a Clerk session token in the `Authorization: Bearer <token>` header.
 `PUT /v1/profile` creates or returns the database profile mapped to the authenticated Clerk user.

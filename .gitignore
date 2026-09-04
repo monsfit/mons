@@ -13,8 +13,12 @@ wheels/
 # Virtual environments
 .venv
 .env
+.env.local
+.env.*.local
+.dev.vars*
+!.dev.vars.example
 .sst/
-sst.pyi
+.wrangler/
 .vercel/
 
 # Monorepo tooling

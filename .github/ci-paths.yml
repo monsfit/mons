@@ -15,8 +15,10 @@ typescript:
   - 'pnpm-workspace.yaml'
   - 'turbo.json'
   - 'tsconfig.base.json'
-  - 'sst.config.ts'
-  - 'sst-env.d.ts'
+  - 'wrangler.jsonc'
+  - 'infra/local/**'
+  - 'scripts/deploy-api.sh'
+  - 'scripts/dev-api.sh'
   - 'scripts/prepare-effect.sh'
 
 postgres:
@@ -49,3 +51,5 @@ infrastructure:
   - '.github/ci-paths.yml'
   - '.github/workflows/ci.yml'
   - 'infra/vps/**'
+  - 'infra/local/**'
+  - 'wrangler.jsonc'

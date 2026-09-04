@@ -9,16 +9,18 @@
     "check": "pnpm format:check && turbo run lint typecheck test build",
     "db:catalog:seed": "pnpm --filter @mons/database catalog:seed",
     "db:migrate": "pnpm --filter @mons/database migrate",
-    "dev": "sst dev",
+    "dev": "./scripts/dev-api.sh",
+    "dev:database": "docker compose -f infra/local/compose.yaml up -d --wait",
+    "dev:database:stop": "docker compose -f infra/local/compose.yaml down",
     "dev:marketing": "turbo run dev --filter=@mons/marketing",
     "format": "oxfmt --write package.json pnpm-workspace.yaml turbo.json tsconfig.base.json clients/web services/api packages",
     "format:check": "oxfmt --check package.json pnpm-workspace.yaml turbo.json tsconfig.base.json clients/web services/api packages",
-    "generated:check": "pnpm openapi:check",
+    "generated:check": "pnpm openapi:check && pnpm wrangler:types:check",
     "lint": "turbo run lint",
     "openapi": "pnpm --filter @mons/api openapi",
     "openapi:check": "pnpm --filter @mons/api openapi:check",
-    "deploy:dev": "pnpm build:api && sst deploy --stage dev",
-    "deploy:production": "pnpm build:api && sst deploy --stage production",
+    "deploy:dev": "pnpm build:api && ./scripts/deploy-api.sh dev",
+    "deploy:production": "pnpm build:api && ./scripts/deploy-api.sh production",
     "prepare": "./scripts/prepare-effect.sh",
     "test": "turbo run test",
     "test:database": "MONS_TEST_DATABASE_URL=${MONS_TEST_DATABASE_URL:-${DATABASE_URL:-postgresql://mons:mons_local@localhost:5432/mons}} pnpm --filter @mons/database test",
@@ -29,6 +31,8 @@
     "vps:restore-drill": "./infra/vps/restore-drill.sh",
     "vps:up": "docker compose -f infra/vps/compose.yaml --profile cloudflare up -d --wait",
     "verify": "pnpm check && pnpm test:database && pnpm generated:check && pnpm mons:check",
+    "wrangler:types": "wrangler types services/api/src/worker-configuration.d.ts --include-runtime false",
+    "wrangler:types:check": "wrangler types services/api/src/worker-configuration.d.ts --include-runtime false --check",
     "mons:build:ios": "xcodebuild build -quiet -project clients/ios/mons.xcodeproj -scheme 'Mons Dev' -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO",
     "mons:check": "pnpm mons:test:packages && pnpm mons:build:ios && pnpm mons:test",
     "mons:test:packages": "swift test --package-path clients/ios -Xswiftc -warnings-as-errors",
@@ -41,8 +45,8 @@
   "devDependencies": {
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
-    "sst": "4.17.1",
-    "turbo": "catalog:"
+    "turbo": "catalog:",
+    "wrangler": "4.128.0"
   },
   "engines": {
     "node": ">=24"

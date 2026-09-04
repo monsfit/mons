@@ -22,6 +22,11 @@
 	<true/>
 	<key>NSAccentColorName</key>
 	<string>AccentColor</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>Photograph meals and scan food barcodes for nutrition logging.</string>
 	<key>NSMicrophoneUsageDescription</key>

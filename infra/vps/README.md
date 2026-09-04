@@ -1,13 +1,13 @@
 # Mons VPS infrastructure
 
 This directory is the version-controlled runbook for the Mons VPS. It owns the PostgreSQL 18
-personal, staging, and production containers, the Cloudflare Tunnel connector, TLS and database-role
-provisioning, and pgBackRest backups. Run these commands from a repository checkout on the VPS,
-not as part of ordinary local application development.
+staging and production containers, the Cloudflare Tunnel
+connector, TLS and database-role provisioning, and pgBackRest backups. Run these commands from a
+repository checkout on the VPS, not as part of ordinary local application development.
 
 ## Layout
 
-- `compose.yaml` defines all three PostgreSQL environments and `cloudflared`.
+- `compose.yaml` defines the staging and production PostgreSQL environments and `cloudflared`.
 - `postgres/` builds the PostgreSQL image and initializes application and migration roles.
 - `pgbackrest.conf.template` configures production backups to the private R2 bucket.
 - `provision.sh` creates host secrets and certificates, starts PostgreSQL, reconciles roles, and
@@ -34,23 +34,21 @@ pnpm vps:backup:install-timers
 Host secrets, TLS material, backup credentials, and database volumes remain outside the repository
 under `/etc/mons` and Docker-managed storage.
 
-Provisioning generates three passwords per environment under `/etc/mons/postgres/<environment>`:
+Provisioning generates three passwords per deployed environment under `/etc/mons/postgres/<environment>`:
 `admin-password`, `migration-password`, and `app-password`. It retains existing non-empty passwords
 and TLS keys, making reruns safe. The pgBackRest configuration containing R2 credentials is installed
 at `/etc/mons/pgbackrest/pgbackrest.conf` with mode `0600`.
 
 The environments are independent PostgreSQL containers and volumes:
 
-| Environment | Database | Tailscale port | Docker hostname |
-| --- | --- | --- | --- |
-| Personal | `mons_personal` | `5432` | `postgres-personal.internal.mons.fit` |
-| Staging | `mons_dev` | `5433` | `postgres-dev.internal.mons.fit` |
-| Production | `mons_prod` | `5434` | `postgres-prod.internal.mons.fit` |
+| Environment | Database        | Tailscale port | Docker hostname                       |
+| ----------- | --------------- | -------------- | ------------------------------------- |
+| Staging     | `mons_dev`      | `5433`         | `postgres-dev.internal.mons.fit`      |
+| Production  | `mons_prod`     | `5434`         | `postgres-prod.internal.mons.fit`     |
 
-After provisioning, create a `mons-postgres-personal` Workers VPC service for the personal Docker
-hostname, then create a cache-disabled `mons-personal` Hyperdrive configuration using database
-`mons_personal` and role `mons_personal_app`. Put its ID in local `.env` as
-`MONS_PERSONAL_HYPERDRIVE_ID`. The existing staging and production Hyperdrive IDs remain unchanged.
+Ordinary development uses the Mac-local Docker database. The VPS has no personal development
+database. Wrangler references the existing
+`mons-development` and `mons-production` Hyperdrive configurations directly.
 
 ## Operations
 

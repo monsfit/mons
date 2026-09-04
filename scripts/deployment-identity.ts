@@ -6,21 +6,14 @@ const argument = (name: string) => {
 }
 
 const environment = argument('--environment')
-const requestedStage = argument('--stage') ?? process.env.SST_STAGE ?? 'jeremy'
+const requestedStage = argument('--stage') ?? process.env.MONS_STAGE
 const stage =
-  environment === 'dev'
-    ? 'dev'
-    : environment === 'production'
-      ? 'production'
-      : requestedStage
+  environment === 'dev' ? 'dev' : environment === 'production' ? 'production' : requestedStage
+if (!stage) throw new Error('A deployment stage is required')
 const format = argument('--format') ?? 'json'
 const identity = deploymentIdentity({ stage })
 
-if (format === 'github') {
-  for (const [key, value] of Object.entries(identity)) {
-    if (value !== undefined) process.stdout.write(`${key}=${value}\n`)
-  }
-} else if (format === 'url') {
+if (format === 'url') {
   process.stdout.write(`https://${identity.apiDomain}\n`)
 } else {
   process.stdout.write(`${JSON.stringify(identity, undefined, 2)}\n`)
