@@ -4288,6 +4288,37 @@
               }
             ]
           },
+          "foodSubgroup": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "foodSubgroupId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "allOf": [
+                  {
+                    "minLength": 1
+                  },
+                  {
+                    "maxLength": 19
+                  },
+                  {
+                    "pattern": "^[1-9]\\d*$"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "gtin": {
             "anyOf": [
               {
@@ -4338,6 +4369,37 @@
               }
             ]
           },
+          "restaurant": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "restaurantId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "allOf": [
+                  {
+                    "minLength": 1
+                  },
+                  {
+                    "maxLength": 19
+                  },
+                  {
+                    "pattern": "^[1-9]\\d*$"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "source": {
             "type": "string"
           },
@@ -4376,12 +4438,16 @@
           "foodId",
           "foodGroup",
           "foodGroupId",
+          "foodSubgroup",
+          "foodSubgroupId",
           "gtin",
           "name",
           "nutrientBasis",
           "nutrients",
           "portions",
           "protein",
+          "restaurant",
+          "restaurantId",
           "source",
           "sourceId",
           "totalFat"
@@ -4608,6 +4674,37 @@
               }
             ]
           },
+          "foodSubgroup": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "foodSubgroupId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "allOf": [
+                  {
+                    "minLength": 1
+                  },
+                  {
+                    "maxLength": 19
+                  },
+                  {
+                    "pattern": "^[1-9]\\d*$"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "name": {
             "type": "string"
           },
@@ -4635,6 +4732,43 @@
                 "type": "null"
               }
             ]
+          },
+          "restaurant": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "restaurantId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "allOf": [
+                  {
+                    "minLength": 1
+                  },
+                  {
+                    "maxLength": 19
+                  },
+                  {
+                    "pattern": "^[1-9]\\d*$"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source": {
+            "type": "string"
+          },
+          "sourceId": {
+            "type": "string"
           },
           "totalFat": {
             "anyOf": [
@@ -4669,9 +4803,15 @@
           "foodId",
           "foodGroup",
           "foodGroupId",
+          "foodSubgroup",
+          "foodSubgroupId",
           "name",
           "nutrientBasis",
           "protein",
+          "restaurant",
+          "restaurantId",
+          "source",
+          "sourceId",
           "totalFat"
         ],
         "additionalProperties": false,

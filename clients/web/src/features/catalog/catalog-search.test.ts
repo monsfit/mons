@@ -11,6 +11,9 @@ describe('catalog search presentation', () => {
       foodGroupId: 'all',
       kind: 'all',
       q: 'chicken',
+      restaurantId: 'all',
+      restaurantName: '',
+      restaurantQuery: '',
     })
   })
 

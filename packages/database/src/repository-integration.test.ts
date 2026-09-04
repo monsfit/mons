@@ -244,6 +244,9 @@ integration('feature repositories with PostgreSQL', () => {
         expect(yield* catalog.listBrands({ limit: 10, query: 'exam' })).toEqual([
           { brand_id: '1', food_count: '2', name: 'Example' },
         ])
+        expect(yield* catalog.listRestaurants({ limit: 10, query: 'exam' })).toEqual([
+          { food_count: '1', name: 'Example Grill', restaurant_id: '1' },
+        ])
         expect(yield* catalog.listFoodGroups()).toContainEqual({
           food_count: '3',
           food_group_id: '1',
@@ -252,16 +255,26 @@ integration('feature repositories with PostgreSQL', () => {
         })
         const restaurant = yield* catalog.search({ kind: 'restaurant', limit: 10, query: 'grill' })
         expect(restaurant[0]).toMatchObject({
-          brand: 'Example Grill',
+          brand: null,
           dataset_kind: 'restaurant',
           default_portion: { amount: 1, name: '1 burger', unit: 'serving' },
           food_subgroup: 'Sandwiches & Wraps',
           food_subgroup_id: '1',
           nutrient_basis: { amount: 1, unit: 'serving' },
+          restaurant: 'Example Grill',
+          restaurant_id: '1',
+          source: 'fastfoodnutrition_org',
         })
+        const filteredRestaurant = yield* catalog.search({
+          limit: 10,
+          query: 'apple',
+          restaurantId: '1',
+        })
+        expect(filteredRestaurant.map((food) => food.food_id)).toEqual(['8'])
         expect(yield* catalog.findById('restaurant', '8')).toMatchObject({
-          brand: 'Example Grill',
+          brand: null,
           name: 'Apple Burger',
+          restaurant: 'Example Grill',
         })
       }),
     )

@@ -22,6 +22,8 @@ export const Route = createFileRoute('/foods')({
         ...(deps.brandQuery.length === 0 ? {} : { brandQuery: deps.brandQuery }),
         ...(deps.foodGroupId === 'all' ? {} : { foodGroupId: deps.foodGroupId }),
         ...(deps.kind === 'all' ? {} : { kind: deps.kind }),
+        ...(deps.restaurantId === 'all' ? {} : { restaurantId: deps.restaurantId }),
+        ...(deps.restaurantQuery.length === 0 ? {} : { restaurantQuery: deps.restaurantQuery }),
       },
     }),
   pendingComponent: FoodExplorerPending,

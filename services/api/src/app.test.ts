@@ -58,6 +58,8 @@ const food: FoodRecord = {
   nutrients: [{ amount: 3.2, field: 'fiber', name: 'Dietary fibre', unit: 'g' }],
   portions: [{ amount: 30, name: '1 bar', unit: 'g' }],
   protein: 5,
+  restaurant: null,
+  restaurant_id: null,
   source: 'test',
   source_id: 'food-42',
   total_fat: 2,
@@ -207,6 +209,7 @@ const catalog: CatalogReaderService = {
     Effect.succeed([
       { food_count: '1', food_group_id: '17', name: 'Prepared Foods', slug: 'prepared_foods' },
     ]),
+  listRestaurants: () => Effect.succeed([]),
   search: () =>
     Effect.succeed([
       {
@@ -224,6 +227,10 @@ const catalog: CatalogReaderService = {
         name: food.name,
         nutrient_basis: food.nutrient_basis,
         protein: food.protein,
+        restaurant: food.restaurant,
+        restaurant_id: food.restaurant_id,
+        source: food.source,
+        source_id: food.source_id,
         total_fat: food.total_fat,
       },
     ]),
@@ -392,9 +399,15 @@ layer(webHandlerLayer)('Mons Effect HTTP API', (it) => {
             foodId: '42',
             foodGroup: 'Prepared Foods',
             foodGroupId: '17',
+            foodSubgroup: 'Ready Meals',
+            foodSubgroupId: '28',
             name: 'Example Food',
             nutrientBasis: { amount: 100, unit: 'g' },
             protein: 5,
+            restaurant: null,
+            restaurantId: null,
+            source: 'test',
+            sourceId: 'food-42',
             totalFat: 2,
           },
         ],

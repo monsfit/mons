@@ -2,31 +2,29 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from '@tanstack/react-router'
 import {
   ArrowRight,
-  CircleDot,
+  Building2,
   Database,
+  Leaf,
   Layers3,
+  Package,
   RefreshCw,
   Search,
   Shapes,
   Sparkles,
   Tag,
+  UtensilsCrossed,
   type LucideIcon,
 } from 'lucide-react'
 
 import type { CatalogSearch } from '~/features/catalog/catalog-search'
-import { formatCompactCount, formatNutrient } from '~/features/catalog/catalog-search'
+import { formatCompactCount } from '~/features/catalog/catalog-search'
+import { formatFoodNutrient } from '~/features/catalog/catalog-presentation'
 import type { getCatalogWorkspace } from '~/features/catalog/catalog-functions'
+import { CatalogSourceBadge } from '~/components/CatalogSourceBadge'
 import { FoodDetailsSheet } from '~/components/FoodDetailsSheet'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '~/components/ui/select'
 import {
   Table,
   TableBody,
@@ -45,15 +43,37 @@ interface FoodExplorerPageProps {
 }
 
 const datasetLabels = {
-  all: 'All sources',
+  all: 'All',
   branded: 'Branded',
   raw: 'Raw',
   restaurant: 'Restaurants',
 } as const
 
+const datasetOptions: ReadonlyArray<{
+  readonly id: keyof typeof datasetLabels
+  readonly label: string
+}> = [
+  { id: 'all', label: datasetLabels.all },
+  { id: 'raw', label: datasetLabels.raw },
+  { id: 'branded', label: datasetLabels.branded },
+  { id: 'restaurant', label: datasetLabels.restaurant },
+]
+
+const datasetIcons: Readonly<Record<Exclude<keyof typeof datasetLabels, 'all'>, LucideIcon>> = {
+  branded: Package,
+  raw: Leaf,
+  restaurant: UtensilsCrossed,
+}
+
+function DatasetIcon({ kind }: Readonly<{ kind: Exclude<keyof typeof datasetLabels, 'all'> }>) {
+  const Icon = datasetIcons[kind]
+  return <Icon className="size-3.5" />
+}
+
 export function FoodExplorerPage({ search, updateSearch, workspace }: FoodExplorerPageProps) {
   const [query, setQuery] = useState(search.q)
   const [brandQuery, setBrandQuery] = useState(search.brandQuery)
+  const [restaurantQuery, setRestaurantQuery] = useState(search.restaurantQuery)
   const totalFoods = workspace.foodGroups.reduce((sum, group) => sum + group.foodCount, 0)
   const activeGroup = workspace.foodGroups.find((group) => group.id === search.foodGroupId)
   const catalogStats: ReadonlyArray<{
@@ -68,6 +88,7 @@ export function FoodExplorerPage({ search, updateSearch, workspace }: FoodExplor
 
   useEffect(() => setQuery(search.q), [search.q])
   useEffect(() => setBrandQuery(search.brandQuery), [search.brandQuery])
+  useEffect(() => setRestaurantQuery(search.restaurantQuery), [search.restaurantQuery])
 
   const submitFoodSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -78,6 +99,22 @@ export function FoodExplorerPage({ search, updateSearch, workspace }: FoodExplor
   const submitBrandSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     updateSearch({ ...search, brandQuery: brandQuery.trim() })
+  }
+
+  const submitRestaurantSearch = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    updateSearch({ ...search, restaurantQuery: restaurantQuery.trim() })
+  }
+
+  const selectDataset = (kind: keyof typeof datasetLabels) => {
+    updateSearch({
+      ...search,
+      brandId: kind === 'branded' ? search.brandId : 'all',
+      brandName: kind === 'branded' ? search.brandName : '',
+      kind,
+      restaurantId: kind === 'restaurant' ? search.restaurantId : 'all',
+      restaurantName: kind === 'restaurant' ? search.restaurantName : '',
+    })
   }
 
   return (
@@ -100,7 +137,7 @@ export function FoodExplorerPage({ search, updateSearch, workspace }: FoodExplor
       </header>
 
       <div className="grid min-h-[calc(100vh-4rem)] lg:grid-cols-[18rem_minmax(0,1fr)]">
-        <aside className="border-b border-white/8 bg-[#131115] px-4 py-5 lg:border-r lg:border-b-0 lg:px-5">
+        <aside className="border-b border-white/8 bg-[#131115] px-4 py-5 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:overflow-y-auto lg:border-r lg:border-b-0 lg:px-5">
           <div className="mb-7 flex items-center justify-between">
             <div>
               <p className="text-[0.68rem] font-semibold tracking-[0.16em] text-white/35 uppercase">
@@ -178,12 +215,77 @@ export function FoodExplorerPage({ search, updateSearch, workspace }: FoodExplor
                   className="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-xs text-white/45 transition hover:bg-white/5 hover:text-white/75"
                   key={brand.id}
                   onClick={() =>
-                    updateSearch({ ...search, brandId: brand.id, brandName: brand.name })
+                    updateSearch({
+                      ...search,
+                      brandId: brand.id,
+                      brandName: brand.name,
+                      kind: 'branded',
+                      restaurantId: 'all',
+                      restaurantName: '',
+                    })
                   }
                 >
                   <span className="truncate">{brand.name}</span>
                   <span className="ml-2 font-mono text-[0.65rem] text-white/25">
                     {formatCompactCount(brand.foodCount)}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="mt-6 border-t border-white/8 pt-6">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="flex items-center gap-2 text-xs font-medium text-white/55">
+                <Building2 className="size-3.5" /> Restaurants
+              </h2>
+              {search.restaurantId !== 'all' && (
+                <button
+                  className="text-[0.68rem] text-[#b9f35b]"
+                  type="button"
+                  onClick={() =>
+                    updateSearch({ ...search, restaurantId: 'all', restaurantName: '' })
+                  }
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            <form className="relative mb-3" onSubmit={submitRestaurantSearch}>
+              <Search className="pointer-events-none absolute top-2.5 left-2.5 size-3.5 text-white/30" />
+              <Input
+                aria-label="Search restaurants"
+                className="border-white/8 bg-white/3 pl-8 text-xs text-white placeholder:text-white/25"
+                placeholder="Search restaurants"
+                value={restaurantQuery}
+                onChange={(event) => setRestaurantQuery(event.target.value)}
+              />
+            </form>
+            {search.restaurantId !== 'all' && (
+              <div className="mb-2 rounded-lg bg-[#b9f35b]/10 px-2.5 py-2 text-xs text-[#d5ff92]">
+                {search.restaurantName}
+              </div>
+            )}
+            <div className="space-y-1">
+              {workspace.restaurants.slice(0, 8).map((restaurant) => (
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-xs text-white/45 transition hover:bg-white/5 hover:text-white/75"
+                  key={restaurant.id}
+                  onClick={() =>
+                    updateSearch({
+                      ...search,
+                      brandId: 'all',
+                      brandName: '',
+                      kind: 'restaurant',
+                      restaurantId: restaurant.id,
+                      restaurantName: restaurant.name,
+                    })
+                  }
+                >
+                  <span className="truncate">{restaurant.name}</span>
+                  <span className="ml-2 font-mono text-[0.65rem] text-white/25">
+                    {formatCompactCount(restaurant.foodCount)}
                   </span>
                 </button>
               ))}
@@ -243,28 +345,23 @@ export function FoodExplorerPage({ search, updateSearch, workspace }: FoodExplor
                     Search <ArrowRight className="size-3.5" />
                   </Button>
                 </form>
-                <Select
+                <div
                   aria-label="Dataset type"
-                  selectedKey={search.kind}
-                  onSelectionChange={(key) =>
-                    updateSearch({
-                      ...search,
-                      kind:
-                        key === 'raw' || key === 'branded' || key === 'restaurant' ? key : 'all',
-                    })
-                  }
+                  className="flex h-10 items-center rounded-lg border border-white/10 bg-white/3 p-1"
+                  role="group"
                 >
-                  <SelectTrigger className="h-10 min-w-40 border-white/10 bg-white/3 text-white">
-                    <SelectValue>{({ selectedText }) => selectedText}</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent className="dark border-white/10 bg-[#211d22] text-white">
-                    {Object.entries(datasetLabels).map(([id, label]) => (
-                      <SelectItem id={id} key={id}>
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  {datasetOptions.map((option) => (
+                    <button
+                      type="button"
+                      aria-pressed={search.kind === option.id}
+                      className={`h-8 rounded-md px-3 text-xs transition ${search.kind === option.id ? 'bg-white/10 text-white shadow-sm' : 'text-white/42 hover:text-white/75'}`}
+                      key={option.id}
+                      onClick={() => selectDataset(option.id)}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div className="flex flex-wrap items-center gap-2 border-b border-white/8 px-4 py-3 text-xs text-white/40">
@@ -281,15 +378,20 @@ export function FoodExplorerPage({ search, updateSearch, workspace }: FoodExplor
                     <Tag className="size-3" /> {search.brandName}
                   </Badge>
                 )}
+                {search.restaurantId !== 'all' && (
+                  <Badge variant="outline" className="border-white/10 text-white/55">
+                    <Building2 className="size-3" /> {search.restaurantName}
+                  </Badge>
+                )}
               </div>
 
-              <Table aria-label="Food catalog results" className="table-fixed min-w-[62rem]">
+              <Table aria-label="Food catalog results" className="table-fixed min-w-[72rem]">
                 <TableHeader className="bg-white/2">
-                  <TableHead isRowHeader className="w-[32%] px-4 text-xs text-white/38">
+                  <TableHead isRowHeader className="w-[31%] px-4 text-xs text-white/38">
                     Food
                   </TableHead>
-                  <TableHead className="text-xs text-white/38">Group</TableHead>
-                  <TableHead className="text-right text-xs text-white/38">Energy</TableHead>
+                  <TableHead className="w-[19%] text-xs text-white/38">Source</TableHead>
+                  <TableHead className="w-[18%] text-xs text-white/38">Group</TableHead>
                   <TableHead className="text-right text-xs text-white/38">Protein</TableHead>
                   <TableHead className="text-right text-xs text-white/38">Fat</TableHead>
                   <TableHead className="pr-4 text-right text-xs text-white/38">Carbs</TableHead>
@@ -300,9 +402,17 @@ export function FoodExplorerPage({ search, updateSearch, workspace }: FoodExplor
                       <TableCell className="px-4 py-3">
                         <div className="flex min-w-0 items-center gap-3">
                           <div className="grid size-9 shrink-0 place-items-center rounded-lg border border-white/6 bg-white/5 text-white/35">
-                            <CircleDot className="size-3.5" />
+                            <DatasetIcon kind={food.datasetKind} />
                           </div>
                           <FoodDetailsSheet food={food} />
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <CatalogSourceBadge source={food.source} />
+                          <span className="block text-[0.65rem] text-white/28">
+                            {datasetLabels[food.datasetKind]}
+                          </span>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -318,16 +428,13 @@ export function FoodExplorerPage({ search, updateSearch, workspace }: FoodExplor
                         </div>
                       </TableCell>
                       <TableCell className="text-right font-mono text-xs text-white/75">
-                        {formatNutrient(food.calories, 'kcal')}
+                        {formatFoodNutrient(food, food.protein)}
                       </TableCell>
                       <TableCell className="text-right font-mono text-xs text-white/75">
-                        {formatNutrient(food.protein)}
-                      </TableCell>
-                      <TableCell className="text-right font-mono text-xs text-white/75">
-                        {formatNutrient(food.totalFat)}
+                        {formatFoodNutrient(food, food.totalFat)}
                       </TableCell>
                       <TableCell className="pr-4 text-right font-mono text-xs text-white/75">
-                        {formatNutrient(food.carbohydrates)}
+                        {formatFoodNutrient(food, food.carbohydrates)}
                       </TableCell>
                     </TableRow>
                   )}

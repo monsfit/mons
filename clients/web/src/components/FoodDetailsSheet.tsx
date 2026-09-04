@@ -1,5 +1,10 @@
 import type { CatalogFood } from '~/features/catalog/catalog-functions'
 import { formatNutrient } from '~/features/catalog/catalog-search'
+import {
+  foodAttribution,
+  foodPortionLabel,
+  formatFoodNutrient,
+} from '~/features/catalog/catalog-presentation'
 import { Badge } from '~/components/ui/badge'
 import {
   SheetContent,
@@ -9,7 +14,8 @@ import {
   SheetTrigger,
 } from '~/components/ui/sheet'
 import { Button } from '~/components/ui/button'
-import { ArrowUpRight, Barcode, Database, Layers3 } from 'lucide-react'
+import { CatalogSourceBadge } from '~/components/CatalogSourceBadge'
+import { ArrowUpRight, Barcode, Database, Flame, Layers3 } from 'lucide-react'
 
 function basisLabel(food: CatalogFood) {
   const amount = food.nutrientBasis.amount.toLocaleString('en-US', { maximumFractionDigits: 1 })
@@ -27,8 +33,14 @@ export function FoodDetailsSheet({ food }: Readonly<{ food: CatalogFood }>) {
       >
         <span className="min-w-0">
           <span className="block truncate font-medium text-foreground">{food.name}</span>
-          <span className="mt-1 block truncate text-xs font-normal text-muted-foreground">
-            {food.brand ?? food.foodGroup}
+          <span className="block truncate text-xs font-normal text-white/48">
+            {foodAttribution(food)}
+          </span>
+          <span className="mt-1 flex items-center gap-1.5 truncate text-xs font-normal text-white/42">
+            <Flame className="size-3.5 shrink-0 text-orange-400" />
+            {formatFoodNutrient(food, food.calories, 'kcal')}
+            <span className="text-white/18">•</span>
+            {foodPortionLabel(food)}
           </span>
         </span>
       </Button>
@@ -49,7 +61,7 @@ export function FoodDetailsSheet({ food }: Readonly<{ food: CatalogFood }>) {
             {food.name}
           </SheetTitle>
           <SheetDescription className="mt-2 text-white/55">
-            {food.brand === null ? 'Unbranded catalog food' : `by ${food.brand}`}
+            {foodAttribution(food) ?? 'Unbranded catalog food'}
           </SheetDescription>
         </SheetHeader>
 
@@ -82,6 +94,12 @@ export function FoodDetailsSheet({ food }: Readonly<{ food: CatalogFood }>) {
                 <Database className="size-4" /> Food ID
               </span>
               <span className="font-mono text-xs text-white/80">{food.foodId}</span>
+            </div>
+            <div className="flex items-center justify-between border-b border-white/8 py-3">
+              <span className="flex items-center gap-2 text-white/50">
+                <Database className="size-4" /> Source
+              </span>
+              <CatalogSourceBadge source={food.source} />
             </div>
             <div className="flex items-center justify-between border-b border-white/8 py-3">
               <span className="flex items-center gap-2 text-white/50">

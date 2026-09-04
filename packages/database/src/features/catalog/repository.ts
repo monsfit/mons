@@ -39,6 +39,8 @@ const foodRecordSchema = Schema.Struct({
   nutrients: Schema.Array(foodNutrientRecordSchema),
   portions: Schema.Array(foodPortionRecordSchema),
   protein: Schema.NullOr(Schema.Number),
+  restaurant: Schema.NullOr(Schema.String),
+  restaurant_id: Schema.NullOr(Schema.String),
   source: Schema.String,
   source_id: Schema.String,
   total_fat: Schema.NullOr(Schema.Number),
@@ -59,6 +61,10 @@ const foodSearchRecordSchema = Schema.Struct({
   name: Schema.String,
   nutrient_basis: nutrientBasisRecordSchema,
   protein: Schema.NullOr(Schema.Number),
+  restaurant: Schema.NullOr(Schema.String),
+  restaurant_id: Schema.NullOr(Schema.String),
+  source: Schema.String,
+  source_id: Schema.String,
   total_fat: Schema.NullOr(Schema.Number),
 })
 
@@ -74,6 +80,11 @@ const brandRecordSchema = Schema.Struct({
   food_count: Schema.String,
   name: Schema.String,
 })
+const restaurantRecordSchema = Schema.Struct({
+  food_count: Schema.String,
+  name: Schema.String,
+  restaurant_id: Schema.String,
+})
 
 export type FoodPortionRecord = typeof foodPortionRecordSchema.Type
 export type FoodNutrientRecord = typeof foodNutrientRecordSchema.Type
@@ -81,6 +92,7 @@ export type FoodRecord = typeof foodRecordSchema.Type
 export type FoodSearchRecord = typeof foodSearchRecordSchema.Type
 export type FoodGroupRecord = typeof foodGroupRecordSchema.Type
 export type BrandRecord = typeof brandRecordSchema.Type
+export type RestaurantRecord = typeof restaurantRecordSchema.Type
 
 export interface FoodSearchOptions {
   readonly brandId?: string
@@ -88,12 +100,15 @@ export interface FoodSearchOptions {
   readonly kind?: DatasetKind
   readonly limit: number
   readonly query: string
+  readonly restaurantId?: string
 }
 
 export interface BrandListOptions {
   readonly limit: number
   readonly query?: string
 }
+
+export type RestaurantListOptions = BrandListOptions
 
 type CatalogReaderError = SqlError.SqlError | Schema.SchemaError
 
@@ -108,6 +123,9 @@ export interface CatalogReaderService {
     options: BrandListOptions,
   ) => Effect.Effect<ReadonlyArray<BrandRecord>, CatalogReaderError>
   readonly listFoodGroups: () => Effect.Effect<ReadonlyArray<FoodGroupRecord>, CatalogReaderError>
+  readonly listRestaurants: (
+    options: RestaurantListOptions,
+  ) => Effect.Effect<ReadonlyArray<RestaurantRecord>, CatalogReaderError>
   readonly search: (
     options: FoodSearchOptions,
   ) => Effect.Effect<ReadonlyArray<FoodSearchRecord>, CatalogReaderError>
@@ -122,6 +140,7 @@ const decodeCatalogReleaseRows = Schema.decodeUnknownEffect(
 )
 const decodeFoodGroupRows = Schema.decodeUnknownEffect(Schema.Array(foodGroupRecordSchema))
 const decodeBrandRows = Schema.decodeUnknownEffect(Schema.Array(brandRecordSchema))
+const decodeRestaurantRows = Schema.decodeUnknownEffect(Schema.Array(restaurantRecordSchema))
 
 const sourceCode = (tableAlias: string) =>
   `CASE ${tableAlias}.source_key
@@ -185,7 +204,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
 
     const selectedFoodColumns = (tableAlias: string) =>
       sql.literal(`
-      coalesce(b.name, r.name) AS brand,
+      b.name AS brand,
       ${tableAlias}.brand_id,
       ${tableAlias}.calories,
       coalesce(${tableAlias}.carbohydrates_total, ${tableAlias}.carbohydrates_available) AS carbohydrates_total,
@@ -214,6 +233,8 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
         WHERE to_jsonb(${tableAlias}) ->> nutrient.field_name IS NOT NULL
       ), '[]'::json) AS nutrients,
       ${tableAlias}.protein,
+      r.name AS restaurant,
+      ${tableAlias}.restaurant_id,
       coalesce((
         SELECT json_agg(
           json_build_object('amount', portion.amount, 'name', portion.name, 'unit', portion.unit)
@@ -229,7 +250,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
 
     const selectedSearchColumns = (tableAlias: string) =>
       sql.literal(`
-      coalesce(b.name, r.name) AS brand,
+      b.name AS brand,
       ${tableAlias}.brand_id,
       ${tableAlias}.calories,
       coalesce(${tableAlias}.carbohydrates_total, ${tableAlias}.carbohydrates_available) AS carbohydrates_total,
@@ -256,6 +277,10 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
         'unit', ${tableAlias}.nutrient_basis_unit
       ) AS nutrient_basis,
       ${tableAlias}.protein,
+      r.name AS restaurant,
+      ${tableAlias}.restaurant_id,
+      ${sourceCode(tableAlias)} AS source,
+      ${tableAlias}.source_record_id AS source_id,
       ${tableAlias}.total_fat
     `)
 
@@ -353,6 +378,28 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
       return yield* decodeBrandRows(rows)
     })
 
+    const listRestaurants = Effect.fn('CatalogReader.listRestaurants')(function* (
+      options: RestaurantListOptions,
+    ) {
+      const prefix = `${(options.query ?? '')
+        .trim()
+        .toLocaleLowerCase()
+        .replaceAll('!', '!!')
+        .replaceAll('%', '!%')
+        .replaceAll('_', '!_')}%`
+      const rows = yield* sql`
+        SELECT
+          r.restaurant_id,
+          r.name,
+          (SELECT count(*)::text FROM ${foods} AS f WHERE f.restaurant_id = r.restaurant_id) AS food_count
+        FROM ${restaurants} AS r
+        WHERE (lower(r.name) COLLATE "C") LIKE ${prefix} ESCAPE '!'
+        ORDER BY lower(r.name) COLLATE "C", r.restaurant_id
+        LIMIT ${options.limit}
+      `
+      return yield* decodeRestaurantRows(rows)
+    })
+
     const search = Effect.fn('CatalogReader.search')(function* (options: FoodSearchOptions) {
       const fallbackCandidateLimit = Math.max(options.limit * 10, 100)
       const escapedPrefix = `${options.query
@@ -384,6 +431,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
         CROSS JOIN search_query
         WHERE (${options.kind ?? null}::text IS NULL OR f.dataset_kind = ${options.kind ?? null})
           AND (${options.brandId ?? null}::bigint IS NULL OR f.brand_id = ${options.brandId ?? null})
+          AND (${options.restaurantId ?? null}::bigint IS NULL OR f.restaurant_id = ${options.restaurantId ?? null})
           AND (${options.foodGroupId ?? null}::bigint IS NULL OR f.food_group_id = ${options.foodGroupId ?? null})
           AND f.search_aliases <> ''
           AND f.search_document @@ search_query.value
@@ -407,6 +455,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
         LEFT JOIN ${foodSubgroups} AS fsg ON fsg.food_subgroup_id = f.food_subgroup_id
         WHERE (${options.kind ?? null}::text IS NULL OR f.dataset_kind = ${options.kind ?? null})
           AND (${options.brandId ?? null}::bigint IS NULL OR f.brand_id = ${options.brandId ?? null})
+          AND (${options.restaurantId ?? null}::bigint IS NULL OR f.restaurant_id = ${options.restaurantId ?? null})
           AND (${options.foodGroupId ?? null}::bigint IS NULL OR f.food_group_id = ${options.foodGroupId ?? null})
           AND (lower(f.name) COLLATE "C") LIKE ${escapedPrefix} ESCAPE '!'
           AND ${validFood}
@@ -435,6 +484,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
               WHERE (${options.kind ?? null}::text IS NULL OR ${options.kind ?? null} = 'branded')
                 AND f.dataset_kind = 'branded'
                 AND (${options.brandId ?? null}::bigint IS NULL OR f.brand_id = ${options.brandId ?? null})
+                AND ${options.restaurantId ?? null}::bigint IS NULL
                 AND (${options.foodGroupId ?? null}::bigint IS NULL OR f.food_group_id = ${options.foodGroupId ?? null})
                 AND (lower(brand.name) COLLATE "C") LIKE ${escapedPrefix} ESCAPE '!'
                 AND ${validFood}
@@ -447,6 +497,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
               INNER JOIN ${foods} AS f ON f.restaurant_id = restaurant.restaurant_id
               WHERE (${options.kind ?? null}::text IS NULL OR ${options.kind ?? null} = 'restaurant')
                 AND ${options.brandId ?? null}::bigint IS NULL
+                AND (${options.restaurantId ?? null}::bigint IS NULL OR f.restaurant_id = ${options.restaurantId ?? null})
                 AND (${options.foodGroupId ?? null}::bigint IS NULL OR f.food_group_id = ${options.foodGroupId ?? null})
                 AND (lower(restaurant.name) COLLATE "C") LIKE ${escapedPrefix} ESCAPE '!'
                 AND ${validFood}
@@ -488,6 +539,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
             CROSS JOIN search_query
             WHERE (${options.kind ?? null}::text IS NULL OR f.dataset_kind = ${options.kind ?? null})
               AND (${options.brandId ?? null}::bigint IS NULL OR f.brand_id = ${options.brandId ?? null})
+              AND (${options.restaurantId ?? null}::bigint IS NULL OR f.restaurant_id = ${options.restaurantId ?? null})
               AND (${options.foodGroupId ?? null}::bigint IS NULL OR f.food_group_id = ${options.foodGroupId ?? null})
               AND f.search_document @@ search_query.value
               AND ${validFood}
@@ -501,6 +553,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
             CROSS JOIN search_query
             WHERE (${options.kind ?? null}::text IS NULL OR ${options.kind ?? null} = 'branded')
               AND (${options.brandId ?? null}::bigint IS NULL OR f.brand_id = ${options.brandId ?? null})
+              AND ${options.restaurantId ?? null}::bigint IS NULL
               AND (${options.foodGroupId ?? null}::bigint IS NULL OR f.food_group_id = ${options.foodGroupId ?? null})
               AND to_tsvector('simple', brand.name) @@ search_query.value
               AND ${validFood}
@@ -514,6 +567,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
             CROSS JOIN search_query
             WHERE (${options.kind ?? null}::text IS NULL OR ${options.kind ?? null} = 'restaurant')
               AND ${options.brandId ?? null}::bigint IS NULL
+              AND (${options.restaurantId ?? null}::bigint IS NULL OR f.restaurant_id = ${options.restaurantId ?? null})
               AND (${options.foodGroupId ?? null}::bigint IS NULL OR f.food_group_id = ${options.foodGroupId ?? null})
               AND to_tsvector('simple', restaurant.name) @@ search_query.value
               AND ${validFood}
@@ -554,6 +608,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
       findById,
       listBrands,
       listFoodGroups,
+      listRestaurants,
       search,
     })
   })

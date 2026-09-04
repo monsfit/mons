@@ -14,6 +14,8 @@ const catalogQuerySchema = Schema.Struct({
   foodGroupId: Schema.optionalKey(Schema.String),
   kind: Schema.optionalKey(Schema.Literals(['raw', 'branded', 'restaurant'])),
   q: Schema.String,
+  restaurantId: Schema.optionalKey(Schema.String),
+  restaurantQuery: Schema.optionalKey(Schema.String),
 })
 
 const decodeCatalogQuery = Schema.decodeUnknownSync(catalogQuerySchema)
@@ -33,6 +35,10 @@ export interface CatalogFood {
   readonly name: string
   readonly nutrientBasis: FoodSearchRecord['nutrient_basis']
   readonly protein: number | null
+  readonly restaurant: string | null
+  readonly restaurantId: string | null
+  readonly source: string
+  readonly sourceId: string
   readonly totalFat: number | null
 }
 
@@ -51,6 +57,10 @@ const toCatalogFood = (food: FoodSearchRecord): CatalogFood => ({
   name: food.name,
   nutrientBasis: food.nutrient_basis,
   protein: food.protein,
+  restaurant: food.restaurant,
+  restaurantId: food.restaurant_id,
+  source: food.source,
+  sourceId: food.source_id,
   totalFat: food.total_fat,
 })
 
@@ -70,12 +80,17 @@ export const getCatalogWorkspace = createServerFn({ method: 'GET' })
         limit: 12,
         ...(data.brandQuery === undefined ? {} : { query: data.brandQuery }),
       })
+      const restaurants = yield* catalog.listRestaurants({
+        limit: 12,
+        ...(data.restaurantQuery === undefined ? {} : { query: data.restaurantQuery }),
+      })
       const foods = yield* catalog.search({
         limit: 50,
         query: data.q,
         ...(data.brandId === undefined ? {} : { brandId: data.brandId }),
         ...(data.foodGroupId === undefined ? {} : { foodGroupId: data.foodGroupId }),
         ...(data.kind === undefined ? {} : { kind: data.kind }),
+        ...(data.restaurantId === undefined ? {} : { restaurantId: data.restaurantId }),
       })
 
       return {
@@ -92,6 +107,11 @@ export const getCatalogWorkspace = createServerFn({ method: 'GET' })
         })),
         foods: foods.map(toCatalogFood),
         releaseId,
+        restaurants: restaurants.map((restaurant) => ({
+          foodCount: Number(restaurant.food_count),
+          id: restaurant.restaurant_id,
+          name: restaurant.name,
+        })),
         stage: env.MONS_STAGE,
       }
     })

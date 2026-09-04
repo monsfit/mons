@@ -7,6 +7,9 @@ export interface CatalogSearch {
   readonly foodGroupId: string
   readonly kind: CatalogDatasetKind | 'all'
   readonly q: string
+  readonly restaurantId: string
+  readonly restaurantName: string
+  readonly restaurantQuery: string
 }
 
 const readText = (value: unknown, fallback: string, maximumLength = 200) =>
@@ -28,6 +31,9 @@ export function parseCatalogSearch(search: Record<string, unknown>): CatalogSear
     foodGroupId: readText(search.foodGroupId, 'all', 19),
     kind,
     q: readText(search.q, 'chicken'),
+    restaurantId: readText(search.restaurantId, 'all', 19),
+    restaurantName: readText(search.restaurantName, '', 160),
+    restaurantQuery: readText(search.restaurantQuery, '', 160),
   }
 }
 
@@ -40,6 +46,6 @@ export function formatCompactCount(value: number): string {
 
 export function formatNutrient(value: number | null, unit = 'g'): string {
   if (value === null) return '—'
-  const fractionDigits = value > 0 && value < 1 ? 1 : 0
+  const fractionDigits = Number.isInteger(value) ? 0 : 1
   return `${value.toLocaleString('en-US', { maximumFractionDigits: fractionDigits })} ${unit}`
 }
