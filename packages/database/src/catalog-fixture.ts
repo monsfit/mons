@@ -23,22 +23,38 @@ export const replaceCatalogWithFixture = (schema = 'mons_catalog_sample') =>
     const portions = sql(`${safeSchema}.portions`)
     const nutrients = sql(`${safeSchema}.nutrient_definitions`)
     const catalogMetadata = sql(`${safeSchema}.catalog_metadata`)
+    const catalogSources = sql(`${safeSchema}.catalog_sources`)
 
     yield* sql`DROP SCHEMA IF EXISTS ${catalog} CASCADE`
     yield* sql`CREATE SCHEMA ${catalog}`
     yield* sql`CREATE TABLE ${catalogMetadata} (
       release_id text PRIMARY KEY,
       schema_version text NOT NULL,
+      storage_version integer NOT NULL,
       built_at timestamptz NOT NULL,
       loaded_at timestamptz NOT NULL,
       raw_rows bigint NOT NULL,
-      branded_rows bigint NOT NULL
+      branded_rows bigint NOT NULL,
+      rejected_portion_rows bigint NOT NULL
     )`
     yield* sql`INSERT INTO ${catalogMetadata}
-      (release_id, schema_version, built_at, loaded_at, raw_rows, branded_rows)
-      VALUES ('sample-catalog-v1', 'sample', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z', 2, 3)`
+      (release_id, schema_version, storage_version, built_at, loaded_at, raw_rows, branded_rows,
+       rejected_portion_rows)
+      VALUES ('sample-catalog-v1', 'sample', 4, '2026-01-01T00:00:00Z',
+              '2026-01-01T00:00:00Z', 2, 3, 0)`
+    yield* sql`CREATE TABLE ${catalogSources} (
+      source_key smallint PRIMARY KEY,
+      code text NOT NULL UNIQUE,
+      display_name text NOT NULL,
+      homepage_url text,
+      search_priority smallint NOT NULL
+    )`
+    yield* sql`INSERT INTO ${catalogSources}
+      (source_key, code, display_name, homepage_url, search_priority)
+      VALUES (30001, 'mons_sample', 'Mons sample catalog', NULL, 2)`
     yield* sql`CREATE TABLE ${foods} (
       brand text,
+      brand_identity text,
       calories double precision,
       carbohydrates_available double precision,
       carbohydrates_total double precision,
@@ -49,8 +65,8 @@ export const replaceCatalogWithFixture = (schema = 'mons_catalog_sample') =>
       name text NOT NULL,
       protein double precision,
       sodium double precision,
-      source text NOT NULL,
-      source_id text NOT NULL,
+      source_key smallint NOT NULL REFERENCES ${catalogSources}(source_key),
+      source_record_id text NOT NULL,
       total_fat double precision,
       search_document tsvector GENERATED ALWAYS AS (
         setweight(to_tsvector('simple', coalesce(name, '')), 'A') ||
@@ -72,6 +88,10 @@ export const replaceCatalogWithFixture = (schema = 'mons_catalog_sample') =>
       name text NOT NULL,
       ordinal integer NOT NULL,
       unit text NOT NULL,
+      quantity double precision,
+      household_unit text,
+      conversion_delta double precision,
+      quality_flags text[] NOT NULL DEFAULT '{}',
       PRIMARY KEY (dataset_kind, food_id, ordinal)
     )`
     yield* sql`CREATE TABLE ${nutrients} (
@@ -81,19 +101,19 @@ export const replaceCatalogWithFixture = (schema = 'mons_catalog_sample') =>
       value_kind text NOT NULL
     )`
     yield* sql`INSERT INTO ${foods}
-      (brand, calories, carbohydrates_total, dataset_kind, fiber, food_id, gtin,
-       name, protein, sodium, source, source_id, total_fat)
+      (brand, brand_identity, calories, carbohydrates_total, dataset_kind, fiber,
+       food_id, gtin, name, protein, sodium, source_key, source_record_id, total_fat)
       VALUES
-      (NULL, 52, 13.8, 'raw', 2.4, 1, NULL,
-       'Sample Apple', 0.3, 1, 'mons_sample', 'raw-apple', 0.2),
-      (NULL, 143, 0.7, 'raw', 0, 2, NULL,
-       'Sample Egg', 12.6, 142, 'mons_sample', 'raw-egg', 9.5),
-      ('Sample Pantry', 379, 67.7, 'branded', 10.1, 3, '00000000000003',
-       'Sample Rolled Oats', 13.2, 6, 'mons_sample', 'branded-oats', 6.5),
-      ('Sample Dairy', 61, 4.8, 'branded', 0, 4, '00000000000004',
-       'Sample Whole Milk', 3.2, 43, 'mons_sample', 'branded-milk', 3.3),
-      ('Sample Bakery', 265, 49, 'branded', 2.7, 5, '00000000000005',
-       'Sample Bread', 9, 491, 'mons_sample', 'branded-bread', 3.2)`
+      (NULL, NULL, 52, 13.8, 'raw', 2.4, 1, NULL,
+       'Sample Apple', 0.3, 1, 30001, 'raw-apple', 0.2),
+      (NULL, NULL, 143, 0.7, 'raw', 0, 2, NULL,
+       'Sample Egg', 12.6, 142, 30001, 'raw-egg', 9.5),
+      ('Sample Pantry', 'sample pantry', 379, 67.7, 'branded', 10.1, 3,
+       '00000000000003', 'Sample Rolled Oats', 13.2, 6, 30001, 'branded-oats', 6.5),
+      ('Sample Dairy', 'sample dairy', 61, 4.8, 'branded', 0, 4,
+       '00000000000004', 'Sample Whole Milk', 3.2, 43, 30001, 'branded-milk', 3.3),
+      ('Sample Bakery', 'sample bakery', 265, 49, 'branded', 2.7, 5,
+       '00000000000005', 'Sample Bread', 9, 491, 30001, 'branded-bread', 3.2)`
     yield* sql`INSERT INTO ${nutrients} (field_name, unit, description, value_kind) VALUES
       ('calories', 'kcal', 'Food energy per 100 g', 'direct'),
       ('carbohydrates_total', 'g', 'Total carbohydrate per 100 g', 'direct'),
@@ -101,7 +121,8 @@ export const replaceCatalogWithFixture = (schema = 'mons_catalog_sample') =>
       ('protein', 'g', 'Protein per 100 g', 'direct'),
       ('sodium', 'mg', 'Sodium per 100 g', 'direct'),
       ('total_fat', 'g', 'Total fat per 100 g', 'direct')`
-    yield* sql`INSERT INTO ${portions} (amount, dataset_kind, food_id, name, ordinal, unit) VALUES
+    yield* sql`INSERT INTO ${portions}
+      (amount, dataset_kind, food_id, name, ordinal, unit) VALUES
       (182, 'raw', 1, '1 medium apple', 0, 'g'),
       (50, 'raw', 2, '1 large egg', 0, 'g'),
       (40, 'branded', 3, '1/2 cup', 0, 'g'),

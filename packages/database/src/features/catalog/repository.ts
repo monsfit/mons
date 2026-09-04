@@ -119,8 +119,12 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
         FROM ${safeSchema}.portions AS portion
         WHERE portion.dataset_kind = ${tableAlias}.dataset_kind AND portion.food_id = ${tableAlias}.food_id
       ), '[]'::json) AS portions,
-      ${tableAlias}.source,
-      ${tableAlias}.source_id,
+      (
+        SELECT source.code
+        FROM ${safeSchema}.catalog_sources AS source
+        WHERE source.source_key = ${tableAlias}.source_key
+      ) AS source,
+      ${tableAlias}.source_record_id AS source_id,
       ${tableAlias}.total_fat
     `)
 
@@ -161,13 +165,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
       AND (f.dataset_kind = 'raw' OR f.gtin IS NOT NULL)
     `)
 
-    const sourcePriority = sql.literal(`
-      CASE f.source
-        WHEN 'usda_fooddata_central_branded' THEN 0
-        WHEN 'open_food_facts' THEN 1
-        ELSE 2
-      END
-    `)
+    const sourcePriority = sql.literal('f.source_key')
 
     const findByGtin = Effect.fn('CatalogReader.findByGtin')(function* (gtin: string) {
       const rows = yield* sql`

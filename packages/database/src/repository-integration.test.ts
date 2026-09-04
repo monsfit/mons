@@ -40,16 +40,28 @@ const fixtureLayer = Layer.effectDiscard(
       const portions = sql(`${schema}.portions`)
       const nutrients = sql(`${schema}.nutrient_definitions`)
       const catalogMetadata = sql(`${schema}.catalog_metadata`)
+      const catalogSources = sql(`${schema}.catalog_sources`)
       yield* sql`DROP SCHEMA IF EXISTS ${catalog} CASCADE`
       yield* sql`DROP SCHEMA IF EXISTS ${application} CASCADE`
       yield* sql`CREATE SCHEMA ${catalog}`
       yield* sql`CREATE TABLE ${catalogMetadata} (release_id text PRIMARY KEY)`
       yield* sql`INSERT INTO ${catalogMetadata} VALUES ('2026-08-27-test0001')`
+      yield* sql`CREATE TABLE ${catalogSources} (
+        source_key smallint PRIMARY KEY, code text NOT NULL UNIQUE,
+        display_name text NOT NULL, homepage_url text, search_priority smallint NOT NULL
+      )`
+      yield* sql`INSERT INTO ${catalogSources}
+        (source_key, code, display_name, search_priority) VALUES
+        (1, 'usda_fooddata_central_branded', 'USDA branded', 0),
+        (2, 'open_food_facts', 'Open Food Facts', 1),
+        (9, 'australian_food_composition', 'Australian Food Composition Database', 2),
+        (30000, 'fixture', 'Integration fixture', 2)`
       yield* sql`CREATE TABLE ${foods} (
         brand text, calories double precision, carbohydrates_available double precision,
         carbohydrates_total double precision, dataset_kind text NOT NULL, food_id bigint NOT NULL,
         fiber double precision, gtin char(14), name text NOT NULL,
-        protein double precision, source text NOT NULL, source_id text NOT NULL,
+        protein double precision, source_key smallint NOT NULL,
+        source_record_id text NOT NULL,
         sodium double precision, total_fat double precision,
         search_document tsvector GENERATED ALWAYS AS (
           setweight(to_tsvector('simple', coalesce(name, '')), 'A') ||
@@ -71,15 +83,15 @@ const fixtureLayer = Layer.effectDiscard(
       )`
       yield* sql`INSERT INTO ${foods}
         (brand, calories, carbohydrates_total, dataset_kind, food_id, gtin,
-         name, protein, source, source_id, total_fat)
+         name, protein, source_key, source_record_id, total_fat)
         VALUES
-        ('Example', 52, 14, 'branded', 1, '00000000000001', 'Apple', 0.3, 'fixture', 'b-1', 0.2),
-        ('Example', 237, 34, 'branded', 2, '00000000000002', 'Apple Pie', 2.4, 'fixture', 'b-2', 11),
-        (NULL, 57, 15, 'raw', 3, NULL, 'Raw Apple', 0.3, 'fixture', 'r-1', 0.1),
-        ('Broken', NULL, NULL, 'branded', 4, '00000000000004', 'Broken Food', NULL, 'open_food_facts', 'bad-1', NULL),
-        ('USDA', 90, 0.4, 'branded', 5, '00000000000005', 'Egg Fried', 6.3, 'usda_fooddata_central_branded', 'usda-1', 6.8),
-        ('OFF', 90, 0.4, 'branded', 6, '00000000000006', 'Egg Fried', 6.3, 'open_food_facts', 'off-1', 6.8),
-        (NULL, 295, NULL, 'raw', 7, NULL, 'Cardamom Seed', 10.8, 'australian_food_composition', 'au-1', 6.7)`
+        ('Example', 52, 14, 'branded', 1, '00000000000001', 'Apple', 0.3, 30000, 'b-1', 0.2),
+        ('Example', 237, 34, 'branded', 2, '00000000000002', 'Apple Pie', 2.4, 30000, 'b-2', 11),
+        (NULL, 57, 15, 'raw', 3, NULL, 'Raw Apple', 0.3, 30000, 'r-1', 0.1),
+        ('Broken', NULL, NULL, 'branded', 4, '00000000000004', 'Broken Food', NULL, 2, 'bad-1', NULL),
+        ('USDA', 90, 0.4, 'branded', 5, '00000000000005', 'Egg Fried', 6.3, 1, 'usda-1', 6.8),
+        ('OFF', 90, 0.4, 'branded', 6, '00000000000006', 'Egg Fried', 6.3, 2, 'off-1', 6.8),
+        (NULL, 295, NULL, 'raw', 7, NULL, 'Cardamom Seed', 10.8, 9, 'au-1', 6.7)`
       yield* sql`UPDATE ${foods} SET carbohydrates_available = 40 WHERE food_id = 7`
       yield* sql`UPDATE ${foods} SET fiber = 2.4, sodium = 1 WHERE food_id = 1`
       yield* sql`INSERT INTO ${nutrients} (field_name, unit, description, value_kind) VALUES
