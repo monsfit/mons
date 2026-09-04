@@ -31,6 +31,8 @@ const foodRecordSchema = Schema.Struct({
   food_id: Schema.String,
   food_group: Schema.String,
   food_group_id: Schema.String,
+  food_subgroup: Schema.NullOr(Schema.String),
+  food_subgroup_id: Schema.NullOr(Schema.String),
   gtin: Schema.NullOr(Schema.String),
   name: Schema.String,
   nutrient_basis: nutrientBasisRecordSchema,
@@ -52,6 +54,8 @@ const foodSearchRecordSchema = Schema.Struct({
   food_id: Schema.String,
   food_group: Schema.String,
   food_group_id: Schema.String,
+  food_subgroup: Schema.NullOr(Schema.String),
+  food_subgroup_id: Schema.NullOr(Schema.String),
   name: Schema.String,
   nutrient_basis: nutrientBasisRecordSchema,
   protein: Schema.NullOr(Schema.Number),
@@ -136,6 +140,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
     const foods = sql(`${safeSchema}.foods`)
     const brands = sql(`${safeSchema}.brands`)
     const foodGroups = sql(`${safeSchema}.food_groups`)
+    const foodSubgroups = sql(`${safeSchema}.food_subgroups`)
     const restaurants = sql(`${safeSchema}.restaurants`)
     const catalogMetadata = sql(`${safeSchema}.catalog_metadata`)
 
@@ -188,6 +193,8 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
       ${tableAlias}.food_id,
       fg.name AS food_group,
       ${tableAlias}.food_group_id,
+      fsg.name AS food_subgroup,
+      ${tableAlias}.food_subgroup_id,
       ${tableAlias}.gtin,
       ${tableAlias}.name,
       json_build_object(
@@ -241,6 +248,8 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
       ${tableAlias}.food_id,
       fg.name AS food_group,
       ${tableAlias}.food_group_id,
+      fsg.name AS food_subgroup,
+      ${tableAlias}.food_subgroup_id,
       ${tableAlias}.name,
       json_build_object(
         'amount', ${tableAlias}.nutrient_basis_amount,
@@ -278,6 +287,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
         LEFT JOIN ${brands} AS b ON b.brand_id = f.brand_id
         LEFT JOIN ${restaurants} AS r ON r.restaurant_id = f.restaurant_id
         INNER JOIN ${foodGroups} AS fg ON fg.food_group_id = f.food_group_id
+        LEFT JOIN ${foodSubgroups} AS fsg ON fsg.food_subgroup_id = f.food_subgroup_id
         WHERE f.dataset_kind = 'branded' AND f.gtin = ${gtin} AND ${validFood}
         LIMIT 1
       `
@@ -304,6 +314,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
         LEFT JOIN ${brands} AS b ON b.brand_id = f.brand_id
         LEFT JOIN ${restaurants} AS r ON r.restaurant_id = f.restaurant_id
         INNER JOIN ${foodGroups} AS fg ON fg.food_group_id = f.food_group_id
+        LEFT JOIN ${foodSubgroups} AS fsg ON fsg.food_subgroup_id = f.food_subgroup_id
         WHERE f.dataset_kind = ${datasetKind} AND f.food_id = ${foodId} AND ${validFood}
         LIMIT 1
       `
@@ -369,6 +380,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
         LEFT JOIN ${brands} AS b ON b.brand_id = f.brand_id
         LEFT JOIN ${restaurants} AS r ON r.restaurant_id = f.restaurant_id
         INNER JOIN ${foodGroups} AS fg ON fg.food_group_id = f.food_group_id
+        LEFT JOIN ${foodSubgroups} AS fsg ON fsg.food_subgroup_id = f.food_subgroup_id
         CROSS JOIN search_query
         WHERE (${options.kind ?? null}::text IS NULL OR f.dataset_kind = ${options.kind ?? null})
           AND (${options.brandId ?? null}::bigint IS NULL OR f.brand_id = ${options.brandId ?? null})
@@ -392,6 +404,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
         LEFT JOIN ${brands} AS b ON b.brand_id = f.brand_id
         LEFT JOIN ${restaurants} AS r ON r.restaurant_id = f.restaurant_id
         INNER JOIN ${foodGroups} AS fg ON fg.food_group_id = f.food_group_id
+        LEFT JOIN ${foodSubgroups} AS fsg ON fsg.food_subgroup_id = f.food_subgroup_id
         WHERE (${options.kind ?? null}::text IS NULL OR f.dataset_kind = ${options.kind ?? null})
           AND (${options.brandId ?? null}::bigint IS NULL OR f.brand_id = ${options.brandId ?? null})
           AND (${options.foodGroupId ?? null}::bigint IS NULL OR f.food_group_id = ${options.foodGroupId ?? null})
@@ -446,6 +459,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
           LEFT JOIN ${brands} AS b ON b.brand_id = f.brand_id
           LEFT JOIN ${restaurants} AS r ON r.restaurant_id = f.restaurant_id
           INNER JOIN ${foodGroups} AS fg ON fg.food_group_id = f.food_group_id
+          LEFT JOIN ${foodSubgroups} AS fsg ON fsg.food_subgroup_id = f.food_subgroup_id
           ORDER BY
             lower(coalesce(b.name, r.name)) COLLATE "C" ASC,
             ${sourcePriority} ASC,
@@ -513,6 +527,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
         LEFT JOIN ${brands} AS b ON b.brand_id = f.brand_id
         LEFT JOIN ${restaurants} AS r ON r.restaurant_id = f.restaurant_id
         INNER JOIN ${foodGroups} AS fg ON fg.food_group_id = f.food_group_id
+        LEFT JOIN ${foodSubgroups} AS fsg ON fsg.food_subgroup_id = f.food_subgroup_id
         CROSS JOIN search_query
         ORDER BY
           greatest(

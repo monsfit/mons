@@ -36,6 +36,11 @@ export function FoodDetailsSheet({ food }: Readonly<{ food: CatalogFood }>) {
         <SheetHeader className="border-b border-white/8 px-6 py-6">
           <div className="mb-4 flex items-center gap-2">
             <Badge className="bg-[#b9f35b] text-[#16200c]">{food.foodGroup}</Badge>
+            {food.foodSubgroup === null ? null : (
+              <Badge variant="outline" className="border-white/15 text-white/65">
+                {food.foodSubgroup}
+              </Badge>
+            )}
             <Badge variant="outline" className="border-white/15 text-white/65">
               {food.datasetKind}
             </Badge>

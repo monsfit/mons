@@ -27,6 +27,8 @@ export interface CatalogFood {
   readonly defaultPortion: FoodSearchRecord['default_portion']
   readonly foodGroup: string
   readonly foodGroupId: string
+  readonly foodSubgroup: string | null
+  readonly foodSubgroupId: string | null
   readonly foodId: string
   readonly name: string
   readonly nutrientBasis: FoodSearchRecord['nutrient_basis']
@@ -43,6 +45,8 @@ const toCatalogFood = (food: FoodSearchRecord): CatalogFood => ({
   defaultPortion: food.default_portion,
   foodGroup: food.food_group,
   foodGroupId: food.food_group_id,
+  foodSubgroup: food.food_subgroup,
+  foodSubgroupId: food.food_subgroup_id,
   foodId: food.food_id,
   name: food.name,
   nutrientBasis: food.nutrient_basis,

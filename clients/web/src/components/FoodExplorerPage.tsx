@@ -306,9 +306,16 @@ export function FoodExplorerPage({ search, updateSearch, workspace }: FoodExplor
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="border-white/8 text-white/48">
-                          {food.foodGroup}
-                        </Badge>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <Badge variant="outline" className="border-white/8 text-white/55">
+                            {food.foodGroup}
+                          </Badge>
+                          {food.foodSubgroup === null ? null : (
+                            <span className="text-[0.68rem] text-white/32">
+                              {food.foodSubgroup}
+                            </span>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="text-right font-mono text-xs text-white/75">
                         {formatNutrient(food.calories, 'kcal')}
