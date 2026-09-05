@@ -32,7 +32,8 @@ function FoodsRoute() {
       isPending={isPending}
       updateSearch={(next) =>
         void navigate({
-          search: (current) => ({ ...current, ...next }),
+          search: (current) =>
+            typeof next === 'function' ? next(current) : { ...current, ...next },
           replace: true,
           resetScroll: false,
         })

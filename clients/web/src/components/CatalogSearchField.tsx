@@ -94,7 +94,7 @@ export function CatalogSearchField({
       />
       <Input
         aria-label={label}
-        aria-describedby={primary && draft.trim().length < 2 ? 'food-search-hint' : undefined}
+        aria-describedby={primary && draft.trim().length === 1 ? 'food-search-hint' : undefined}
         className={
           primary
             ? 'h-10 border-white/10 bg-[#100e11] pr-24 pl-10 text-white placeholder:text-white/25'
@@ -124,7 +124,7 @@ export function CatalogSearchField({
           Search <ArrowRight className="size-3.5" />
         </Button>
       )}
-      {primary && draft.trim().length < 2 && (
+      {primary && draft.trim().length === 1 && (
         <p id="food-search-hint" role="status" className="mt-2 text-xs text-white/50">
           Type at least 2 characters to search.
         </p>

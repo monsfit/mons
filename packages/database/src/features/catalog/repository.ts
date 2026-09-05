@@ -95,6 +95,10 @@ export type BrandRecord = typeof brandRecordSchema.Type
 export type RestaurantRecord = typeof restaurantRecordSchema.Type
 
 export interface FoodSearchOptions {
+  readonly brandIds?: ReadonlyArray<string>
+  readonly restaurantIds?: ReadonlyArray<string>
+  readonly foodGroupIds?: ReadonlyArray<string>
+  readonly kinds?: ReadonlyArray<DatasetKind>
   readonly brandId?: string
   readonly foodGroupId?: string
   readonly kind?: DatasetKind
@@ -407,6 +411,32 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
     const search = Effect.fn('CatalogReader.search')(function* (options: FoodSearchOptions) {
       const offset = Math.max(options.offset ?? 0, 0)
       const targetLimit = offset + options.limit
+      const kinds = options.kinds ?? (options.kind === undefined ? [] : [options.kind])
+      const brandIds = options.brandIds ?? (options.brandId === undefined ? [] : [options.brandId])
+      const restaurantIds =
+        options.restaurantIds ?? (options.restaurantId === undefined ? [] : [options.restaurantId])
+      const groupIds =
+        options.foodGroupIds ?? (options.foodGroupId === undefined ? [] : [options.foodGroupId])
+      const filters = sql.and([
+        kinds.length === 0 ? sql`TRUE` : sql.in('f.dataset_kind', kinds),
+        brandIds.length === 0 ? sql`TRUE` : sql.in('f.brand_id', brandIds),
+        restaurantIds.length === 0 ? sql`TRUE` : sql.in('f.restaurant_id', restaurantIds),
+        groupIds.length === 0 ? sql`TRUE` : sql.in('f.food_group_id', groupIds),
+      ])
+      if (options.query.trim() === '') {
+        const rows = yield* sql`
+          SELECT ${selectedSearchColumns('f')}
+          FROM ${foods} AS f
+          LEFT JOIN ${brands} AS b ON b.brand_id = f.brand_id
+          LEFT JOIN ${restaurants} AS r ON r.restaurant_id = f.restaurant_id
+          INNER JOIN ${foodGroups} AS fg ON fg.food_group_id = f.food_group_id
+          LEFT JOIN ${foodSubgroups} AS fsg ON fsg.food_subgroup_id = f.food_subgroup_id
+          WHERE ${filters} AND ${validFood}
+          ORDER BY f.food_id ASC
+          LIMIT ${options.limit} OFFSET ${offset}
+        `
+        return yield* decodeFoodSearchRows(rows)
+      }
       const escapedPrefix = `${options.query
         .trim()
         .toLocaleLowerCase()
@@ -435,10 +465,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
         INNER JOIN ${foodGroups} AS fg ON fg.food_group_id = f.food_group_id
         LEFT JOIN ${foodSubgroups} AS fsg ON fsg.food_subgroup_id = f.food_subgroup_id
         CROSS JOIN search_query
-        WHERE (${options.kind ?? null}::text IS NULL OR f.dataset_kind = ${options.kind ?? null})
-          AND (${options.brandId ?? null}::bigint IS NULL OR f.brand_id = ${options.brandId ?? null})
-          AND (${options.restaurantId ?? null}::bigint IS NULL OR f.restaurant_id = ${options.restaurantId ?? null})
-          AND (${options.foodGroupId ?? null}::bigint IS NULL OR f.food_group_id = ${options.foodGroupId ?? null})
+        WHERE ${filters}
           AND f.search_aliases <> ''
           AND f.search_document @@ search_query.value
           AND to_tsvector('simple', f.search_aliases) @@ search_query.value
@@ -459,10 +486,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
         LEFT JOIN ${restaurants} AS r ON r.restaurant_id = f.restaurant_id
         INNER JOIN ${foodGroups} AS fg ON fg.food_group_id = f.food_group_id
         LEFT JOIN ${foodSubgroups} AS fsg ON fsg.food_subgroup_id = f.food_subgroup_id
-        WHERE (${options.kind ?? null}::text IS NULL OR f.dataset_kind = ${options.kind ?? null})
-          AND (${options.brandId ?? null}::bigint IS NULL OR f.brand_id = ${options.brandId ?? null})
-          AND (${options.restaurantId ?? null}::bigint IS NULL OR f.restaurant_id = ${options.restaurantId ?? null})
-          AND (${options.foodGroupId ?? null}::bigint IS NULL OR f.food_group_id = ${options.foodGroupId ?? null})
+        WHERE ${filters}
           AND (lower(f.name) COLLATE "C") LIKE ${escapedPrefix} ESCAPE '!'
           AND ${validFood}
         ORDER BY
@@ -480,18 +504,14 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
         if (!foodsById.has(id)) foodsById.set(id, food)
         if (foodsById.size >= targetLimit) return [...foodsById.values()].slice(offset, targetLimit)
       }
-      if (options.kind !== 'raw') {
+      if (kinds.length === 0 || kinds.some((kind) => kind !== 'raw')) {
         const brandRows = yield* sql`
           WITH candidates AS MATERIALIZED (
             (
               SELECT f.food_id
               FROM ${foods} AS f
               INNER JOIN ${brands} AS brand ON brand.brand_id = f.brand_id
-              WHERE (${options.kind ?? null}::text IS NULL OR ${options.kind ?? null} = 'branded')
-                AND f.dataset_kind = 'branded'
-                AND (${options.brandId ?? null}::bigint IS NULL OR f.brand_id = ${options.brandId ?? null})
-                AND ${options.restaurantId ?? null}::bigint IS NULL
-                AND (${options.foodGroupId ?? null}::bigint IS NULL OR f.food_group_id = ${options.foodGroupId ?? null})
+              WHERE ${filters}
                 AND (lower(brand.name) COLLATE "C") LIKE ${escapedPrefix} ESCAPE '!'
                 AND ${validFood}
             )
@@ -500,10 +520,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
               SELECT f.food_id
               FROM ${restaurants} AS restaurant
               INNER JOIN ${foods} AS f ON f.restaurant_id = restaurant.restaurant_id
-              WHERE (${options.kind ?? null}::text IS NULL OR ${options.kind ?? null} = 'restaurant')
-                AND ${options.brandId ?? null}::bigint IS NULL
-                AND (${options.restaurantId ?? null}::bigint IS NULL OR f.restaurant_id = ${options.restaurantId ?? null})
-                AND (${options.foodGroupId ?? null}::bigint IS NULL OR f.food_group_id = ${options.foodGroupId ?? null})
+              WHERE ${filters}
                 AND (lower(restaurant.name) COLLATE "C") LIKE ${escapedPrefix} ESCAPE '!'
                 AND ${validFood}
             )
@@ -542,10 +559,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
             SELECT f.dataset_kind, f.food_id
             FROM ${foods} AS f
             CROSS JOIN search_query
-            WHERE (${options.kind ?? null}::text IS NULL OR f.dataset_kind = ${options.kind ?? null})
-              AND (${options.brandId ?? null}::bigint IS NULL OR f.brand_id = ${options.brandId ?? null})
-              AND (${options.restaurantId ?? null}::bigint IS NULL OR f.restaurant_id = ${options.restaurantId ?? null})
-              AND (${options.foodGroupId ?? null}::bigint IS NULL OR f.food_group_id = ${options.foodGroupId ?? null})
+            WHERE ${filters}
               AND f.search_document @@ search_query.value
               AND ${validFood}
           )
@@ -555,10 +569,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
             FROM ${brands} AS brand
             INNER JOIN ${foods} AS f ON f.brand_id = brand.brand_id
             CROSS JOIN search_query
-            WHERE (${options.kind ?? null}::text IS NULL OR ${options.kind ?? null} = 'branded')
-              AND (${options.brandId ?? null}::bigint IS NULL OR f.brand_id = ${options.brandId ?? null})
-              AND ${options.restaurantId ?? null}::bigint IS NULL
-              AND (${options.foodGroupId ?? null}::bigint IS NULL OR f.food_group_id = ${options.foodGroupId ?? null})
+            WHERE ${filters}
               AND to_tsvector('simple', brand.name) @@ search_query.value
               AND ${validFood}
           )
@@ -568,10 +579,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
             FROM ${restaurants} AS restaurant
             INNER JOIN ${foods} AS f ON f.restaurant_id = restaurant.restaurant_id
             CROSS JOIN search_query
-            WHERE (${options.kind ?? null}::text IS NULL OR ${options.kind ?? null} = 'restaurant')
-              AND ${options.brandId ?? null}::bigint IS NULL
-              AND (${options.restaurantId ?? null}::bigint IS NULL OR f.restaurant_id = ${options.restaurantId ?? null})
-              AND (${options.foodGroupId ?? null}::bigint IS NULL OR f.food_group_id = ${options.foodGroupId ?? null})
+            WHERE ${filters}
               AND to_tsvector('simple', restaurant.name) @@ search_query.value
               AND ${validFood}
           )

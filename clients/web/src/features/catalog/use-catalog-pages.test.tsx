@@ -3,7 +3,7 @@ import { act, cleanup, renderHook } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 
 import { getCatalogFoodPage, type getCatalogWorkspace } from './catalog-functions'
-import { parseCatalogSearch } from './catalog-search'
+import { parseCatalogSearch, toCatalogQuery } from './catalog-search'
 import { useCatalogPages } from './use-catalog-pages'
 
 vi.mock('./catalog-functions', () => ({ getCatalogFoodPage: vi.fn<typeof getCatalogFoodPage>() }))
@@ -53,7 +53,7 @@ it('ignores old pages after navigation and resets even when results are structur
   view.rerender({ search: nextSearch, pending: false })
   await act(() => view.result.current.loadMore())
   expect(getCatalogFoodPage).toHaveBeenLastCalledWith({
-    data: { q: 'chicken', kind: 'raw', offset: 50 },
+    data: { ...toCatalogQuery(nextSearch), offset: 50 },
   })
   expect(view.result.current.nextOffset).toBeNull()
 })

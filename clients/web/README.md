@@ -36,9 +36,14 @@ the active catalog release are all read from the database; no catalog fixture is
 web client.
 
 Food, brand, and restaurant searches update after 300 ms without typing; Enter submits immediately.
-Food searches need at least two characters. Clearing the input clears the query and results while
-preserving filters; a single character waits for more input. Brand/restaurant text narrows the
+Food searches need at least two characters. An empty input browses the first 50 foods in stable
+food-ID order, with the current filters applied and more pages available on scroll; a single
+character waits for more input. Brand/restaurant text narrows the
 corresponding picker; selecting a result applies that filter.
+Types, groups, brands, and restaurants accept multiple selections: values within a facet are ORed,
+and different facets are ANDed. The table toolbar shows removable chips and a clear-all action.
+Selecting one facet never silently removes another. Incompatible combinations show no matches.
+Selections are serialized in the URL and restored on reload; old single-selection URLs still work.
 Changes replace the current URL entry, preserve focus, and reset table pagination. The table loads
 50 rows at a time near the bottom. Brand and restaurant pickers load 30 items per page; the small
 food-group taxonomy fits in one page. React Aria virtualizes all three pickers and the table,
