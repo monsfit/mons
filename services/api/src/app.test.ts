@@ -205,6 +205,7 @@ const catalog: CatalogReaderService = {
     Effect.succeed(datasetKind === food.dataset_kind && foodId === food.food_id ? food : undefined),
   findByGtin: (gtin) => Effect.succeed(gtin === food.gtin ? food : undefined),
   listBrands: () => Effect.succeed([{ brand_id: '1', food_count: '1', name: 'Example Brand' }]),
+  listFilterFacets: () => Effect.succeed([]),
   listFoodGroups: () =>
     Effect.succeed([
       { food_count: '1', food_group_id: '17', name: 'Prepared Foods', slug: 'prepared_foods' },

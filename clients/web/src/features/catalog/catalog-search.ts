@@ -4,6 +4,8 @@ export interface CatalogFilter {
   readonly name: string
 }
 export interface CatalogSearch {
+  readonly sources: ReadonlyArray<CatalogFilter>
+  readonly subgroups: ReadonlyArray<CatalogFilter>
   readonly brands: ReadonlyArray<CatalogFilter>
   readonly groups: ReadonlyArray<CatalogFilter>
   readonly restaurants: ReadonlyArray<CatalogFilter>
@@ -42,6 +44,8 @@ export function parseCatalogSearch(search: Record<string, unknown>): CatalogSear
   const q = readText(search.q, 200)
   return {
     brands: readFilters(search.brands, search.brandId, search.brandName),
+    sources: readFilters(search.sources, undefined, undefined),
+    subgroups: readFilters(search.subgroups, undefined, undefined),
     groups: readFilters(search.groups, search.foodGroupId, ''),
     restaurants: readFilters(search.restaurants, search.restaurantId, search.restaurantName),
     kinds: [
@@ -64,6 +68,8 @@ export function toCatalogQuery(search: CatalogSearch) {
   return {
     q: search.q,
     brandIds: search.brands.map((item) => item.id),
+    sourceKeys: search.sources.map((item) => item.id),
+    foodSubgroupIds: search.subgroups.map((item) => item.id),
     foodGroupIds: search.groups.map((item) => item.id),
     restaurantIds: search.restaurants.map((item) => item.id),
     kinds: search.kinds,

@@ -29,11 +29,16 @@ export function CatalogFacetList({
   query = '',
   nextOffset = null,
 }: CatalogFacetListProps) {
-  const [page, setPage] = useState({ items, nextOffset })
+  const [page, setPage] = useState(() =>
+    kind === undefined
+      ? { items: items.slice(0, 30), nextOffset: items.length > 30 ? 30 : null }
+      : { items, nextOffset },
+  )
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle')
   const generation = useRef(0)
   const busy = useRef(false)
   useEffect(() => {
+    busy.current = false
     return () => {
       generation.current += 1
       busy.current = true
@@ -41,7 +46,12 @@ export function CatalogFacetList({
   }, [])
 
   async function loadMore() {
-    if (busy.current || kind === undefined || page.nextOffset === null) return
+    if (busy.current || page.nextOffset === null) return
+    if (kind === undefined) {
+      const end = page.nextOffset + 30
+      setPage({ items: items.slice(0, end), nextOffset: items.length > end ? end : null })
+      return
+    }
     busy.current = true
     const request = generation.current
     setStatus('loading')
@@ -70,7 +80,16 @@ export function CatalogFacetList({
           aria-label={label}
           data-loaded-count={page.items.length}
           className="catalog-facet-list"
+          onScroll={({ currentTarget }) => {
+            if (
+              status === 'idle' &&
+              currentTarget.scrollHeight - currentTarget.scrollTop - currentTarget.clientHeight <
+                100
+            )
+              void loadMore()
+          }}
           selectionMode="multiple"
+          escapeKeyBehavior="none"
           selectionBehavior="toggle"
           selectedKeys={selectedIds}
           onSelectionChange={(selection) => {

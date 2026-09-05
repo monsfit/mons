@@ -70,6 +70,11 @@ const foodSearchRecordSchema = Schema.Struct({
 })
 
 const catalogReleaseRecordSchema = Schema.Struct({ release_id: Schema.String })
+const filterFacetSchema = Schema.Struct({
+  id: Schema.String,
+  name: Schema.String,
+  foodCount: Schema.Number,
+})
 const foodGroupRecordSchema = Schema.Struct({
   food_count: Schema.String,
   food_group_id: Schema.String,
@@ -96,6 +101,8 @@ export type BrandRecord = typeof brandRecordSchema.Type
 export type RestaurantRecord = typeof restaurantRecordSchema.Type
 
 export interface FoodSearchOptions {
+  readonly sourceKeys?: ReadonlyArray<string>
+  readonly foodSubgroupIds?: ReadonlyArray<string>
   readonly brandIds?: ReadonlyArray<string>
   readonly restaurantIds?: ReadonlyArray<string>
   readonly foodGroupIds?: ReadonlyArray<string>
@@ -120,6 +127,9 @@ export type RestaurantListOptions = BrandListOptions
 type CatalogReaderError = SqlError.SqlError | Schema.SchemaError
 
 export interface CatalogReaderService {
+  readonly listFilterFacets: (
+    kind: 'sources' | 'subgroups',
+  ) => Effect.Effect<ReadonlyArray<typeof filterFacetSchema.Type>, CatalogReaderError>
   readonly activeReleaseId: () => Effect.Effect<string, CatalogReaderError>
   readonly findById: (
     datasetKind: DatasetKind,
@@ -359,6 +369,16 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
       return decoded[0]
     })
 
+    const listFilterFacets = Effect.fn('CatalogReader.listFilterFacets')(function* (
+      kind: 'sources' | 'subgroups',
+    ) {
+      const rows =
+        kind === 'sources'
+          ? yield* sql`SELECT f.source_key::text AS id, ${sql.literal(sourceCode('f'))} AS name, count(*)::int AS "foodCount" FROM ${foods} AS f GROUP BY f.source_key ORDER BY f.source_key`
+          : yield* sql`SELECT s.food_subgroup_id::text AS id, s.name, count(f.food_id)::int AS "foodCount" FROM ${foodSubgroups} AS s LEFT JOIN ${foods} AS f ON f.food_subgroup_id = s.food_subgroup_id GROUP BY s.food_subgroup_id, s.name ORDER BY s.name COLLATE "C", s.food_subgroup_id`
+      return yield* Schema.decodeUnknownEffect(Schema.Array(filterFacetSchema))(rows)
+    })
+
     const listFoodGroups = Effect.fn('CatalogReader.listFoodGroups')(function* () {
       const rows = yield* sql`
         SELECT fg.food_group_id, fg.slug, fg.name, count(f.food_id)::text AS food_count
@@ -424,6 +444,10 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
       const groupIds =
         options.foodGroupIds ?? (options.foodGroupId === undefined ? [] : [options.foodGroupId])
       const filters = sql.and([
+        options.sourceKeys?.length ? sql.in('f.source_key', options.sourceKeys) : sql`TRUE`,
+        options.foodSubgroupIds?.length
+          ? sql.in('f.food_subgroup_id', options.foodSubgroupIds)
+          : sql`TRUE`,
         kinds.length === 0 ? sql`TRUE` : sql.in('f.dataset_kind', kinds),
         brandIds.length === 0 ? sql`TRUE` : sql.in('f.brand_id', brandIds),
         restaurantIds.length === 0 ? sql`TRUE` : sql.in('f.restaurant_id', restaurantIds),
@@ -624,6 +648,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
       findById,
       listBrands,
       listFoodGroups,
+      listFilterFacets,
       listRestaurants,
       search,
     })

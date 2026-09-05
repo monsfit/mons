@@ -8,6 +8,7 @@ import {
 } from '@mons/database'
 import { Effect, Layer, Schema } from 'effect'
 import { isCatalogId } from './catalog-search'
+import { getCatalogSource } from './catalog-sources'
 
 export const CATALOG_PAGE_SIZE = 50
 export const FACET_PAGE_SIZE = 30
@@ -21,6 +22,8 @@ const catalogOffsetSchema = Schema.Number.check(
 )
 
 const catalogQuerySchema = Schema.Struct({
+  sourceKeys: Schema.Array(catalogIdSchema).check(Schema.isMaxLength(50)),
+  foodSubgroupIds: Schema.Array(catalogIdSchema).check(Schema.isMaxLength(50)),
   brandIds: Schema.Array(catalogIdSchema).check(Schema.isMaxLength(50)),
   brandQuery: Schema.optionalKey(catalogFilterTextSchema),
   foodGroupIds: Schema.Array(catalogIdSchema).check(Schema.isMaxLength(50)),
@@ -106,6 +109,8 @@ const searchCatalog = Effect.fn('WebCatalog.search')(function* (
     offset,
     query: data.q,
     brandIds: data.brandIds,
+    sourceKeys: data.sourceKeys,
+    foodSubgroupIds: data.foodSubgroupIds,
     foodGroupIds: data.foodGroupIds,
     kinds: data.kinds,
     restaurantIds: data.restaurantIds,
@@ -191,6 +196,8 @@ export const getCatalogWorkspace = createServerFn({ method: 'GET' })
       const catalog = yield* CatalogReader
       const releaseId = yield* catalog.activeReleaseId()
       const foodGroups = yield* catalog.listFoodGroups()
+      const sources = yield* catalog.listFilterFacets('sources')
+      const subgroups = yield* catalog.listFilterFacets('subgroups')
       const brands = yield* catalog.listBrands({
         limit: FACET_PAGE_SIZE + 1,
         ...(data.brandQuery === undefined ? {} : { query: data.brandQuery }),
@@ -204,6 +211,13 @@ export const getCatalogWorkspace = createServerFn({ method: 'GET' })
 
       return {
         brandNextOffset: brands.length > FACET_PAGE_SIZE ? FACET_PAGE_SIZE : null,
+        brandQuery: data.brandQuery ?? '',
+        restaurantQuery: data.restaurantQuery ?? '',
+        sources: sources.map((source) => ({
+          ...source,
+          name: getCatalogSource(source.name).label,
+        })),
+        subgroups,
         restaurantNextOffset: restaurants.length > FACET_PAGE_SIZE ? FACET_PAGE_SIZE : null,
         brands: brands.slice(0, FACET_PAGE_SIZE).map((brand) => ({
           foodCount: Number(brand.food_count),
