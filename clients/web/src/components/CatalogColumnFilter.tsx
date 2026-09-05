@@ -121,7 +121,7 @@ export function CatalogColumnFilter({
       isOpen={isOpen}
       onOpenChange={setOpen}
       placement="bottom start"
-      className="dark w-80 max-h-[min(720px,80dvh)] overflow-y-auto border border-white/15 bg-[#1d1d1d] text-white"
+      className="w-80 max-h-[min(720px,80dvh)] overflow-y-auto border border-border bg-card text-foreground"
     >
       <Dialog aria-label={`${label} filters`} className="space-y-4 outline-none">
         <div
@@ -176,7 +176,7 @@ export function CatalogColumnFilter({
               updateSearch={updateSearch}
             />
           ))}
-          <p className="text-[10px] text-white/40">
+          <p className="text-[10px] text-muted-foreground">
             Match any within a filter; match all across filters.
           </p>
         </div>

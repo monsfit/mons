@@ -1,3 +1,4 @@
+import { ThemeToggle } from './ThemeToggle'
 import { dailyMeals, principles, productPillars } from '../content'
 
 function ArrowIcon() {
@@ -106,6 +107,7 @@ export function MarketingPage() {
             Early access
           </a>
         </nav>
+        <ThemeToggle />
       </header>
 
       <main id="main">

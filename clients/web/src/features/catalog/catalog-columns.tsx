@@ -22,16 +22,17 @@ export const catalogColumns: ColumnDef<CatalogFood>[] = [
       <Link
         to="/food/$kind/$foodId"
         params={{ kind: food.datasetKind, foodId: food.foodId }}
-        className="block min-w-0 rounded outline-offset-2 focus-visible:outline-2 focus-visible:outline-lime-200"
+        className="block min-w-0 rounded outline-offset-2 focus-visible:outline-2 focus-visible:outline-ring"
       >
         <span
           className="block truncate text-sm font-medium"
           title={`${food.name} ${foodAttribution(food) ?? ''}`}
         >
-          {food.name} <span className="font-normal text-white/55">{foodAttribution(food)}</span>
+          {food.name}{' '}
+          <span className="font-normal text-muted-foreground">{foodAttribution(food)}</span>
         </span>
-        <span className="mt-1 flex items-center gap-1 text-xs text-white/50">
-          <Flame className="size-3.5 shrink-0 text-orange-400" />
+        <span className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+          <Flame className="size-3.5 shrink-0 text-primary" />
           {formatFoodNutrient(food, food.calories, 'kcal')}
           <span>·</span>
           <span className="truncate">{foodPortionLabel(food)}</span>
@@ -46,7 +47,7 @@ export const catalogColumns: ColumnDef<CatalogFood>[] = [
     cell: ({ row: { original: food } }) => (
       <>
         <CatalogSourceBadge source={food.source} />
-        <span className="mt-1 w-fit rounded-full border border-white/10 bg-white/5 px-2 text-[10px] text-white/50">
+        <span className="mt-1 w-fit rounded-full border border-border bg-muted px-2 text-[10px] text-muted-foreground">
           {datasetKindLabel[food.datasetKind]}
         </span>
       </>
@@ -60,14 +61,14 @@ export const catalogColumns: ColumnDef<CatalogFood>[] = [
       <>
         <span
           title={food.foodGroup}
-          className="w-fit max-w-full truncate rounded-full border border-violet-300/20 bg-violet-300/5 px-2 py-1 text-[10px] text-violet-100/80"
+          className="w-fit max-w-full truncate rounded-full border border-info/25 bg-info/10 px-2 py-1 text-[10px] text-info"
         >
           {food.foodGroup}
         </span>
         {food.foodSubgroup !== null && (
           <span
             title={food.foodSubgroup}
-            className="mt-1 w-fit max-w-full truncate rounded-full border border-white/10 bg-white/5 px-2 text-[10px] text-white/50"
+            className="mt-1 w-fit max-w-full truncate rounded-full border border-border bg-muted px-2 text-[10px] text-muted-foreground"
           >
             {food.foodSubgroup}
           </span>

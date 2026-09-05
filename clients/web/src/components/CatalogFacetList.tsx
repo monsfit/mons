@@ -101,14 +101,14 @@ export function CatalogFacetList({
             if (item !== undefined) onSelect(item)
           }}
           renderEmptyState={() => (
-            <span className="p-2 text-xs text-white/45">No results found</span>
+            <span className="p-2 text-xs text-muted-foreground">No results found</span>
           )}
         >
           <Collection items={page.items}>
             {(item) => (
               <ListBoxItem id={item.id} textValue={item.name} className="catalog-facet-item">
                 <span className="min-w-0 truncate">{item.name}</span>
-                <span className="text-[10px] text-white/45">
+                <span className="text-[10px] text-muted-foreground">
                   {formatCompactCount(item.foodCount)}
                 </span>
               </ListBoxItem>
@@ -118,7 +118,7 @@ export function CatalogFacetList({
             <ListBoxLoadMoreItem
               onLoadMore={() => void loadMore()}
               isLoading={status === 'loading'}
-              className="p-2 text-xs text-white/40"
+              className="p-2 text-xs text-muted-foreground"
             >
               Loading more…
             </ListBoxLoadMoreItem>
@@ -126,11 +126,7 @@ export function CatalogFacetList({
         </ListBox>
       </Virtualizer>
       {status === 'error' && (
-        <button
-          type="button"
-          className="py-2 text-xs text-amber-300"
-          onClick={() => void loadMore()}
-        >
+        <button type="button" className="py-2 text-xs text-warning" onClick={() => void loadMore()}>
           Couldn’t load more. Retry
         </button>
       )}

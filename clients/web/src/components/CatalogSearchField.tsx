@@ -88,8 +88,8 @@ export function CatalogSearchField({
       <Search
         className={
           primary
-            ? 'pointer-events-none absolute top-3 left-3 size-4 text-white/30'
-            : 'pointer-events-none absolute top-2.5 left-2.5 size-3.5 text-white/30'
+            ? 'pointer-events-none absolute top-3 left-3 size-4 text-muted-foreground'
+            : 'pointer-events-none absolute top-2.5 left-2.5 size-3.5 text-muted-foreground'
         }
       />
       <Input
@@ -97,8 +97,8 @@ export function CatalogSearchField({
         aria-describedby={primary && draft.trim().length === 1 ? 'food-search-hint' : undefined}
         className={
           primary
-            ? 'h-10 border-white/10 bg-[#100e11] pr-24 pl-10 text-white placeholder:text-white/25'
-            : 'border-white/8 bg-white/3 pl-8 text-xs text-white placeholder:text-white/25'
+            ? 'h-10 border-border bg-background pr-24 pl-10 text-foreground placeholder:text-muted-foreground'
+            : 'border-border bg-muted pl-8 text-xs text-foreground placeholder:text-muted-foreground'
         }
         maxLength={primary ? 200 : 160}
         placeholder={primary ? 'Search foods, brands, and restaurants' : label}
@@ -119,13 +119,13 @@ export function CatalogSearchField({
       {primary && (
         <Button
           type="submit"
-          className="absolute top-1 right-1 h-8 bg-[#b9f35b] px-3 text-[#17200d] hover:bg-[#cafc79]"
+          className="absolute top-1 right-1 h-8 bg-primary px-3 text-primary-foreground hover:bg-primary/80"
         >
           Search <ArrowRight className="size-3.5" />
         </Button>
       )}
       {primary && draft.trim().length === 1 && (
-        <p id="food-search-hint" role="status" className="mt-2 text-xs text-white/50">
+        <p id="food-search-hint" role="status" className="mt-2 text-xs text-muted-foreground">
           Type at least 2 characters to search.
         </p>
       )}
