@@ -10,6 +10,7 @@ import { Effect, Layer, Schema } from 'effect'
 import { isCatalogId } from './catalog-search'
 
 export const CATALOG_PAGE_SIZE = 50
+export const FACET_PAGE_SIZE = 30
 
 const catalogIdSchema = Schema.String.check(Schema.makeFilter(isCatalogId))
 const catalogSearchTextSchema = Schema.String.check(Schema.isMaxLength(200))
@@ -126,6 +127,59 @@ export const getCatalogFoodPage = createServerFn({ method: 'GET' })
     ),
   )
 
+export const getCatalogFacetPage = createServerFn({ method: 'GET' })
+  .validator(
+    Schema.decodeUnknownSync(
+      Schema.Struct({
+        kind: Schema.Literals(['brands', 'restaurants']),
+        query: catalogFilterTextSchema,
+        offset: catalogOffsetSchema,
+      }),
+    ),
+  )
+  .handler(({ data }) =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const catalog = yield* CatalogReader
+        const options = { limit: FACET_PAGE_SIZE + 1, offset: data.offset, query: data.query }
+        const items =
+          data.kind === 'brands'
+            ? (yield* catalog.listBrands(options)).map((item) => ({
+                id: item.brand_id,
+                name: item.name,
+                foodCount: Number(item.food_count),
+              }))
+            : (yield* catalog.listRestaurants(options)).map((item) => ({
+                id: item.restaurant_id,
+                name: item.name,
+                foodCount: Number(item.food_count),
+              }))
+        return {
+          items: items.slice(0, FACET_PAGE_SIZE),
+          nextOffset: items.length > FACET_PAGE_SIZE ? data.offset + FACET_PAGE_SIZE : null,
+        }
+      }).pipe(Effect.provide(catalogLayer())),
+    ),
+  )
+
+export const getCatalogFood = createServerFn({ method: 'GET' })
+  .validator(
+    Schema.decodeUnknownSync(
+      Schema.Struct({
+        kind: Schema.Literals(['raw', 'branded', 'restaurant']),
+        foodId: catalogIdSchema,
+      }),
+    ),
+  )
+  .handler(({ data }) =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const catalog = yield* CatalogReader
+        return (yield* catalog.findById(data.kind, data.foodId)) ?? null
+      }).pipe(Effect.provide(catalogLayer())),
+    ),
+  )
+
 export const getCatalogWorkspace = createServerFn({ method: 'GET' })
   .validator(decodeCatalogQuery)
   .handler(({ data }) => {
@@ -134,18 +188,20 @@ export const getCatalogWorkspace = createServerFn({ method: 'GET' })
       const releaseId = yield* catalog.activeReleaseId()
       const foodGroups = yield* catalog.listFoodGroups()
       const brands = yield* catalog.listBrands({
-        limit: 12,
+        limit: FACET_PAGE_SIZE + 1,
         ...(data.brandQuery === undefined ? {} : { query: data.brandQuery }),
       })
       const restaurants = yield* catalog.listRestaurants({
-        limit: 12,
+        limit: FACET_PAGE_SIZE + 1,
         ...(data.restaurantQuery === undefined ? {} : { query: data.restaurantQuery }),
       })
       const foods = yield* searchCatalog(data, 0)
       const page = toCatalogPage(foods, 0)
 
       return {
-        brands: brands.map((brand) => ({
+        brandNextOffset: brands.length > FACET_PAGE_SIZE ? FACET_PAGE_SIZE : null,
+        restaurantNextOffset: restaurants.length > FACET_PAGE_SIZE ? FACET_PAGE_SIZE : null,
+        brands: brands.slice(0, FACET_PAGE_SIZE).map((brand) => ({
           foodCount: Number(brand.food_count),
           id: brand.brand_id,
           name: brand.name,
@@ -159,7 +215,7 @@ export const getCatalogWorkspace = createServerFn({ method: 'GET' })
         foods: page.foods,
         nextOffset: page.nextOffset,
         releaseId,
-        restaurants: restaurants.map((restaurant) => ({
+        restaurants: restaurants.slice(0, FACET_PAGE_SIZE).map((restaurant) => ({
           foodCount: Number(restaurant.food_count),
           id: restaurant.restaurant_id,
           name: restaurant.name,

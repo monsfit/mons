@@ -274,9 +274,14 @@ integration('feature repositories with PostgreSQL', () => {
         expect(yield* catalog.listBrands({ limit: 10, query: 'exam' })).toEqual([
           { brand_id: '1', food_count: '2', name: 'Example' },
         ])
+        const allBrands = yield* catalog.listBrands({ limit: 10 })
+        const brandPage = yield* catalog.listBrands({ limit: 1, offset: 1 })
+        expect(brandPage).toEqual(allBrands.slice(1, 2))
+        expect(yield* catalog.listBrands({ limit: 10, query: 'exam', offset: 1 })).toEqual([])
         expect(yield* catalog.listRestaurants({ limit: 10, query: 'exam' })).toEqual([
           { food_count: '1', name: 'Example Grill', restaurant_id: '1' },
         ])
+        expect(yield* catalog.listRestaurants({ limit: 10, query: 'exam', offset: 1 })).toEqual([])
         expect(yield* catalog.listFoodGroups()).toContainEqual({
           food_count: '3',
           food_group_id: '1',

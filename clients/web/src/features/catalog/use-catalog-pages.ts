@@ -12,8 +12,6 @@ export function useCatalogPages(
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle')
   const generation = useRef(0)
   const blocked = useRef(false)
-  const resultsScrollRef = useRef<HTMLDivElement>(null)
-  const loadMoreRef = useRef<HTMLDivElement>(null)
 
   const invalidate = useCallback(() => {
     generation.current += 1
@@ -25,7 +23,6 @@ export function useCatalogPages(
     blocked.current = isPending
     setPage({ foods: workspace.foods, nextOffset: workspace.nextOffset })
     setStatus('idle')
-    resultsScrollRef.current?.scrollTo({ top: 0 })
     return invalidate
   }, [search, workspace, isPending, invalidate])
 
@@ -54,19 +51,5 @@ export function useCatalogPages(
     }
   }, [page.nextOffset, search])
 
-  useEffect(() => {
-    const root = resultsScrollRef.current
-    const target = loadMoreRef.current
-    if (root === null || target === null || page.nextOffset === null || status === 'error') return
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) void loadMore()
-      },
-      { root, rootMargin: '240px 0px' },
-    )
-    observer.observe(target)
-    return () => observer.disconnect()
-  }, [loadMore, page.nextOffset, status])
-
-  return { ...page, status, loadMore, invalidate, resultsScrollRef, loadMoreRef }
+  return { ...page, status, loadMore, invalidate }
 }
