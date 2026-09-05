@@ -1,2 +1,3 @@
 services/api/openapi/openapi.json
 packages/contracts/schema/*.schema.json
+clients/web/src/worker-configuration.d.ts

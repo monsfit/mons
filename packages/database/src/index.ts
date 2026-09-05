@@ -13,6 +13,8 @@ export type {
   FoodGroupRecord,
   FoodSearchRecord,
   FoodSearchOptions,
+  RestaurantListOptions,
+  RestaurantRecord,
 } from './features/catalog/repository.ts'
 export { createDatabaseLayer, DatabaseHealth, databaseHealthLayer } from './core/client.ts'
 export type { DatabaseHealthService, DatabaseOptions } from './core/client.ts'

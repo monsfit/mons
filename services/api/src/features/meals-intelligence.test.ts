@@ -20,6 +20,7 @@ const catalog: CatalogReaderService = {
   findByGtin: () => Effect.succeed(undefined),
   listBrands: () => Effect.succeed([]),
   listFoodGroups: () => Effect.succeed([]),
+  listRestaurants: () => Effect.succeed([]),
   search: () =>
     Effect.succeed([
       {
@@ -32,9 +33,15 @@ const catalog: CatalogReaderService = {
         food_id: 'food-42',
         food_group: 'Prepared Foods',
         food_group_id: '17',
+        food_subgroup: 'Ready Meals',
+        food_subgroup_id: '28',
         name: 'Example Food',
         nutrient_basis: { amount: 100, unit: 'g' },
         protein: 5,
+        restaurant: null,
+        restaurant_id: null,
+        source: 'integration_test',
+        source_id: 'food-42',
         total_fat: 2,
       },
     ]),

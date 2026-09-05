@@ -1,0 +1,49 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "mons-web-local",
+  "main": "@tanstack/react-start/server-entry",
+  "compatibility_date": "2026-09-04",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "observability": { "enabled": true },
+  "vars": {
+    "MONS_CATALOG_SCHEMA": "mons_catalog",
+    "MONS_STAGE": "local",
+  },
+  "hyperdrive": [
+    {
+      "binding": "Database",
+      "id": "8c533f1b36d644fab96b3ebe4cb5bc08",
+    },
+  ],
+  "env": {
+    "dev": {
+      "name": "mons-dev-web",
+      "routes": [{ "pattern": "dev.mons.fit", "custom_domain": true }],
+      "vars": {
+        "MONS_CATALOG_SCHEMA": "mons_catalog",
+        "MONS_STAGE": "dev",
+      },
+      "hyperdrive": [
+        {
+          "binding": "Database",
+          "id": "8c533f1b36d644fab96b3ebe4cb5bc08",
+        },
+      ],
+    },
+    "production": {
+      "name": "mons-production-web",
+      "routes": [{ "pattern": "mons.fit", "custom_domain": true }],
+      "vars": {
+        "MONS_CATALOG_SCHEMA": "mons_catalog",
+        "MONS_STAGE": "production",
+      },
+      "hyperdrive": [
+        {
+          "binding": "Database",
+          "id": "0d5ed6f6c3c94a6c8efca2deb51ea2ea",
+        },
+      ],
+    },
+  },
+}

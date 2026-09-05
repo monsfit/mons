@@ -1,30 +1,63 @@
-# Mons web client
+# Mons web
 
-The marketing website for Mons is a server-rendered React application built with TanStack Start,
-TanStack Router, Vite, and Nitro. It lives in the Mons pnpm workspace and participates in the
-same Turbo formatting, linting, TypeScript 7, test, and build checks as the API.
+The Mons web client is a server-rendered TanStack Start application running on Cloudflare Workers.
+It serves the public website and shared web tools, beginning with the catalog workspace at
+`/foods`. The workspace searches the normalized raw, branded, and restaurant catalog directly from
+PostgreSQL through Hyperdrive.
+
+The interface uses Tailwind CSS and shadcn's React Aria component base. It is intentionally
+unauthenticated for now.
 
 ## Run locally
 
-From the repository root:
+Start the repository's PostgreSQL container, then run the web client:
 
 ```bash
-npx pnpm@11.20.0 install
-npx pnpm@11.20.0 dev:marketing
+pnpm dev:database
+pnpm db:migrate
+pnpm dev:web
 ```
 
-Open <http://localhost:3001>. The API continues to use port 3000.
+Wrangler reads the ignored `clients/web/.env` file. Copy `.env.example` to `.env` if it does not
+exist; its binding-specific local Hyperdrive variable points at the local `mons` database. Open
+<http://localhost:3001/foods>. The API continues to use port 3000.
+
+## Data path
+
+```text
+TanStack Start server function
+  -> Effect CatalogReader
+  -> Wrangler local Hyperdrive binding
+  -> local PostgreSQL mons_catalog schema
+```
+
+Search and filters are encoded in the URL. Food groups, brands, dataset counts, food results, and
+the active catalog release are all read from the database; no catalog fixture is bundled into the
+web client.
+
+Food, brand, and restaurant searches update after 300 ms without typing; Enter submits immediately.
+Food searches need at least two characters. Shorter input keeps the previous results visible with a
+hint. Brand/restaurant text narrows the corresponding picker; selecting a result applies that filter.
+Changes replace the current URL entry, preserve focus, and reset table pagination. The table loads
+50 rows at a time near the bottom, with a manual load/retry button and an explicit end state.
+
+Run the browser interaction regression against a running local web server and populated local
+catalog with `pnpm --filter @mons/web test:e2e` (Google Chrome required). It checks debouncing,
+filter combinations, scroll loading, duplicate rows, sticky headers, and empty results. Unit tests
+cover delayed responses, input composition, request invalidation, and retries. No catalog reload is
+performed by these web tests. Database integration tests use isolated test schemas.
 
 ## Commands
 
 ```bash
-npx pnpm@11.20.0 --filter @mons/marketing lint
-npx pnpm@11.20.0 --filter @mons/marketing typecheck
-npx pnpm@11.20.0 --filter @mons/marketing test
-npx pnpm@11.20.0 --filter @mons/marketing build
-npx pnpm@11.20.0 --filter @mons/marketing start
+pnpm --filter @mons/web lint
+pnpm --filter @mons/web typecheck
+pnpm --filter @mons/web test
+pnpm --filter @mons/web build
+pnpm --filter @mons/web types:generate
+pnpm deploy:web:dev
+pnpm deploy:web:production
 ```
 
-The production build emits a Nitro Node server under `.output`. The site reuses the locally
-bundled Mons Space Grotesk font files and the Lunar Plum light/dark design tokens; it makes no
-runtime font requests to a third party.
+The `dev` deployment uses the existing development Hyperdrive at `dev.mons.fit`. The production
+environment uses the production Hyperdrive at `mons.fit`.
