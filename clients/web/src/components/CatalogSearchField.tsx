@@ -34,7 +34,11 @@ export function CatalogSearchField({
   function commit(text: string) {
     cancel()
     const normalized = text.trim()
-    if (composing.current || (primary && normalized.length < 2) || normalized === submitted.current)
+    if (
+      composing.current ||
+      (primary && normalized.length === 1) ||
+      normalized === submitted.current
+    )
       return
     submitted.current = normalized
     pending.current.push(normalized)
@@ -44,7 +48,11 @@ export function CatalogSearchField({
   function schedule(text: string) {
     cancel()
     const normalized = text.trim()
-    if (composing.current || (primary && normalized.length < 2) || normalized === submitted.current)
+    if (
+      composing.current ||
+      (primary && normalized.length === 1) ||
+      normalized === submitted.current
+    )
       return
     timer.current = setTimeout(() => {
       timer.current = undefined
@@ -118,7 +126,7 @@ export function CatalogSearchField({
       )}
       {primary && draft.trim().length < 2 && (
         <p id="food-search-hint" role="status" className="mt-2 text-xs text-white/50">
-          Type at least 2 characters to search. Previous results remain below.
+          Type at least 2 characters to search.
         </p>
       )}
     </form>

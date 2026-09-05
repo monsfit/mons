@@ -12,7 +12,7 @@ import { isCatalogId } from './catalog-search'
 export const CATALOG_PAGE_SIZE = 50
 
 const catalogIdSchema = Schema.String.check(Schema.makeFilter(isCatalogId))
-const catalogSearchTextSchema = Schema.String.check(Schema.isMinLength(2), Schema.isMaxLength(200))
+const catalogSearchTextSchema = Schema.String.check(Schema.isMaxLength(200))
 const catalogFilterTextSchema = Schema.String.check(Schema.isMaxLength(160))
 const catalogOffsetSchema = Schema.Number.check(
   Schema.isInt(),
@@ -94,6 +94,7 @@ const searchCatalog = Effect.fn('WebCatalog.search')(function* (
   data: typeof catalogQuerySchema.Type,
   offset: number,
 ) {
+  if (data.q.trim().length < 2) return []
   const catalog = yield* CatalogReader
   return yield* catalog.search({
     limit: CATALOG_PAGE_SIZE + 1,

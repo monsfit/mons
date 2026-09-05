@@ -36,8 +36,9 @@ the active catalog release are all read from the database; no catalog fixture is
 web client.
 
 Food, brand, and restaurant searches update after 300 ms without typing; Enter submits immediately.
-Food searches need at least two characters. Shorter input keeps the previous results visible with a
-hint. Brand/restaurant text narrows the corresponding picker; selecting a result applies that filter.
+Food searches need at least two characters. Clearing the input clears the query and results while
+preserving filters; a single character waits for more input. Brand/restaurant text narrows the
+corresponding picker; selecting a result applies that filter.
 Changes replace the current URL entry, preserve focus, and reset table pagination. The table loads
 50 rows at a time near the bottom, with a manual load/retry button and an explicit end state.
 

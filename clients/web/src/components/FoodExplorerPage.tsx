@@ -340,7 +340,7 @@ export function FoodExplorerPage({
                   {nextOffset === null ? '' : '+'} results
                 </span>
                 <span className="text-white/15">/</span>
-                <span>“{search.q}”</span>
+                <span>{search.q === '' ? 'No search entered' : `“${search.q}”`}</span>
                 {activeGroup !== undefined && (
                   <Badge variant="outline" className="border-white/10 text-white/55">
                     <Shapes className="size-3" /> {activeGroup.name}
@@ -445,9 +445,13 @@ export function FoodExplorerPage({
                   <div className="grid min-h-64 place-items-center p-8 text-center">
                     <div>
                       <Search className="mx-auto mb-3 size-5 text-white/25" />
-                      <p className="text-sm text-white/60">No matching foods</p>
+                      <p className="text-sm text-white/60">
+                        {search.q === '' ? 'Search the food catalog' : 'No matching foods'}
+                      </p>
                       <p className="mt-1 text-xs text-white/30">
-                        Try a broader term or clear a filter.
+                        {search.q === ''
+                          ? 'Enter at least 2 characters to find foods.'
+                          : 'Try a broader term or clear a filter.'}
                       </p>
                     </div>
                   </div>

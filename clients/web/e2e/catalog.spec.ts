@@ -1,5 +1,29 @@
 import { expect, test } from '@playwright/test'
 
+test('clears the query and results without losing filters, including after reload', async ({
+  page,
+}) => {
+  await page.goto('/foods?q=burger&kind=branded')
+  const food = page.getByRole('textbox', { name: 'Search foods', exact: true })
+  await expect(food).toHaveValue('burger')
+  await page.waitForLoadState('networkidle')
+  await food.fill('')
+  await expect.poll(() => new URL(page.url()).searchParams.get('q')).toBe('')
+  await expect(page.getByText('Search the food catalog', { exact: true })).toBeVisible()
+  await expect(page.locator('[data-slot=table-body] [data-slot=table-row]')).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Branded', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+  await expect(food).toBeFocused()
+  await page.reload()
+  await expect(food).toHaveValue('')
+  await expect(page.getByText('Search the food catalog', { exact: true })).toBeVisible()
+  await food.fill('chicken')
+  await expect(page.getByText('“chicken”', { exact: true })).toBeVisible()
+  await expect(page.locator('[data-slot=table-body] [data-slot=table-row]').first()).toBeVisible()
+})
+
 test('keeps typing focused while a slow search is in flight', async ({ page }) => {
   await page.goto('/foods?q=chicken')
   await page.waitForLoadState('networkidle')

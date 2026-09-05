@@ -8,6 +8,11 @@ import {
 } from './catalog-search'
 
 describe('catalog search presentation', () => {
+  it('preserves an explicitly cleared query instead of restoring chicken', () => {
+    expect(parseCatalogSearch({ q: '' }).q).toBe('')
+    expect(parseCatalogSearch({ q: '   ' }).q).toBe('')
+    expect(toCatalogQuery(parseCatalogSearch({ q: '' })).q).toBe('')
+  })
   it('provides a useful deterministic first query', () => {
     expect(parseCatalogSearch({})).toEqual({
       brandId: 'all',
