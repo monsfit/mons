@@ -2,7 +2,11 @@ import { Link } from '@tanstack/react-router'
 import { Collection, Table, TableLoadMoreItem } from 'react-aria-components'
 import { TableLayout, Virtualizer } from 'react-aria-components/Virtualizer'
 import { Flame } from 'lucide-react'
-import type { CatalogSearch } from '~/features/catalog/catalog-search'
+import type {
+  CatalogSearch,
+  CatalogSearchUpdate,
+  CatalogDatasetKind,
+} from '~/features/catalog/catalog-search'
 import {
   foodAttribution,
   foodPortionLabel,
@@ -15,20 +19,20 @@ import { CatalogSearchField } from './CatalogSearchField'
 import { CatalogFacetList } from './CatalogFacetList'
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table'
 
+import { parseCatalogSearch, toggleFilter } from '~/features/catalog/catalog-search'
+
 type Workspace = Awaited<ReturnType<typeof getCatalogWorkspace>>
 interface FoodExplorerPageProps {
   readonly isPending: boolean
   readonly search: CatalogSearch
   readonly workspace: Workspace
-  readonly updateSearch: (next: Partial<CatalogSearch>) => void
+  readonly updateSearch: (next: CatalogSearchUpdate) => void
 }
-const kinds: ReadonlyArray<{ id: CatalogSearch['kind']; label: string }> = [
-  { id: 'all', label: 'All' },
+const kinds: ReadonlyArray<{ id: CatalogDatasetKind; label: string }> = [
   { id: 'raw', label: 'Raw' },
   { id: 'branded', label: 'Branded' },
-  { id: 'restaurant', label: 'Restaurants' },
+  { id: 'restaurant', label: 'Restaurant' },
 ]
-
 export function FoodExplorerPage({
   search,
   updateSearch: navigate,
@@ -40,17 +44,20 @@ export function FoodExplorerPage({
     workspace,
     isPending,
   )
-  const updateSearch = (next: Partial<CatalogSearch>) => {
-    if (!isPending && JSON.stringify({ ...search, ...next }) === JSON.stringify(search)) return
+  const updateSearch = (next: CatalogSearchUpdate) => {
+    const candidate = typeof next === 'function' ? next(search) : { ...search, ...next }
+    if (!isPending && JSON.stringify(candidate) === JSON.stringify(search)) return
     invalidate()
     navigate(next)
   }
   const hasActiveFilters =
-    search.kind !== 'all' ||
-    search.foodGroupId !== 'all' ||
-    search.brandId !== 'all' ||
-    search.restaurantId !== 'all'
-
+    search.kinds.length + search.groups.length + search.brands.length + search.restaurants.length >
+    0
+  const facets: ReadonlyArray<{ key: 'groups' | 'brands' | 'restaurants'; label: string }> = [
+    { key: 'groups', label: 'Group' },
+    { key: 'brands', label: 'Brand' },
+    { key: 'restaurants', label: 'Restaurant' },
+  ]
   return (
     <div className="dark catalog-shell">
       <header className="catalog-header">
@@ -58,35 +65,34 @@ export function FoodExplorerPage({
           MONS
         </Link>
         <h1 className="border-l border-white/15 pl-4 text-sm text-white/60">Foods</h1>
-        <div className="min-w-0 flex-1 md:mx-auto md:max-w-xl">
-          <CatalogSearchField
-            primary
-            label="Search foods"
-            value={search.q}
-            onCommit={(q) => updateSearch({ q })}
-          />
-        </div>
-        <span className="hidden text-xs text-white/40 md:block">{workspace.stage}</span>
+        <span className="ml-auto text-xs text-white/40">{workspace.stage}</span>
       </header>
       <div className="catalog-layout">
         <aside className="catalog-sidebar">
           <section>
             <h2>Type</h2>
             <div role="group" aria-label="Dataset type" className="flex flex-wrap gap-1">
+              <button
+                type="button"
+                aria-pressed={search.kinds.length === 0}
+                className="rounded px-2 py-1.5 text-xs aria-pressed:bg-white/10"
+                onClick={() => updateSearch({ kinds: [] })}
+              >
+                All
+              </button>
               {kinds.map(({ id, label }) => (
                 <button
                   key={id}
                   type="button"
-                  aria-pressed={search.kind === id}
+                  aria-pressed={search.kinds.includes(id)}
                   className="rounded px-2 py-1.5 text-xs text-white/60 aria-pressed:bg-white/10 aria-pressed:text-white"
                   onClick={() =>
-                    updateSearch({
-                      kind: id,
-                      brandId: id === 'branded' ? search.brandId : 'all',
-                      brandName: id === 'branded' ? search.brandName : '',
-                      restaurantId: id === 'restaurant' ? search.restaurantId : 'all',
-                      restaurantName: id === 'restaurant' ? search.restaurantName : '',
-                    })
+                    updateSearch((current) => ({
+                      ...current,
+                      kinds: current.kinds.includes(id)
+                        ? current.kinds.filter((kind) => kind !== id)
+                        : [...current.kinds, id],
+                    }))
                   }
                 >
                   {label}
@@ -97,21 +103,27 @@ export function FoodExplorerPage({
           <section>
             <h2>
               Food groups{' '}
-              <button type="button" onClick={() => updateSearch({ foodGroupId: 'all' })}>
+              <button type="button" onClick={() => updateSearch({ groups: [] })}>
                 All groups
               </button>
             </h2>
             <CatalogFacetList
               label="Food groups"
+              key={workspace.releaseId}
               items={workspace.foodGroups}
-              selectedId={search.foodGroupId}
-              onSelect={(group) => updateSearch({ foodGroupId: group.id })}
+              selectedIds={search.groups.map((item) => item.id)}
+              onSelect={(group) =>
+                updateSearch((current) => ({
+                  ...current,
+                  groups: toggleFilter(current.groups, group),
+                }))
+              }
             />
           </section>
           <section>
             <h2>
               Brands{' '}
-              <button type="button" onClick={() => updateSearch({ brandId: 'all', brandName: '' })}>
+              <button type="button" onClick={() => updateSearch({ brands: [] })}>
                 Clear
               </button>
             </h2>
@@ -120,35 +132,26 @@ export function FoodExplorerPage({
               value={search.brandQuery}
               onCommit={(brandQuery) => updateSearch({ brandQuery })}
             />
-            {search.brandId !== 'all' && (
-              <p className="mb-2 text-xs text-lime-200">{search.brandName}</p>
-            )}
             <CatalogFacetList
+              key={`${workspace.releaseId}:${search.brandQuery}`}
               label="Brands"
-              key={search.brandQuery}
               kind="brands"
               query={search.brandQuery}
               items={workspace.brands}
               nextOffset={workspace.brandNextOffset}
-              selectedId={search.brandId}
+              selectedIds={search.brands.map((item) => item.id)}
               onSelect={(brand) =>
-                updateSearch({
-                  brandId: brand.id,
-                  brandName: brand.name,
-                  kind: 'branded',
-                  restaurantId: 'all',
-                  restaurantName: '',
-                })
+                updateSearch((current) => ({
+                  ...current,
+                  brands: toggleFilter(current.brands, brand),
+                }))
               }
             />
           </section>
           <section>
             <h2>
               Restaurants{' '}
-              <button
-                type="button"
-                onClick={() => updateSearch({ restaurantId: 'all', restaurantName: '' })}
-              >
+              <button type="button" onClick={() => updateSearch({ restaurants: [] })}>
                 Clear
               </button>
             </h2>
@@ -157,25 +160,19 @@ export function FoodExplorerPage({
               value={search.restaurantQuery}
               onCommit={(restaurantQuery) => updateSearch({ restaurantQuery })}
             />
-            {search.restaurantId !== 'all' && (
-              <p className="mb-2 text-xs text-lime-200">{search.restaurantName}</p>
-            )}
             <CatalogFacetList
+              key={`${workspace.releaseId}:${search.restaurantQuery}`}
               label="Restaurants"
-              key={search.restaurantQuery}
               kind="restaurants"
               query={search.restaurantQuery}
               items={workspace.restaurants}
               nextOffset={workspace.restaurantNextOffset}
-              selectedId={search.restaurantId}
+              selectedIds={search.restaurants.map((item) => item.id)}
               onSelect={(restaurant) =>
-                updateSearch({
-                  restaurantId: restaurant.id,
-                  restaurantName: restaurant.name,
-                  kind: 'restaurant',
-                  brandId: 'all',
-                  brandName: '',
-                })
+                updateSearch((current) => ({
+                  ...current,
+                  restaurants: toggleFilter(current.restaurants, restaurant),
+                }))
               }
             />
           </section>
@@ -184,33 +181,78 @@ export function FoodExplorerPage({
           </p>
         </aside>
         <main className="catalog-main">
-          <div role="status" className="catalog-results-status">
-            <span>
-              {isPending
-                ? 'Updating results…'
-                : search.q === ''
-                  ? 'Search the food catalog'
-                  : `${foods.length}${nextOffset === null ? '' : '+'} results`}
-            </span>
-            {search.q !== '' && <span>“{search.q}”</span>}
+          <div className="border-b border-white/10 p-3">
+            <CatalogSearchField
+              primary
+              label="Search foods"
+              value={search.q}
+              onCommit={(q) => updateSearch({ q })}
+            />
+          </div>
+          <section
+            aria-label="Active filters"
+            className="flex max-h-36 shrink-0 flex-wrap items-center gap-2 overflow-y-auto border-b border-white/10 p-3 text-xs"
+          >
+            <span className="mr-1 text-white/50">Filters</span>
+            {search.kinds.map((kind) => (
+              <button
+                key={kind}
+                type="button"
+                aria-label={`Remove type: ${kind}`}
+                className="rounded border border-white/15 bg-white/5 px-2 py-1"
+                onClick={() =>
+                  updateSearch((current) => ({
+                    ...current,
+                    kinds: current.kinds.filter((value) => value !== kind),
+                  }))
+                }
+              >
+                Type: {kind} <span aria-hidden="true">×</span>
+              </button>
+            ))}
+            {facets.flatMap(({ key, label }) =>
+              search[key].map((item) => (
+                <button
+                  key={`${key}:${item.id}`}
+                  type="button"
+                  aria-label={`Remove ${label.toLowerCase()}: ${item.name}`}
+                  className="rounded border border-white/15 bg-white/5 px-2 py-1"
+                  onClick={() =>
+                    updateSearch((current) => ({
+                      ...current,
+                      [key]: current[key].filter((value) => value.id !== item.id),
+                    }))
+                  }
+                >
+                  {label}: {item.name} <span aria-hidden="true">×</span>
+                </button>
+              )),
+            )}
+            {!hasActiveFilters && <span className="text-white/35">None · showing all foods</span>}
             {hasActiveFilters && (
               <button
                 type="button"
-                className="text-lime-200"
+                className="ml-auto text-lime-200"
                 onClick={() =>
-                  updateSearch({
-                    brandId: 'all',
-                    brandName: '',
-                    foodGroupId: 'all',
-                    kind: 'all',
-                    restaurantId: 'all',
-                    restaurantName: '',
-                  })
+                  updateSearch((current) => ({
+                    ...parseCatalogSearch({}),
+                    q: current.q,
+                    brandQuery: current.brandQuery,
+                    restaurantQuery: current.restaurantQuery,
+                  }))
                 }
               >
                 Clear filters
               </button>
             )}
+          </section>
+          <div role="status" className="catalog-results-status">
+            <span>
+              {isPending
+                ? 'Updating results…'
+                : `${foods.length}${nextOffset === null ? '' : '+'} results`}
+            </span>
+            <span>{search.q === '' ? 'All foods' : `“${search.q}”`}</span>
             <span className="ml-auto text-white/45">Per portion · basis when unavailable</span>
           </div>
           <Virtualizer
@@ -251,7 +293,7 @@ export function FoodExplorerPage({
                 renderEmptyState={() => (
                   <div className="p-8 text-sm text-white/50">
                     {search.q === ''
-                      ? 'Enter at least 2 characters to find foods.'
+                      ? 'No matching foods. Try clearing a filter.'
                       : 'No matching foods. Try a broader term or clear a filter.'}
                   </div>
                 )}

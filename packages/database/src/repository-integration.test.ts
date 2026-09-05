@@ -268,6 +268,32 @@ integration('feature repositories with PostgreSQL', () => {
         )
         expect(new Set([...firstPage, ...secondPage].map((food) => food.food_id)).size).toBe(4)
         const fruit = yield* catalog.search({ foodGroupId: '1', limit: 10, query: 'apple' })
+        const browse = yield* catalog.search({ limit: 50, query: '' })
+        const browseFirst = yield* catalog.search({ limit: 2, query: '' })
+        const browseSecond = yield* catalog.search({ limit: 2, offset: 2, query: '' })
+        expect([...browseFirst, ...browseSecond]).toEqual(browse.slice(0, 4))
+        const combined = yield* catalog.search({
+          kinds: ['raw', 'branded'],
+          foodGroupIds: ['1', '4'],
+          limit: 50,
+          query: '',
+        })
+        expect(combined).toEqual(
+          browse.filter(
+            (food) =>
+              ['raw', 'branded'].includes(food.dataset_kind) &&
+              ['1', '4'].includes(food.food_group_id),
+          ),
+        )
+        const manyBrands = yield* catalog.search({
+          brandIds: ['1', '2'],
+          limit: 50,
+          query: 'apple',
+        })
+        expect(manyBrands.length).toBeGreaterThan(0)
+        expect(
+          manyBrands.every((food) => food.brand_id !== null && ['1', '2'].includes(food.brand_id)),
+        ).toBe(true)
         expect(fruit.every((food) => food.food_group_id === '1')).toBe(true)
         const exampleBrand = yield* catalog.search({ brandId: '1', limit: 10, query: 'apple' })
         expect(exampleBrand.map((food) => food.food_id)).toEqual(['1', '2'])

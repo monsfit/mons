@@ -2,15 +2,29 @@ import { createRouter } from '@tanstack/react-router'
 
 import { routeTree } from './routeTree.gen'
 
-const parseSearch = (searchString: string): Record<string, string> =>
+const parseValue = (key: string, value: string): unknown => {
+  if (!['brands', 'groups', 'restaurants', 'kinds'].includes(key) || !value.startsWith('['))
+    return value
+  try {
+    const decoded: unknown = JSON.parse(value)
+    return Array.isArray(decoded) ? decoded : value
+  } catch {
+    return value
+  }
+}
+
+const parseSearch = (searchString: string): Record<string, unknown> =>
   Object.fromEntries(
-    new URLSearchParams(searchString.startsWith('?') ? searchString.slice(1) : searchString),
+    [
+      ...new URLSearchParams(searchString.startsWith('?') ? searchString.slice(1) : searchString),
+    ].map(([key, value]) => [key, parseValue(key, value)]),
   )
 
 const stringifySearch = (search: Record<string, unknown>): string => {
   const parameters = new URLSearchParams()
   for (const [key, value] of Object.entries(search)) {
     if (typeof value === 'string') parameters.set(key, value)
+    else if (Array.isArray(value)) parameters.set(key, JSON.stringify(value))
   }
   const encoded = parameters.toString()
   return encoded.length === 0 ? '' : `?${encoded}`

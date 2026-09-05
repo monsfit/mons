@@ -21,12 +21,14 @@ const catalogOffsetSchema = Schema.Number.check(
 )
 
 const catalogQuerySchema = Schema.Struct({
-  brandId: Schema.optionalKey(catalogIdSchema),
+  brandIds: Schema.Array(catalogIdSchema).check(Schema.isMaxLength(50)),
   brandQuery: Schema.optionalKey(catalogFilterTextSchema),
-  foodGroupId: Schema.optionalKey(catalogIdSchema),
-  kind: Schema.optionalKey(Schema.Literals(['raw', 'branded', 'restaurant'])),
+  foodGroupIds: Schema.Array(catalogIdSchema).check(Schema.isMaxLength(50)),
+  kinds: Schema.Array(Schema.Literals(['raw', 'branded', 'restaurant'])).check(
+    Schema.isMaxLength(3),
+  ),
   q: catalogSearchTextSchema,
-  restaurantId: Schema.optionalKey(catalogIdSchema),
+  restaurantIds: Schema.Array(catalogIdSchema).check(Schema.isMaxLength(50)),
   restaurantQuery: Schema.optionalKey(catalogFilterTextSchema),
 })
 const catalogPageQuerySchema = Schema.Struct({
@@ -95,16 +97,16 @@ const searchCatalog = Effect.fn('WebCatalog.search')(function* (
   data: typeof catalogQuerySchema.Type,
   offset: number,
 ) {
-  if (data.q.trim().length < 2) return []
+  if (data.q.trim().length === 1) return []
   const catalog = yield* CatalogReader
   return yield* catalog.search({
     limit: CATALOG_PAGE_SIZE + 1,
     offset,
     query: data.q,
-    ...(data.brandId === undefined ? {} : { brandId: data.brandId }),
-    ...(data.foodGroupId === undefined ? {} : { foodGroupId: data.foodGroupId }),
-    ...(data.kind === undefined ? {} : { kind: data.kind }),
-    ...(data.restaurantId === undefined ? {} : { restaurantId: data.restaurantId }),
+    brandIds: data.brandIds,
+    foodGroupIds: data.foodGroupIds,
+    kinds: data.kinds,
+    restaurantIds: data.restaurantIds,
   })
 })
 

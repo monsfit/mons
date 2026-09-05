@@ -13,7 +13,7 @@ interface FacetItem {
 interface CatalogFacetListProps {
   readonly label: string
   readonly items: ReadonlyArray<FacetItem>
-  readonly selectedId: string
+  readonly selectedIds: ReadonlyArray<string>
   readonly onSelect: (item: FacetItem) => void
   readonly kind?: 'brands' | 'restaurants'
   readonly query?: string
@@ -23,7 +23,7 @@ interface CatalogFacetListProps {
 export function CatalogFacetList({
   label,
   items,
-  selectedId,
+  selectedIds,
   onSelect,
   kind,
   query = '',
@@ -33,19 +33,12 @@ export function CatalogFacetList({
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle')
   const generation = useRef(0)
   const busy = useRef(false)
-  const scroll = useRef<HTMLDivElement>(null)
-
   useEffect(() => {
-    generation.current += 1
-    busy.current = false
-    setPage({ items, nextOffset })
-    setStatus('idle')
-    scroll.current?.scrollTo({ top: 0 })
     return () => {
       generation.current += 1
       busy.current = true
     }
-  }, [items, nextOffset, kind, query])
+  }, [])
 
   async function loadMore() {
     if (busy.current || kind === undefined || page.nextOffset === null) return
@@ -74,15 +67,17 @@ export function CatalogFacetList({
     <div>
       <Virtualizer layout={ListLayout} layoutOptions={{ rowSize: 34, loaderSize: 34 }}>
         <ListBox
-          ref={scroll}
           aria-label={label}
           data-loaded-count={page.items.length}
           className="catalog-facet-list"
-          selectionMode="single"
-          selectedKeys={[selectedId]}
+          selectionMode="multiple"
+          selectionBehavior="toggle"
+          selectedKeys={selectedIds}
           onSelectionChange={(selection) => {
             if (selection === 'all') return
-            const id = selection.values().next().value
+            const id =
+              [...selection].find((key) => !selectedIds.includes(String(key))) ??
+              selectedIds.find((key) => !selection.has(key))
             const item = page.items.find((candidate) => candidate.id === id)
             if (item !== undefined) onSelect(item)
           }}
