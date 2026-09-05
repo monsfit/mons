@@ -1,5 +1,6 @@
 import { flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
 import { catalogColumns } from '~/features/catalog/catalog-columns'
+import { datasetKindLabel } from '~/features/catalog/catalog-search'
 import { Link } from '@tanstack/react-router'
 import { Collection, Table, TableLoadMoreItem } from 'react-aria-components'
 import { Virtualizer } from 'react-aria-components/Virtualizer'
@@ -110,7 +111,7 @@ export function FoodExplorerPage({
                   }))
                 }
               >
-                Type: {kind} <span aria-hidden="true">×</span>
+                Type: {datasetKindLabel[kind]} <span aria-hidden="true">×</span>
               </Button>
             ))}
             {facets.flatMap(({ key, label }) =>

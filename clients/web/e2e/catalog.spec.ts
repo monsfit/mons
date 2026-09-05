@@ -104,9 +104,9 @@ test('browses by default, combines selections, and removes chips independently',
     },
   )
   await openFilters(page, 'Source')
-  await page.getByRole('button', { name: 'Raw', exact: true }).click()
+  await page.getByRole('button', { name: 'Raw Ingredient', exact: true }).click()
   await page.getByRole('button', { name: 'Branded', exact: true }).click()
-  await expect(page.getByRole('button', { name: 'Raw', exact: true })).toHaveAttribute(
+  await expect(page.getByRole('button', { name: 'Raw Ingredient', exact: true })).toHaveAttribute(
     'aria-pressed',
     'true',
   )
@@ -328,9 +328,9 @@ test('debounces food and facet searches, filters results, and loads more on scro
   await expect(page.getByText('“chicken”', { exact: true })).toBeVisible()
 
   await openFilters(page, 'Source')
-  await page.getByRole('button', { name: 'Raw', exact: true }).click()
+  await page.getByRole('button', { name: 'Raw Ingredient', exact: true }).click()
   await expect(page).toHaveURL(/kinds=.*raw/)
-  await expect(page.getByRole('button', { name: 'Raw', exact: true })).toHaveAttribute(
+  await expect(page.getByRole('button', { name: 'Raw Ingredient', exact: true })).toHaveAttribute(
     'aria-pressed',
     'true',
   )
@@ -340,7 +340,7 @@ test('debounces food and facet searches, filters results, and loads more on scro
   await expect(page.getByRole('grid')).toHaveAttribute('data-loaded-count', '50')
   await expect.poll(() => rows.count()).toBeGreaterThan(0)
   expect(await rows.count()).toBeLessThan(30)
-  await expect(rows.first()).toContainText('raw')
+  await expect(rows.first()).toContainText('Raw Ingredient')
   expect(
     await rows.evaluateAll((elements) =>
       elements.every((row) => {
