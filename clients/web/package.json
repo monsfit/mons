@@ -22,6 +22,7 @@
     "@mons/database": "workspace:*",
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-start": "catalog:",
+    "@tanstack/react-table": "catalog:",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.2.4",
     "effect": "catalog:",

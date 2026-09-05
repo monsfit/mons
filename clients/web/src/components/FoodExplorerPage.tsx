@@ -1,24 +1,16 @@
+import { flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
+import { catalogColumns } from '~/features/catalog/catalog-columns'
 import { Link } from '@tanstack/react-router'
 import { Collection, Table, TableLoadMoreItem } from 'react-aria-components'
 import { Virtualizer } from 'react-aria-components/Virtualizer'
 import { CatalogTableLayout } from '~/features/catalog/catalog-table-layout'
-import { tableNutrients } from '~/features/catalog/table-nutrients'
-import { formatNutritionAmount } from '~/features/catalog/nutrition'
-import { foodNutrientAmount } from '~/features/catalog/catalog-presentation'
-import { Flame } from 'lucide-react'
 import type {
   CatalogSearch,
   CatalogSearchUpdate,
   CatalogDatasetKind,
 } from '~/features/catalog/catalog-search'
-import {
-  foodAttribution,
-  foodPortionLabel,
-  formatFoodNutrient,
-} from '~/features/catalog/catalog-presentation'
 import type { getCatalogWorkspace } from '~/features/catalog/catalog-functions'
 import { useCatalogPages } from '~/features/catalog/use-catalog-pages'
-import { CatalogSourceBadge } from './CatalogSourceBadge'
 import { CatalogSearchField } from './CatalogSearchField'
 import { CatalogFacetList } from './CatalogFacetList'
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table'
@@ -48,6 +40,15 @@ export function FoodExplorerPage({
     workspace,
     isPending,
   )
+  const table = useReactTable({
+    data: foods,
+    columns: catalogColumns,
+    getRowId: (food) => `${food.datasetKind}:${food.foodId}`,
+    getCoreRowModel: getCoreRowModel(),
+    manualFiltering: true,
+    manualPagination: true,
+    autoResetPageIndex: false,
+  })
   const updateSearch = (next: CatalogSearchUpdate) => {
     const candidate = typeof next === 'function' ? next(search) : { ...search, ...next }
     if (!isPending && JSON.stringify(candidate) === JSON.stringify(search)) return
@@ -283,30 +284,14 @@ export function FoodExplorerPage({
               }}
             >
               <TableHeader>
-                <TableHead id="food" isRowHeader width={370}>
-                  Food
-                </TableHead>
-                <TableHead id="source" width={190}>
-                  Source
-                </TableHead>
-                <TableHead id="group" width={150}>
-                  Group
-                </TableHead>
-                <TableHead id="calories" width={110}>
-                  Calories
-                </TableHead>
-                <TableHead id="protein" width={90}>
-                  Protein
-                </TableHead>
-                <TableHead id="fat" width={90}>
-                  Fat
-                </TableHead>
-                <TableHead id="carbs" width={90}>
-                  Carbs
-                </TableHead>
-                {tableNutrients.map((nutrient) => (
-                  <TableHead key={nutrient.field} id={nutrient.field} width={125}>
-                    {nutrient.label} ({nutrient.unit})
+                {table.getFlatHeaders().map((header) => (
+                  <TableHead
+                    key={header.id}
+                    id={header.id}
+                    isRowHeader={header.id === 'food'}
+                    width={header.getSize()}
+                  >
+                    {flexRender(header.column.columnDef.header, header.getContext())}
                   </TableHead>
                 ))}
               </TableHeader>
@@ -319,67 +304,12 @@ export function FoodExplorerPage({
                   </div>
                 )}
               >
-                <Collection items={foods}>
-                  {(food) => (
-                    <TableRow id={`${food.datasetKind}:${food.foodId}`} textValue={food.name}>
-                      <TableCell>
-                        <Link
-                          to="/food/$kind/$foodId"
-                          params={{ kind: food.datasetKind, foodId: food.foodId }}
-                          className="block min-w-0 rounded outline-offset-2 focus-visible:outline-2 focus-visible:outline-lime-200"
-                        >
-                          <span
-                            className="block truncate text-sm font-medium"
-                            title={`${food.name} ${foodAttribution(food) ?? ''}`}
-                          >
-                            {food.name}{' '}
-                            <span className="font-normal text-white/55">
-                              {foodAttribution(food)}
-                            </span>
-                          </span>
-                          <span className="mt-1 flex items-center gap-1 text-xs text-white/50">
-                            <Flame className="size-3.5 shrink-0 text-orange-400" />
-                            {formatFoodNutrient(food, food.calories, 'kcal')}
-                            <span>·</span>
-                            <span className="truncate">{foodPortionLabel(food)}</span>
-                          </span>
-                        </Link>
-                      </TableCell>
-                      <TableCell>
-                        <CatalogSourceBadge source={food.source} />
-                        <span className="mt-1 w-fit rounded-full border border-white/10 bg-white/5 px-2 text-[10px] text-white/50">
-                          {food.datasetKind}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <span
-                          title={food.foodGroup}
-                          className="w-fit max-w-full truncate rounded-full border border-violet-300/20 bg-violet-300/5 px-2 py-1 text-[10px] text-violet-100/80"
-                        >
-                          {food.foodGroup}
-                        </span>
-                        {food.foodSubgroup !== null && (
-                          <span
-                            title={food.foodSubgroup}
-                            className="mt-1 w-fit max-w-full truncate rounded-full border border-white/10 bg-white/5 px-2 text-[10px] text-white/50"
-                          >
-                            {food.foodSubgroup}
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell>{formatFoodNutrient(food, food.calories, 'kcal')}</TableCell>
-                      <TableCell>{formatFoodNutrient(food, food.protein)}</TableCell>
-                      <TableCell>{formatFoodNutrient(food, food.totalFat)}</TableCell>
-                      <TableCell>{formatFoodNutrient(food, food.carbohydrates)}</TableCell>
-                      {tableNutrients.map((nutrient) => (
-                        <TableCell key={nutrient.field}>
-                          {formatNutritionAmount(
-                            foodNutrientAmount(
-                              food,
-                              food.additionalNutrients[nutrient.field] ?? null,
-                            ),
-                            nutrient.unit,
-                          )}
+                <Collection items={table.getRowModel().rows}>
+                  {(row) => (
+                    <TableRow id={row.id} textValue={row.original.name}>
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </TableCell>
                       ))}
                     </TableRow>

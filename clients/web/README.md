@@ -46,7 +46,10 @@ Selecting one facet never silently removes another. Incompatible combinations sh
 Selections are serialized in the URL and restored on reload; old single-selection URLs still work.
 Changes replace the current URL entry, preserve focus, and reset table pagination. The table loads
 50 rows at a time near the bottom. Brand and restaurant pickers load 30 items per page; the small
-food-group taxonomy fits in one page. React Aria virtualizes all three pickers and the table,
+food-group taxonomy fits in one page. TanStack Table owns the food table's column definitions,
+sizes, row model, stable row IDs, and cell rendering. Filtering and pagination stay server-side;
+the table never filters or paginates just the loaded subset. React Aria provides the accessible
+table surface and virtualizes all three pickers and the table,
 including horizontally virtualized macro/micronutrient columns. Food, Source, and Group are pinned
 when the table viewport is at least 900px wide; smaller viewports scroll the entire table so all
 nutrients remain reachable. Source, type, group, and subgroup labels use compact tags. Missing
