@@ -269,6 +269,14 @@ integration('feature repositories with PostgreSQL', () => {
         expect(new Set([...firstPage, ...secondPage].map((food) => food.food_id)).size).toBe(4)
         const fruit = yield* catalog.search({ foodGroupId: '1', limit: 10, query: 'apple' })
         const browse = yield* catalog.search({ limit: 50, query: '' })
+        expect(browse.find((food) => food.food_id === '1')?.additional_nutrients).toMatchObject({
+          fiber: 2.4,
+          sodium: 1,
+        })
+        expect(
+          browse.find((food) => food.food_id === '1')?.additional_nutrients.vitamin_d_calciferol ??
+            null,
+        ).toBeNull()
         const browseFirst = yield* catalog.search({ limit: 2, query: '' })
         const browseSecond = yield* catalog.search({ limit: 2, offset: 2, query: '' })
         expect([...browseFirst, ...browseSecond]).toEqual(browse.slice(0, 4))

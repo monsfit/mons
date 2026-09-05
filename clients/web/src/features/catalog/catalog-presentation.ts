@@ -24,10 +24,14 @@ export function foodPortionLabel(food: CatalogFood): string {
 }
 
 export function formatFoodNutrient(food: CatalogFood, value: number | null, unit = 'g'): string {
-  if (value === null) return formatNutrient(null, unit)
+  return formatNutrient(foodNutrientAmount(food, value), unit)
+}
+
+export function foodNutrientAmount(food: CatalogFood, value: number | null): number | null {
+  if (value === null) return null
   const portion = food.defaultPortion
   if (portion === null || portion.unit !== food.nutrientBasis.unit) {
-    return formatNutrient(value, unit)
+    return value
   }
-  return formatNutrient(value * (portion.amount / food.nutrientBasis.amount), unit)
+  return value * (portion.amount / food.nutrientBasis.amount)
 }

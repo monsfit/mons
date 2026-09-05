@@ -1,9 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
 import type { CatalogFood } from './catalog-functions'
-import { foodAttribution, foodPortionLabel, formatFoodNutrient } from './catalog-presentation'
+import {
+  foodAttribution,
+  foodPortionLabel,
+  formatFoodNutrient,
+  foodNutrientAmount,
+} from './catalog-presentation'
+import { formatNutritionAmount } from './nutrition'
 
 const food: CatalogFood = {
+  additionalNutrients: {},
   brand: "Annie's Homegrown",
   brandId: '1',
   calories: 400,
@@ -26,6 +33,11 @@ const food: CatalogFood = {
 }
 
 describe('catalog food presentation', () => {
+  it('preserves small micronutrients and missing values when scaling a portion', () => {
+    expect(formatNutritionAmount(foodNutrientAmount(food, 0.004), 'mg')).toBe('0.0012 mg')
+    expect(formatNutritionAmount(foodNutrientAmount(food, 0), 'mg')).toBe('0 mg')
+    expect(formatNutritionAmount(foodNutrientAmount(food, null), 'mg')).toBe('—')
+  })
   it('presents a clean brand attribution and portion', () => {
     expect(foodAttribution(food)).toBe("by Annie's Homegrown")
     expect(foodPortionLabel(food)).toBe('6 cookies, 30 g')

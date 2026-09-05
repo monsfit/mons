@@ -40,6 +40,7 @@ const decodeCatalogQuery = Schema.decodeUnknownSync(catalogQuerySchema)
 const decodeCatalogPageQuery = Schema.decodeUnknownSync(catalogPageQuerySchema)
 
 export interface CatalogFood {
+  readonly additionalNutrients: FoodSearchRecord['additional_nutrients']
   readonly brand: string | null
   readonly brandId: string | null
   readonly calories: number | null
@@ -62,6 +63,7 @@ export interface CatalogFood {
 }
 
 const toCatalogFood = (food: FoodSearchRecord): CatalogFood => ({
+  additionalNutrients: food.additional_nutrients,
   brand: food.brand,
   brandId: food.brand_id,
   calories: food.calories,

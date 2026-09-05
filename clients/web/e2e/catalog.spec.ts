@@ -1,5 +1,48 @@
 import { expect, test } from '@playwright/test'
 
+test('pins food, source and group while scrolling nutrients, with a narrow-screen fallback', async ({
+  page,
+}) => {
+  await page.goto('/foods?q=chicken')
+  await page.waitForLoadState('networkidle')
+  const table = page.getByRole('grid')
+  const firstRow = page.locator('[data-slot=table-row]').first()
+  const positions = () =>
+    firstRow
+      .locator('[data-slot=table-cell]')
+      .evaluateAll((cells) => cells.slice(0, 3).map((cell) => cell.getBoundingClientRect().x))
+  const initial = await positions()
+  await table.evaluate((element) => {
+    element.scrollLeft = element.scrollWidth
+  })
+  await expect(
+    page.getByRole('columnheader', { name: 'Vitamin K (mcg)', exact: true }),
+  ).toBeVisible()
+  expect(await positions()).toEqual(initial)
+  const heads = await page
+    .locator('[data-slot=table-head]')
+    .evaluateAll((cells) => cells.slice(0, 3).map((cell) => cell.getBoundingClientRect().x))
+  expect(heads).toEqual(initial)
+  await table.evaluate((element) => {
+    element.scrollTop = element.scrollHeight
+  })
+  await expect(table).toHaveAttribute('data-loaded-count', '100')
+  expect(await firstRow.locator('[data-slot=table-cell]').count()).toBeLessThan(27)
+  await page.setViewportSize({ width: 600, height: 900 })
+  await table.evaluate((element) => {
+    element.scrollLeft = element.scrollWidth
+  })
+  await expect
+    .poll(
+      async () =>
+        (await page.getByRole('columnheader', { name: 'Food', exact: true }).boundingBox())?.x,
+    )
+    .toBeLessThan(0)
+  await expect(
+    page.getByRole('columnheader', { name: 'Vitamin K (mcg)', exact: true }),
+  ).toBeVisible()
+})
+
 test('browses by default, combines selections, and removes chips independently', async ({
   page,
 }) => {

@@ -25,6 +25,7 @@ const catalog: CatalogReaderService = {
     Effect.succeed([
       {
         brand: 'Example',
+        additional_nutrients: {},
         brand_id: '1',
         calories: 120,
         carbohydrates_total: 18,
