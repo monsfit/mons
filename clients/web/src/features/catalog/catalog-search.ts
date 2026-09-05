@@ -25,7 +25,7 @@ const readId = (value: unknown) =>
 
 export function parseCatalogSearch(search: Record<string, unknown>): CatalogSearch {
   const candidateKind = readText(search.kind, 'all')
-  const candidateQuery = readText(search.q, 'chicken')
+  const candidateQuery = readText(search.q, search.q === undefined ? 'chicken' : '')
   const kind =
     candidateKind === 'raw' || candidateKind === 'branded' || candidateKind === 'restaurant'
       ? candidateKind
@@ -37,7 +37,7 @@ export function parseCatalogSearch(search: Record<string, unknown>): CatalogSear
     brandQuery: readText(search.brandQuery, '', 160),
     foodGroupId: readId(search.foodGroupId),
     kind,
-    q: candidateQuery.length >= 2 ? candidateQuery : 'chicken',
+    q: candidateQuery.length >= 2 ? candidateQuery : '',
     restaurantId: readId(search.restaurantId),
     restaurantName: readText(search.restaurantName, '', 160),
     restaurantQuery: readText(search.restaurantQuery, '', 160),
