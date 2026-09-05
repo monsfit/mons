@@ -58,7 +58,7 @@ export function toggleFilter(
 ): ReadonlyArray<CatalogFilter> {
   return items.some((candidate) => candidate.id === item.id)
     ? items.filter((candidate) => candidate.id !== item.id)
-    : [...items, item].slice(0, 50)
+    : [...items, { id: item.id, name: item.name }].slice(0, 50)
 }
 export function toCatalogQuery(search: CatalogSearch) {
   return {

@@ -47,6 +47,7 @@ test('browses by default, combines selections, and removes chips independently',
   await page.getByRole('button', { name: 'Clear filters', exact: true }).click()
   await expect(page.getByRole('region', { name: 'Active filters' })).toContainText('None')
   await expect(table).toHaveAttribute('data-loaded-count', '50')
+  await page.getByRole('button', { name: 'All', exact: true }).click()
   await table.evaluate((element) => {
     element.scrollTop = element.scrollHeight
   })

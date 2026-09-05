@@ -45,6 +45,8 @@ export function FoodExplorerPage({
     isPending,
   )
   const updateSearch = (next: CatalogSearchUpdate) => {
+    const candidate = typeof next === 'function' ? next(search) : { ...search, ...next }
+    if (!isPending && JSON.stringify(candidate) === JSON.stringify(search)) return
     invalidate()
     navigate(next)
   }
