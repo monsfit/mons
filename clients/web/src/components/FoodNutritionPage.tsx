@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { datasetKindLabel } from '~/features/catalog/catalog-search'
 import { Link } from '@tanstack/react-router'
 import type { FoodRecord } from '@mons/database'
 import { ArrowLeft, Flame } from 'lucide-react'
@@ -79,7 +80,7 @@ export function FoodNutritionPage({ food }: Readonly<{ food: FoodRecord }>) {
         <div className="min-w-0">
           <div className="mb-5 flex flex-wrap items-center gap-2 text-xs text-white/60">
             <span className="rounded-full border border-white/15 px-3 py-1">
-              {food.dataset_kind}
+              {datasetKindLabel[food.dataset_kind]}
             </span>
             <span>
               {food.food_group}

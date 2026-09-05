@@ -1,4 +1,5 @@
 import type { ColumnDef } from '@tanstack/react-table'
+import { datasetKindLabel } from './catalog-search'
 import { Link } from '@tanstack/react-router'
 import { Flame } from 'lucide-react'
 import type { CatalogFood } from './catalog-functions'
@@ -46,7 +47,7 @@ export const catalogColumns: ColumnDef<CatalogFood>[] = [
       <>
         <CatalogSourceBadge source={food.source} />
         <span className="mt-1 w-fit rounded-full border border-white/10 bg-white/5 px-2 text-[10px] text-white/50">
-          {food.datasetKind}
+          {datasetKindLabel[food.datasetKind]}
         </span>
       </>
     ),

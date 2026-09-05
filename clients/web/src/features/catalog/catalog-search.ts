@@ -1,4 +1,9 @@
 export type CatalogDatasetKind = 'raw' | 'branded' | 'restaurant'
+export const datasetKindLabel: Record<CatalogDatasetKind, string> = {
+  raw: 'Raw Ingredient',
+  branded: 'Branded',
+  restaurant: 'Restaurant',
+}
 export interface CatalogFilter {
   readonly id: string
   readonly name: string

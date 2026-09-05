@@ -1,5 +1,6 @@
 import { useState, type RefObject } from 'react'
 import { Dialog } from 'react-aria-components'
+import { datasetKindLabel } from '~/features/catalog/catalog-search'
 import { Button } from './ui/button'
 import { Popover, PopoverTitle } from './ui/popover'
 import { CatalogSearchField } from './CatalogSearchField'
@@ -160,8 +161,7 @@ export function CatalogColumnFilter({
                       }))
                     }
                   >
-                    {kind[0]?.toUpperCase()}
-                    {kind.slice(1)}
+                    {datasetKindLabel[kind]}
                   </Button>
                 ))}
               </div>
