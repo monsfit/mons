@@ -10,6 +10,17 @@ afterEach(() => {
 })
 
 describe('CatalogSearchField', () => {
+  it('cancels pending text and commits an empty food search', () => {
+    const commit = vi.fn<(value: string) => void>()
+    const view = render(
+      <CatalogSearchField primary label="Foods" value="burger" onCommit={commit} />,
+    )
+    fireEvent.change(view.getByRole('textbox'), { target: { value: 'salmon' } })
+    act(() => vi.advanceTimersByTime(200))
+    fireEvent.change(view.getByRole('textbox'), { target: { value: '' } })
+    act(() => vi.advanceTimersByTime(300))
+    expect(commit).toHaveBeenCalledExactlyOnceWith('')
+  })
   it('commits only the latest text after 300 ms and flushes immediately on submit', () => {
     const commit = vi.fn<(value: string) => void>()
     const view = render(
