@@ -9,7 +9,7 @@ export function foodAttribution(food: CatalogFood): string | null {
 
 export function foodPortionLabel(food: CatalogFood): string {
   const portion = food.defaultPortion
-  if (portion === null) {
+  if (portion === null || portion.unit !== food.nutrientBasis.unit) {
     return `${food.nutrientBasis.amount.toLocaleString('en-US')} ${food.nutrientBasis.unit}`
   }
   if (portion.unit === 'serving') return portion.name

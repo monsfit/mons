@@ -29,7 +29,7 @@ export function FoodDetailsSheet({ food }: Readonly<{ food: CatalogFood }>) {
     <SheetTrigger>
       <Button
         variant="ghost"
-        className="h-auto w-full min-w-0 justify-start overflow-hidden px-0 py-1 text-left hover:bg-transparent"
+        className="h-auto min-w-0 flex-1 shrink justify-start overflow-hidden px-0 py-1 text-left hover:bg-transparent"
       >
         <span className="min-w-0">
           <span className="block truncate font-medium text-foreground">{food.name}</span>

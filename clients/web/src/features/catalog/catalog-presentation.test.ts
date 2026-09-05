@@ -36,6 +36,15 @@ describe('catalog food presentation', () => {
     expect(formatFoodNutrient(food, food.protein)).toBe('1.5 g')
   })
 
+  it('labels the nutrient basis when a portion cannot be converted without density', () => {
+    const drink: CatalogFood = {
+      ...food,
+      defaultPortion: { amount: 250, name: '1 glass', unit: 'ml' },
+    }
+    expect(foodPortionLabel(drink)).toBe('100 g')
+    expect(formatFoodNutrient(drink, drink.calories, 'kcal')).toBe('400 kcal')
+  })
+
   it('does not repeat a quantity already present in the portion name', () => {
     expect(
       foodPortionLabel({

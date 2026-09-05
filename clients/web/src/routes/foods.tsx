@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useRouterState } from '@tanstack/react-router'
 
 import { FoodExplorerPage } from '~/components/FoodExplorerPage'
 import { getCatalogWorkspace } from '~/features/catalog/catalog-functions'
@@ -14,31 +14,29 @@ export const Route = createFileRoute('/foods')({
   }),
   validateSearch: parseCatalogSearch,
   loaderDeps: ({ search }) => search,
-  loader: ({ deps }) => getCatalogWorkspace({ data: toCatalogQuery(deps) }),
-  pendingComponent: FoodExplorerPending,
+  loader: async ({ deps }) => ({
+    search: deps,
+    workspace: await getCatalogWorkspace({ data: toCatalogQuery(deps) }),
+  }),
 })
 
 function FoodsRoute() {
-  const search = Route.useSearch()
-  const workspace = Route.useLoaderData()
+  const { search, workspace } = Route.useLoaderData()
+  const isPending = useRouterState({ select: (state) => state.isLoading })
   const navigate = Route.useNavigate()
 
   return (
     <FoodExplorerPage
       search={search}
       workspace={workspace}
-      updateSearch={(next) => void navigate({ search: next })}
+      isPending={isPending}
+      updateSearch={(next) =>
+        void navigate({
+          search: (current) => ({ ...current, ...next }),
+          replace: true,
+          resetScroll: false,
+        })
+      }
     />
-  )
-}
-
-function FoodExplorerPending() {
-  return (
-    <div className="dark grid min-h-screen place-items-center bg-[#100e11] text-white">
-      <div className="flex items-center gap-3 text-sm text-white/55">
-        <span className="size-2 animate-pulse rounded-full bg-[#b9f35b]" />
-        Reading the catalog…
-      </div>
-    </div>
   )
 }

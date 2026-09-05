@@ -35,6 +35,18 @@ Search and filters are encoded in the URL. Food groups, brands, dataset counts, 
 the active catalog release are all read from the database; no catalog fixture is bundled into the
 web client.
 
+Food, brand, and restaurant searches update after 300 ms without typing; Enter submits immediately.
+Food searches need at least two characters. Shorter input keeps the previous results visible with a
+hint. Brand/restaurant text narrows the corresponding picker; selecting a result applies that filter.
+Changes replace the current URL entry, preserve focus, and reset table pagination. The table loads
+50 rows at a time near the bottom, with a manual load/retry button and an explicit end state.
+
+Run the browser interaction regression against a running local web server and populated local
+catalog with `pnpm --filter @mons/web test:e2e` (Google Chrome required). It checks debouncing,
+filter combinations, scroll loading, duplicate rows, sticky headers, and empty results. Unit tests
+cover delayed responses, input composition, request invalidation, and retries. No catalog reload is
+performed by these web tests. Database integration tests use isolated test schemas.
+
 ## Commands
 
 ```bash

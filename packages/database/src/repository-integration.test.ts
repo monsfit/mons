@@ -207,6 +207,30 @@ integration('feature repositories with PostgreSQL', () => {
       }),
     )
 
+    it.effect(
+      'ranks the full fallback set before paginating, independent of physical row order',
+      () =>
+        Effect.gen(function* () {
+          const sql = yield* SqlClient.SqlClient
+          const catalog = yield* CatalogReader
+          const foods = sql(`${schema}.foods`)
+          yield* sql`INSERT INTO ${foods}
+          (food_id, food_group_id, name, dataset_kind, calories, protein, carbohydrates_total,
+           total_fat, nutrient_basis_amount, nutrient_basis_unit, source_key, source_record_id)
+          SELECT id, 4, 'Fixture paginationneedle', 'raw', 100, 10, 5, 2, 100, 'g', 1, id::text
+          FROM generate_series(1000, 1249) AS series(id) ORDER BY series.id DESC`
+          const full = yield* catalog.search({ query: 'paginationneedle', limit: 300 })
+          const first = yield* catalog.search({ query: 'paginationneedle', limit: 10 })
+          const second = yield* catalog.search({ query: 'paginationneedle', limit: 10, offset: 10 })
+          expect(full).toHaveLength(250)
+          expect([...first, ...second].map((food) => food.food_id)).toEqual(
+            full.slice(0, 20).map((food) => food.food_id),
+          )
+          expect(first[0]?.food_id).toBe('1000')
+          yield* sql`DELETE FROM ${foods} WHERE food_id BETWEEN 1000 AND 1249`
+        }),
+    )
+
     it.effect('searches deterministically, validates data, and prioritizes USDA', () =>
       Effect.gen(function* () {
         const catalog = yield* CatalogReader

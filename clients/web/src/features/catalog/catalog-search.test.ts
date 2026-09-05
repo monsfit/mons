@@ -48,6 +48,15 @@ describe('catalog search presentation', () => {
     })
   })
 
+  it('rejects out-of-range identifiers without silently truncating them', () => {
+    for (const brandId of ['0', '-1', '01', '9223372036854775808', '123456789012345678901']) {
+      expect(parseCatalogSearch({ brandId }).brandId).toBe('all')
+    }
+    expect(parseCatalogSearch({ brandId: '9223372036854775807' }).brandId).toBe(
+      '9223372036854775807',
+    )
+  })
+
   it('formats catalog totals and nutrients for dense tables', () => {
     expect(formatCompactCount(2_785_392)).toBe('2.8M')
     expect(formatNutrient(0.45)).toBe('0.5 g')

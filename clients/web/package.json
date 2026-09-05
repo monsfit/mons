@@ -12,6 +12,7 @@
     "lint": "oxlint src vite.config.ts vitest.config.ts --deny-warnings",
     "preview": "vite preview",
     "test": "vitest run --config vitest.config.ts",
+    "test:e2e": "playwright test",
     "typecheck": "tsgo -p tsconfig.json",
     "types:check": "wrangler types src/worker-configuration.d.ts --include-runtime false --check",
     "types:generate": "wrangler types src/worker-configuration.d.ts --include-runtime false"
@@ -34,12 +35,15 @@
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.54.4",
     "@cloudflare/workers-types": "5.20260903.1",
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/vite": "^4.3.3",
+    "@testing-library/react": "^16.3.3",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@typescript/native-preview": "catalog:",
     "@vitejs/plugin-react": "catalog:",
+    "happy-dom": "^20.14.0",
     "oxlint": "catalog:",
     "tailwindcss": "^4.3.3",
     "vite": "catalog:",

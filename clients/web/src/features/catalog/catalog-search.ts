@@ -17,10 +17,11 @@ const readText = (value: unknown, fallback: string, maximumLength = 200) =>
     ? value.trim().slice(0, maximumLength)
     : fallback
 
-const readId = (value: unknown) => {
-  const candidate = readText(value, 'all', 19)
-  return candidate === 'all' || /^\d{1,19}$/.test(candidate) ? candidate : 'all'
-}
+export const isCatalogId = (value: string): boolean =>
+  /^[1-9]\d{0,18}$/.test(value) && BigInt(value) <= 9_223_372_036_854_775_807n
+
+const readId = (value: unknown) =>
+  typeof value === 'string' && isCatalogId(value.trim()) ? value.trim() : 'all'
 
 export function parseCatalogSearch(search: Record<string, unknown>): CatalogSearch {
   const candidateKind = readText(search.kind, 'all')

@@ -404,7 +404,6 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
     const search = Effect.fn('CatalogReader.search')(function* (options: FoodSearchOptions) {
       const offset = Math.max(options.offset ?? 0, 0)
       const targetLimit = offset + options.limit
-      const fallbackCandidateLimit = Math.max(targetLimit * 10, 100)
       const escapedPrefix = `${options.query
         .trim()
         .toLocaleLowerCase()
@@ -492,7 +491,6 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
                 AND (${options.foodGroupId ?? null}::bigint IS NULL OR f.food_group_id = ${options.foodGroupId ?? null})
                 AND (lower(brand.name) COLLATE "C") LIKE ${escapedPrefix} ESCAPE '!'
                 AND ${validFood}
-              LIMIT ${targetLimit}
             )
             UNION ALL
             (
@@ -505,7 +503,6 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
                 AND (${options.foodGroupId ?? null}::bigint IS NULL OR f.food_group_id = ${options.foodGroupId ?? null})
                 AND (lower(restaurant.name) COLLATE "C") LIKE ${escapedPrefix} ESCAPE '!'
                 AND ${validFood}
-              LIMIT ${targetLimit}
             )
           )
           SELECT ${selectedSearchColumns('f')}
@@ -548,7 +545,6 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
               AND (${options.foodGroupId ?? null}::bigint IS NULL OR f.food_group_id = ${options.foodGroupId ?? null})
               AND f.search_document @@ search_query.value
               AND ${validFood}
-            LIMIT ${fallbackCandidateLimit}
           )
           UNION
           (
@@ -562,7 +558,6 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
               AND (${options.foodGroupId ?? null}::bigint IS NULL OR f.food_group_id = ${options.foodGroupId ?? null})
               AND to_tsvector('simple', brand.name) @@ search_query.value
               AND ${validFood}
-            LIMIT ${fallbackCandidateLimit}
           )
           UNION
           (
@@ -576,7 +571,6 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
               AND (${options.foodGroupId ?? null}::bigint IS NULL OR f.food_group_id = ${options.foodGroupId ?? null})
               AND to_tsvector('simple', restaurant.name) @@ search_query.value
               AND ${validFood}
-            LIMIT ${fallbackCandidateLimit}
           )
         )
         SELECT ${selectedSearchColumns('f')}
