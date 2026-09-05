@@ -40,11 +40,24 @@ Food searches need at least two characters. Clearing the input clears the query 
 preserving filters; a single character waits for more input. Brand/restaurant text narrows the
 corresponding picker; selecting a result applies that filter.
 Changes replace the current URL entry, preserve focus, and reset table pagination. The table loads
-50 rows at a time near the bottom, with a manual load/retry button and an explicit end state.
+50 rows at a time near the bottom. Brand and restaurant pickers load 30 items per page; the small
+food-group taxonomy fits in one page. React Aria virtualizes all three pickers and the table,
+including keyboard-focused items. Scrolling loads subsequent pages, failed requests offer retry,
+and changing a search resets its collection. Counts on facets describe the whole catalog, not the
+current search results.
+
+Select a food to open `/food/:kind/:foodId`. This read-only page shows the full reported nutrient
+record, a portion selector, nutrition facts, and grouped nutrient breakdowns. Only portions with
+the same unit as the source basis can be used for scaling; volume-to-mass conversions are not
+assumed. Missing nutrients remain missing, while reported zeros stay zero. Daily Value comparisons
+use the [FDA reference](https://www.fda.gov/food/nutrition-facts-label/daily-value-nutrition-and-supplement-facts-labels)
+only when the nutrient form and unit are comparable. Protein quality, calorie-burn estimates,
+descriptions, and similar-food recommendations are not inferred from missing source data.
 
 Run the browser interaction regression against a running local web server and populated local
 catalog with `pnpm --filter @mons/web test:e2e` (Google Chrome required). It checks debouncing,
-filter combinations, scroll loading, duplicate rows, sticky headers, and empty results. Unit tests
+filter combinations, virtualized scroll loading, retries, duplicate rows, sticky headers, nutrition
+navigation, portion changes, and empty results. Unit tests
 cover delayed responses, input composition, request invalidation, and retries. No catalog reload is
 performed by these web tests. Database integration tests use isolated test schemas.
 

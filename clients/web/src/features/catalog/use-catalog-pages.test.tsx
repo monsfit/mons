@@ -14,6 +14,8 @@ afterEach(() => {
 
 const workspace: Awaited<ReturnType<typeof getCatalogWorkspace>> = {
   brands: [],
+  brandNextOffset: null,
+  restaurantNextOffset: null,
   foods: [],
   foodGroups: [],
   restaurants: [],

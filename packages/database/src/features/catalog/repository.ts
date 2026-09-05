@@ -106,6 +106,7 @@ export interface FoodSearchOptions {
 
 export interface BrandListOptions {
   readonly limit: number
+  readonly offset?: number
   readonly query?: string
 }
 
@@ -375,6 +376,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
         WHERE (lower(b.name) COLLATE "C") LIKE ${prefix} ESCAPE '!'
         ORDER BY lower(b.name) COLLATE "C", b.brand_id
         LIMIT ${options.limit}
+        OFFSET ${Math.max(0, options.offset ?? 0)}
       `
       return yield* decodeBrandRows(rows)
     })
@@ -397,6 +399,7 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
         WHERE (lower(r.name) COLLATE "C") LIKE ${prefix} ESCAPE '!'
         ORDER BY lower(r.name) COLLATE "C", r.restaurant_id
         LIMIT ${options.limit}
+        OFFSET ${Math.max(0, options.offset ?? 0)}
       `
       return yield* decodeRestaurantRows(rows)
     })

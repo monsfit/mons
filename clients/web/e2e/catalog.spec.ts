@@ -1,5 +1,70 @@
 import { expect, test } from '@playwright/test'
 
+test('virtualizes and paginates both facet lists independently, then resets on search', async ({
+  page,
+}) => {
+  await page.goto('/foods?q=chicken')
+  await page.waitForLoadState('networkidle')
+  for (const name of ['Brands', 'Restaurants']) {
+    const list = page.getByRole('listbox', { name, exact: true })
+    await expect(list).toHaveAttribute('data-loaded-count', '30')
+    const first = await list.getByRole('option').first().textContent()
+    await list.evaluate((element) => {
+      element.scrollTop = element.scrollHeight
+    })
+    await expect(list).toHaveAttribute('data-loaded-count', '60')
+    expect(await list.getByRole('option').count()).toBeLessThan(15)
+    expect(await list.getByRole('option').first().textContent()).not.toBe(first)
+  }
+  const brands = page.getByRole('listbox', { name: 'Brands', exact: true })
+  await page.getByRole('textbox', { name: 'Search brands', exact: true }).fill('tyson')
+  await expect(brands.getByRole('option').first()).toContainText(/Tyson/i)
+  await expect.poll(() => brands.evaluate((element) => element.scrollTop)).toBe(0)
+  await brands.focus()
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('Enter')
+  await expect(page).toHaveURL(/kind=branded/)
+})
+
+test('offers retry when scrolling a facet fails', async ({ page }) => {
+  await page.goto('/foods?q=chicken')
+  await page.waitForLoadState('networkidle')
+  await page.route(
+    (url) => url.pathname.includes('_server'),
+    (route) => route.abort(),
+    { times: 1 },
+  )
+  const brands = page.getByRole('listbox', { name: 'Brands', exact: true })
+  await brands.evaluate((element) => {
+    element.scrollTop = element.scrollHeight
+  })
+  const retry = page.getByRole('button', { name: 'Couldn’t load more. Retry', exact: true })
+  await expect(retry).toBeVisible()
+  await retry.click()
+  await expect(brands).toHaveAttribute('data-loaded-count', '60')
+})
+
+test('opens a full nutrition page and scales reported nutrients with the portion', async ({
+  page,
+}) => {
+  await page.goto('/foods?q=chicken')
+  const link = page.getByRole('link', { name: /Chicken, breast, boneless, skinless, raw/ }).first()
+  await link.click()
+  await expect(page.getByRole('heading', { name: 'Nutrition Facts', exact: true })).toBeVisible({
+    timeout: 15000,
+  })
+  const facts = page.getByRole('region', { name: 'Nutrition facts' })
+  const initial = await facts.innerText()
+  await page.getByRole('combobox', { name: 'Nutrition amount' }).selectOption('basis')
+  await expect(facts).toContainText('100 g (source basis)')
+  expect(await facts.innerText()).not.toBe(initial)
+  await expect(page.getByRole('heading', { name: 'Nutrient breakdown', exact: true })).toBeVisible()
+  await page.reload()
+  await expect(page.getByRole('heading', { name: 'Nutrition Facts', exact: true })).toBeVisible()
+  await page.goto('/food/raw/9223372036854775807')
+  await expect(page.getByRole('heading', { name: 'Food not found' })).toBeVisible()
+})
+
 test('clears the query and results without losing filters, including after reload', async ({
   page,
 }) => {
@@ -60,7 +125,7 @@ test('keeps simultaneous food and brand edits when their debounces overlap', asy
   await expect(
     page
       .locator('aside')
-      .getByRole('button', { name: /^Tyson\s/ })
+      .getByRole('option', { name: /^Tyson/ })
       .first(),
   ).toBeVisible()
   await expect(page.getByRole('textbox', { name: 'Search brands', exact: true })).toHaveValue(
@@ -109,13 +174,15 @@ test('debounces food and facet searches, filters results, and loads more on scro
   )
   await page.waitForLoadState('networkidle')
   const rows = page.locator('[data-slot=table-body] [data-slot=table-row]')
-  await expect(rows).toHaveCount(50)
-  await expect(rows.first()).toContainText('Raw')
+  await expect(page.getByRole('grid')).toHaveAttribute('data-loaded-count', '50')
+  await expect.poll(() => rows.count()).toBeGreaterThan(0)
+  expect(await rows.count()).toBeLessThan(30)
+  await expect(rows.first()).toContainText('raw')
   expect(
     await rows.evaluateAll((elements) =>
       elements.every((row) => {
         const cell = row.querySelector('[data-slot=table-cell]')
-        const button = cell?.querySelector('button')
+        const button = cell?.querySelector('a')
         return (
           cell !== null &&
           button !== null &&
@@ -128,15 +195,16 @@ test('debounces food and facet searches, filters results, and loads more on scro
   const initialIds = await rows.evaluateAll((elements) =>
     elements.map((element) => element.getAttribute('data-key')),
   )
-  const scroll = page.getByLabel('Scrollable food results', { exact: true })
+  const scroll = page.getByRole('grid', { name: 'Food catalog results' })
   await scroll.evaluate((element) => {
     element.scrollTop = element.scrollHeight
   })
-  await expect.poll(() => rows.count()).toBeGreaterThan(50)
+  await expect(scroll).toHaveAttribute('data-loaded-count', '100')
+  expect(await rows.count()).toBeLessThan(30)
   const ids = await rows.evaluateAll((elements) =>
     elements.map((element) => element.getAttribute('data-key')),
   )
-  expect(ids.slice(0, 50)).toEqual(initialIds)
+  expect(ids).not.toEqual(initialIds)
   expect(new Set(ids).size).toBe(ids.length)
   const header = page.locator('[data-slot=table-header]')
   const headerBox = await header.boundingBox()
@@ -152,14 +220,16 @@ test('debounces food and facet searches, filters results, and loads more on scro
     'true',
   )
   await page.waitForLoadState('networkidle')
-  await expect(rows).toHaveCount(50)
+  await expect(page.getByRole('grid')).toHaveAttribute('data-loaded-count', '50')
+  await expect.poll(() => rows.count()).toBeGreaterThan(0)
+  expect(await rows.count()).toBeLessThan(30)
   await expect.poll(() => scroll.evaluate((element) => element.scrollTop)).toBe(0)
   const brands = page.getByRole('textbox', { name: 'Search brands', exact: true })
   await brands.fill('tyson')
   await expect(page).toHaveURL(/brandQuery=tyson/)
   const tyson = page
     .locator('aside')
-    .getByRole('button', { name: /^Tyson\s/ })
+    .getByRole('option', { name: /^Tyson/ })
     .first()
   await tyson.click()
   await expect(page).toHaveURL(/kind=branded/)
@@ -170,7 +240,7 @@ test('debounces food and facet searches, filters results, and loads more on scro
   await expect(page).toHaveURL(/restaurantQuery=applebee/)
   await page
     .locator('aside')
-    .getByRole('button', { name: /Applebee/ })
+    .getByRole('option', { name: /Applebee/ })
     .click()
   await expect(page).toHaveURL(/kind=restaurant/)
   await expect(page).toHaveURL(/brandId=all/)
@@ -178,6 +248,6 @@ test('debounces food and facet searches, filters results, and loads more on scro
   await page.getByRole('button', { name: 'Clear filters', exact: true }).click()
   await expect(page).toHaveURL(/kind=all/)
   await food.fill('zzzznomatchingfoodzzzz')
-  await expect(page.getByText('No matching foods', { exact: true })).toBeVisible()
+  await expect(page.getByText('No matching foods.', { exact: false })).toBeVisible()
   expect(errors).toEqual([])
 })
