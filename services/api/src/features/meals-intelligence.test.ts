@@ -20,6 +20,7 @@ const catalog: CatalogReaderService = {
   findByGtin: () => Effect.succeed(undefined),
   listBrands: () => Effect.succeed([]),
   listFoodGroups: () => Effect.succeed([]),
+  listFilterFacets: () => Effect.succeed([]),
   listRestaurants: () => Effect.succeed([]),
   search: () =>
     Effect.succeed([

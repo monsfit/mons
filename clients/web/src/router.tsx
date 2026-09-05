@@ -3,7 +3,10 @@ import { createRouter } from '@tanstack/react-router'
 import { routeTree } from './routeTree.gen'
 
 const parseValue = (key: string, value: string): unknown => {
-  if (!['brands', 'groups', 'restaurants', 'kinds'].includes(key) || !value.startsWith('['))
+  if (
+    !['brands', 'groups', 'restaurants', 'kinds', 'sources', 'subgroups'].includes(key) ||
+    !value.startsWith('[')
+  )
     return value
   try {
     const decoded: unknown = JSON.parse(value)

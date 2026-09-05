@@ -32,6 +32,8 @@ describe('catalog search presentation', () => {
     expect(parseCatalogSearch({})).toEqual({
       brands: [],
       brandQuery: '',
+      sources: [],
+      subgroups: [],
       groups: [],
       kinds: [],
       q: '',
@@ -60,6 +62,8 @@ describe('catalog search presentation', () => {
     })
     expect(toCatalogQuery(search)).toEqual({
       brandIds: ['12'],
+      sourceKeys: [],
+      foodSubgroupIds: [],
       foodGroupIds: [],
       restaurantIds: [],
       kinds: ['branded'],

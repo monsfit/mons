@@ -269,6 +269,22 @@ integration('feature repositories with PostgreSQL', () => {
         expect(new Set([...firstPage, ...secondPage].map((food) => food.food_id)).size).toBe(4)
         const fruit = yield* catalog.search({ foodGroupId: '1', limit: 10, query: 'apple' })
         const browse = yield* catalog.search({ limit: 50, query: '' })
+        expect(yield* catalog.listFilterFacets('sources')).toContainEqual({
+          id: '30000',
+          name: 'integration_test',
+          foodCount: 3,
+        })
+        expect(yield* catalog.listFilterFacets('subgroups')).toEqual([
+          { id: '1', name: 'Sandwiches & Wraps', foodCount: 1 },
+        ])
+        expect(yield* catalog.search({ limit: 50, query: '', foodSubgroupIds: ['1'] })).toEqual(
+          browse.filter((food) => food.food_subgroup_id === '1'),
+        )
+        expect(yield* catalog.search({ limit: 50, query: '', sourceKeys: ['30000'] })).toEqual(
+          browse.filter((food) => food.source === 'integration_test'),
+        )
+        expect(yield* catalog.search({ limit: 50, query: '', sourceKeys: ['999'] })).toEqual([])
+        expect(yield* catalog.search({ limit: 50, query: '', foodSubgroupIds: ['99'] })).toEqual([])
         expect(browse.find((food) => food.food_id === '1')?.additional_nutrients).toMatchObject({
           fiber: 2.4,
           sodium: 1,

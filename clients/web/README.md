@@ -40,7 +40,10 @@ Food searches need at least two characters. An empty input browses the first 50 
 food-ID order, with the current filters applied and more pages available on scroll; a single
 character waits for more input. Brand/restaurant text narrows the
 corresponding picker; selecting a result applies that filter.
-Types, groups, brands, and restaurants accept multiple selections: values within a facet are ORed,
+Column-header shadcn popovers replace the sidebar: Food contains brands/restaurants, Source
+contains dataset types/data sources, and Group contains food groups/subtypes. Selections and count
+badges update optimistically while results load; popovers remain open for multi-selection.
+Types, sources, groups, subtypes, brands, and restaurants accept multiple selections: values within a facet are ORed,
 and different facets are ANDed. The table toolbar shows removable chips and a clear-all action.
 Selecting one facet never silently removes another. Incompatible combinations show no matches.
 Selections are serialized in the URL and restored on reload; old single-selection URLs still work.
@@ -49,7 +52,7 @@ Changes replace the current URL entry, preserve focus, and reset table paginatio
 food-group taxonomy fits in one page. TanStack Table owns the food table's column definitions,
 sizes, row model, stable row IDs, and cell rendering. Filtering and pagination stay server-side;
 the table never filters or paginates just the loaded subset. React Aria provides the accessible
-table surface and virtualizes all three pickers and the table,
+table surface and virtualizes all pickers and the table,
 including horizontally virtualized macro/micronutrient columns. Food, Source, and Group are pinned
 when the table viewport is at least 900px wide; smaller viewports scroll the entire table so all
 nutrients remain reachable. Source, type, group, and subgroup labels use compact tags. Missing
