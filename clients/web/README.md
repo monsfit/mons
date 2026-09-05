@@ -47,7 +47,11 @@ Selections are serialized in the URL and restored on reload; old single-selectio
 Changes replace the current URL entry, preserve focus, and reset table pagination. The table loads
 50 rows at a time near the bottom. Brand and restaurant pickers load 30 items per page; the small
 food-group taxonomy fits in one page. React Aria virtualizes all three pickers and the table,
-including keyboard-focused items. Scrolling loads subsequent pages, failed requests offer retry,
+including horizontally virtualized macro/micronutrient columns. Food, Source, and Group are pinned
+when the table viewport is at least 900px wide; smaller viewports scroll the entire table so all
+nutrients remain reachable. Source, type, group, and subgroup labels use compact tags. Missing
+nutrients display as a dash, and micronutrients retain small nonzero values after portion scaling.
+The virtualizer retains keyboard-focused items. Scrolling loads subsequent pages, failed requests offer retry,
 and changing a search resets its collection. Counts on facets describe the whole catalog, not the
 current search results.
 

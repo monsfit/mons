@@ -47,6 +47,7 @@ const foodRecordSchema = Schema.Struct({
 })
 
 const foodSearchRecordSchema = Schema.Struct({
+  additional_nutrients: Schema.Record(Schema.String, Schema.NullOr(Schema.Number)),
   brand: Schema.NullOr(Schema.String),
   brand_id: Schema.NullOr(Schema.String),
   calories: Schema.NullOr(Schema.Number),
@@ -256,6 +257,11 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
 
     const selectedSearchColumns = (tableAlias: string) =>
       sql.literal(`
+      coalesce((
+        SELECT jsonb_object_agg(n.key, n.value)
+        FROM jsonb_each(to_jsonb(${tableAlias})) AS n
+        WHERE n.key IN ('fiber', 'total_sugars', 'added_sugars', 'saturated_fat', 'trans_fat', 'dietary_cholesterol', 'sodium', 'potassium', 'calcium', 'iron', 'magnesium', 'zinc', 'vitamin_c_ascorbic_acid', 'vitamin_d_calciferol', 'vitamin_b6', 'vitamin_b12_cobalamin', 'folate_dfe', 'vitamin_a_retinol', 'vitamin_e_tocopherol', 'vitamin_k_phylloquinone')
+      ), '{}'::jsonb) AS additional_nutrients,
       b.name AS brand,
       ${tableAlias}.brand_id,
       ${tableAlias}.calories,

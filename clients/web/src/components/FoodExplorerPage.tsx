@@ -1,6 +1,10 @@
 import { Link } from '@tanstack/react-router'
 import { Collection, Table, TableLoadMoreItem } from 'react-aria-components'
-import { TableLayout, Virtualizer } from 'react-aria-components/Virtualizer'
+import { Virtualizer } from 'react-aria-components/Virtualizer'
+import { CatalogTableLayout } from '~/features/catalog/catalog-table-layout'
+import { tableNutrients } from '~/features/catalog/table-nutrients'
+import { formatNutritionAmount } from '~/features/catalog/nutrition'
+import { foodNutrientAmount } from '~/features/catalog/catalog-presentation'
 import { Flame } from 'lucide-react'
 import type {
   CatalogSearch,
@@ -256,7 +260,7 @@ export function FoodExplorerPage({
             <span className="ml-auto text-white/45">Per portion · basis when unavailable</span>
           </div>
           <Virtualizer
-            layout={TableLayout}
+            layout={CatalogTableLayout}
             layoutOptions={{ rowHeight: 76, headingHeight: 38, loaderHeight: 48 }}
           >
             <Table
@@ -265,6 +269,18 @@ export function FoodExplorerPage({
               aria-busy={isPending}
               className="catalog-table"
               data-loaded-count={foods.length}
+              onScroll={({ currentTarget }) => {
+                // The load sentinel can be outside the horizontal viewport.
+                if (
+                  !isPending &&
+                  status === 'idle' &&
+                  currentTarget.scrollHeight -
+                    currentTarget.scrollTop -
+                    currentTarget.clientHeight <
+                    240
+                )
+                  void loadMore()
+              }}
             >
               <TableHeader>
                 <TableHead id="food" isRowHeader width={370}>
@@ -288,6 +304,11 @@ export function FoodExplorerPage({
                 <TableHead id="carbs" width={90}>
                   Carbs
                 </TableHead>
+                {tableNutrients.map((nutrient) => (
+                  <TableHead key={nutrient.field} id={nutrient.field} width={125}>
+                    {nutrient.label} ({nutrient.unit})
+                  </TableHead>
+                ))}
               </TableHeader>
               <TableBody
                 renderEmptyState={() => (
@@ -326,20 +347,41 @@ export function FoodExplorerPage({
                       </TableCell>
                       <TableCell>
                         <CatalogSourceBadge source={food.source} />
-                        <span className="mt-1 block text-[10px] text-white/40">
+                        <span className="mt-1 w-fit rounded-full border border-white/10 bg-white/5 px-2 text-[10px] text-white/50">
                           {food.datasetKind}
                         </span>
                       </TableCell>
                       <TableCell>
-                        <span className="block truncate text-xs">{food.foodGroup}</span>
-                        <span className="block truncate text-[10px] text-white/40">
-                          {food.foodSubgroup}
+                        <span
+                          title={food.foodGroup}
+                          className="w-fit max-w-full truncate rounded-full border border-violet-300/20 bg-violet-300/5 px-2 py-1 text-[10px] text-violet-100/80"
+                        >
+                          {food.foodGroup}
                         </span>
+                        {food.foodSubgroup !== null && (
+                          <span
+                            title={food.foodSubgroup}
+                            className="mt-1 w-fit max-w-full truncate rounded-full border border-white/10 bg-white/5 px-2 text-[10px] text-white/50"
+                          >
+                            {food.foodSubgroup}
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell>{formatFoodNutrient(food, food.calories, 'kcal')}</TableCell>
                       <TableCell>{formatFoodNutrient(food, food.protein)}</TableCell>
                       <TableCell>{formatFoodNutrient(food, food.totalFat)}</TableCell>
                       <TableCell>{formatFoodNutrient(food, food.carbohydrates)}</TableCell>
+                      {tableNutrients.map((nutrient) => (
+                        <TableCell key={nutrient.field}>
+                          {formatNutritionAmount(
+                            foodNutrientAmount(
+                              food,
+                              food.additionalNutrients[nutrient.field] ?? null,
+                            ),
+                            nutrient.unit,
+                          )}
+                        </TableCell>
+                      ))}
                     </TableRow>
                   )}
                 </Collection>

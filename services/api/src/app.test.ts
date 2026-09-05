@@ -214,6 +214,7 @@ const catalog: CatalogReaderService = {
     Effect.succeed([
       {
         brand: food.brand,
+        additional_nutrients: {},
         brand_id: food.brand_id,
         calories: food.calories,
         carbohydrates_total: food.carbohydrates_total,
