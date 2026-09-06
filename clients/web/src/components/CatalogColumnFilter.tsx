@@ -1,5 +1,4 @@
 import { useState, type RefObject } from 'react'
-import { Dialog } from 'react-aria-components'
 import { datasetKindLabel } from '~/features/catalog/catalog-search'
 import { Button } from './ui/button'
 import { Popover, PopoverTitle } from './ui/popover'
@@ -96,6 +95,9 @@ function Picker({
 
 export function CatalogColumnFilter({
   triggerRef,
+  popoverRef,
+  onPointerEnter,
+  onPointerLeave,
   isOpen,
   onOpenChange: setOpen,
   column,
@@ -105,6 +107,9 @@ export function CatalogColumnFilter({
   updateSearch,
 }: {
   triggerRef: RefObject<HTMLElement | null>
+  popoverRef: RefObject<HTMLDivElement | null>
+  onPointerEnter: () => void
+  onPointerLeave: () => void
   isOpen: boolean
   onOpenChange: (open: boolean) => void
   column: string
@@ -117,13 +122,22 @@ export function CatalogColumnFilter({
   if (!columns) return label
   return (
     <Popover
+      ref={popoverRef}
+      isNonModal
+      onPointerEnter={onPointerEnter}
+      onPointerLeave={onPointerLeave}
       triggerRef={triggerRef}
       isOpen={isOpen}
       onOpenChange={setOpen}
       placement="bottom start"
       className="w-80 max-h-[min(720px,80dvh)] overflow-y-auto border border-border bg-card text-foreground"
     >
-      <Dialog aria-label={`${label} filters`} className="space-y-4 outline-none">
+      <div
+        role="dialog"
+        tabIndex={-1}
+        aria-label={`${label} filters`}
+        className="space-y-4 outline-none"
+      >
         <div
           className="space-y-4"
           onKeyDownCapture={(event) => {
@@ -180,7 +194,7 @@ export function CatalogColumnFilter({
             Match any within a filter; match all across filters.
           </p>
         </div>
-      </Dialog>
+      </div>
     </Popover>
   )
 }

@@ -22,9 +22,10 @@ function Popover({
   offset = 4,
   crossOffset = 0,
   ...props
-}: Omit<PopoverPrimitiveProps, 'className'> & {
-  className?: string
-}) {
+}: Omit<PopoverPrimitiveProps, 'className'> &
+  React.RefAttributes<HTMLDivElement> & {
+    className?: string
+  }) {
   return (
     <PopoverPrimitive
       data-slot="popover-content"

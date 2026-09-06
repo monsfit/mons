@@ -1,0 +1,30 @@
+import { expect, test } from '@playwright/test'
+
+test('hover opens without stealing focus, bridges into the menu, and dismisses on leave', async ({
+  page,
+}) => {
+  await page.goto('/foods')
+  await page.waitForLoadState('networkidle')
+  const search = page.getByRole('textbox', { name: 'Search foods', exact: true })
+  await search.focus()
+  const trigger = page.getByRole('button', { name: 'Filter source', exact: true })
+  const dialog = page.getByRole('dialog', { name: 'Source filters', exact: true })
+  await trigger.hover()
+  await expect(dialog).toBeVisible()
+  await expect(search).toBeFocused()
+  await dialog.hover()
+  await page.waitForTimeout(400)
+  await expect(dialog).toBeVisible()
+  await page.mouse.move(1100, 100)
+  await expect(dialog).toBeHidden()
+  await trigger.click()
+  await expect(dialog).toBeVisible()
+  await page.mouse.move(1100, 100)
+  await page.waitForTimeout(400)
+  await expect(dialog).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(dialog).toBeHidden()
+  await trigger.focus()
+  await page.keyboard.press('Enter')
+  await expect(dialog).toBeVisible()
+})

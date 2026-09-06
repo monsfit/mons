@@ -9,7 +9,7 @@ import { CatalogTableLayout } from '~/features/catalog/catalog-table-layout'
 import type { CatalogSearch, CatalogSearchUpdate } from '~/features/catalog/catalog-search'
 import type { getCatalogWorkspace } from '~/features/catalog/catalog-functions'
 import { useCatalogPages } from '~/features/catalog/use-catalog-pages'
-import { useRef, useState } from 'react'
+import { useColumnFilter } from '~/features/catalog/use-column-filter'
 import { Button } from './ui/button'
 import { Badge } from './ui/badge'
 import { Filter } from 'lucide-react'
@@ -37,8 +37,8 @@ export function FoodExplorerPage({
     workspace,
     isPending,
   )
-  const triggerRef = useRef<HTMLElement | null>(null)
-  const [openColumn, setOpenColumn] = useState<string | null>(null)
+  const filter = useColumnFilter()
+  const { column: openColumn, triggerRef } = filter
   const searchKey = JSON.stringify(search)
   const table = useReactTable({
     data: foods,
@@ -210,10 +210,14 @@ export function FoodExplorerPage({
                         aria-label={`Filter ${header.id}`}
                         aria-haspopup="dialog"
                         aria-expanded={openColumn === header.id}
+                        onHoverStart={(event) => {
+                          if (event.target instanceof HTMLElement)
+                            filter.hover(header.id, event.target)
+                        }}
+                        onHoverEnd={filter.leave}
                         onPress={(event) => {
                           if (!(event.target instanceof HTMLElement)) return
-                          triggerRef.current = event.target
-                          setOpenColumn(header.id)
+                          filter.open(header.id, event.target)
                         }}
                       >
                         {flexRender(header.column.columnDef.header, header.getContext())}
@@ -264,9 +268,12 @@ export function FoodExplorerPage({
             <CatalogColumnFilter
               key={openColumn}
               triggerRef={triggerRef}
+              popoverRef={filter.popoverRef}
+              onPointerEnter={filter.cancel}
+              onPointerLeave={filter.leave}
               isOpen
               onOpenChange={(open) => {
-                if (!open) setOpenColumn(null)
+                if (!open) filter.close()
               }}
               column={openColumn}
               label={openColumn[0]?.toUpperCase() + openColumn.slice(1)}
