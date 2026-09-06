@@ -29,22 +29,22 @@ const catalogSources: Readonly<Record<string, CatalogSource>> = {
   open_food_facts: { label: 'Open Food Facts', abbreviation: 'OFF', verified: false },
   usda_fooddata_central_branded: {
     label: 'USDA Branded Foods',
-    abbreviation: 'USDA Branded',
+    abbreviation: 'USDA',
     verified: false,
   },
   usda_fooddata_central_foundation: {
     label: 'USDA Foundation Foods',
-    abbreviation: 'USDA Foundation',
+    abbreviation: 'USDA',
     verified: true,
   },
   usda_fooddata_central_sr_legacy: {
     label: 'USDA SR Legacy',
-    abbreviation: 'USDA SR',
+    abbreviation: 'USDA',
     verified: true,
   },
   usda_fooddata_central_survey: {
     label: 'USDA Food Surveys',
-    abbreviation: 'USDA Surveys',
+    abbreviation: 'USDA',
     verified: true,
   },
 }

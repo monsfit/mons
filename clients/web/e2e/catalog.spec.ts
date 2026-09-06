@@ -20,7 +20,7 @@ test('filters sources and subtypes across the catalog and preserves selections o
     page.getByRole('button', { name: 'Remove source: USDA Branded Foods', exact: true }),
   ).toBeVisible()
   await expect(page.getByRole('status')).not.toContainText('Updating')
-  await expect(page.locator('[data-slot=table-row]').first()).toContainText('USDA Branded')
+  await expect(page.locator('[data-slot=table-row]').first()).toContainText('USDA')
   await page.getByRole('button', { name: 'Clear filters', exact: true }).click()
   await openFilters(page, 'Category')
   await page
