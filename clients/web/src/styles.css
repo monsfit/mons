@@ -1,7 +1,7 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
-@import '@fontsource-variable/geist';
+@import '@fontsource-variable/inter';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -119,30 +119,6 @@
   }
 }
 
-@font-face {
-  font-family: 'Space Grotesk';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url('../../ios/mons/DesignSystem/Fonts/SpaceGrotesk-Regular.ttf') format('truetype');
-}
-
-@font-face {
-  font-family: 'Space Grotesk';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url('../../ios/mons/DesignSystem/Fonts/SpaceGrotesk-Medium.ttf') format('truetype');
-}
-
-@font-face {
-  font-family: 'Space Grotesk';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url('../../ios/mons/DesignSystem/Fonts/SpaceGrotesk-Bold.ttf') format('truetype');
-}
-
 :root {
   --background: oklch(0.9818 0.0054 95.0986);
   --foreground: oklch(0.3438 0.0269 95.7226);
@@ -210,7 +186,7 @@ body {
   min-width: 320px;
   background: var(--background);
   color: var(--text);
-  font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-sans);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
@@ -1145,7 +1121,7 @@ footer > span {
 
 @theme inline {
   --font-heading: var(--font-sans);
-  --font-sans: 'Geist Variable', sans-serif;
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
   --color-success: var(--success);
   --color-info: var(--info);
   --color-warning: var(--warning);
