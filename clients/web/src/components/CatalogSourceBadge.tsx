@@ -1,5 +1,4 @@
 import { CircleCheck } from 'lucide-react'
-import { Badge } from './ui/badge'
 
 import { getCatalogSource } from '~/features/catalog/catalog-sources'
 
@@ -7,17 +6,16 @@ export function CatalogSourceBadge({ source }: Readonly<{ source: string }>) {
   const metadata = getCatalogSource(source)
 
   return (
-    <Badge
-      variant="outline"
+    <span
       title={metadata.label}
-      className="h-auto min-h-6 max-w-full shrink rounded-md border-transparent bg-info/10 px-2 py-1 text-info whitespace-normal justify-start"
+      className="inline-flex max-w-full items-start gap-2 text-xs leading-5 whitespace-normal text-muted-foreground"
     >
-      <span className="text-[11px] leading-4">{metadata.label}</span>
+      <span>{metadata.label}</span>
       {metadata.verified ? (
         <span title="Verified scientific source" aria-label="Verified scientific source">
-          <CircleCheck className="size-3.5 shrink-0 text-success" />
+          <CircleCheck className="mt-1 size-3.5 shrink-0 text-success" />
         </span>
       ) : null}
-    </Badge>
+    </span>
   )
 }

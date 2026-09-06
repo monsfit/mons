@@ -16,8 +16,8 @@ type Facet = 'brands' | 'restaurants' | 'groups' | 'subgroups' | 'sources'
 const labels = {
   brands: 'Brands',
   restaurants: 'Restaurants',
-  groups: 'Food groups',
-  subgroups: 'Subtypes',
+  groups: 'Categories',
+  subgroups: 'Subcategories',
   sources: 'Data sources',
 }
 const facets: Record<string, Facet[]> = {
@@ -56,7 +56,7 @@ function Picker({
     ? items
     : items.filter((item) => item.name.toLowerCase().includes(localQuery.toLowerCase()))
   return (
-    <section className="space-y-2">
+    <section className="flex flex-col gap-2">
       <div className="flex items-center justify-between text-xs font-medium">
         <h3>{labels[facet]}</h3>
         <Button variant="ghost" size="xs" onPress={() => updateSearch({ [facet]: [] })}>
@@ -130,16 +130,16 @@ export function CatalogColumnFilter({
       isOpen={isOpen}
       onOpenChange={setOpen}
       placement="bottom start"
-      className="w-80 max-h-[min(720px,80dvh)] overflow-y-auto border border-border bg-card text-foreground"
+      className="w-80 max-h-[min(720px,80dvh)] overflow-y-auto"
     >
       <div
         role="dialog"
         tabIndex={-1}
         aria-label={`${label} filters`}
-        className="space-y-4 outline-none"
+        className="flex flex-col gap-4 outline-none"
       >
         <div
-          className="space-y-4"
+          className="flex flex-col gap-4"
           onKeyDownCapture={(event) => {
             if (event.key === 'Escape') {
               event.stopPropagation()
@@ -148,8 +148,13 @@ export function CatalogColumnFilter({
           }}
         >
           <PopoverTitle>{label} filters</PopoverTitle>
+          {column === 'group' && (
+            <p className="text-xs text-muted-foreground">
+              Choose a broad category or narrow by subcategory.
+            </p>
+          )}
           {column === 'source' && (
-            <section className="space-y-2">
+            <section className="flex flex-col gap-2">
               <h3 className="text-xs font-medium">Type</h3>
               <div className="flex gap-1" role="group" aria-label="Dataset type">
                 <Button

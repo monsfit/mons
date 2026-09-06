@@ -12,7 +12,7 @@ import { useCatalogPages } from '~/features/catalog/use-catalog-pages'
 import { useColumnFilter } from '~/features/catalog/use-column-filter'
 import { Button } from './ui/button'
 import { Badge } from './ui/badge'
-import { Filter } from 'lucide-react'
+import { Filter, X } from 'lucide-react'
 import { CatalogColumnFilter, filterCount } from './CatalogColumnFilter'
 import { CatalogSearchField } from './CatalogSearchField'
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table'
@@ -67,9 +67,9 @@ export function FoodExplorerPage({
     key: 'groups' | 'brands' | 'restaurants' | 'sources' | 'subgroups'
     label: string
   }> = [
-    { key: 'groups', label: 'Group' },
+    { key: 'groups', label: 'Category' },
     { key: 'sources', label: 'Source' },
-    { key: 'subgroups', label: 'Subtype' },
+    { key: 'subgroups', label: 'Subcategory' },
     { key: 'brands', label: 'Brand' },
     { key: 'restaurants', label: 'Restaurant' },
   ]
@@ -93,71 +93,68 @@ export function FoodExplorerPage({
               onCommit={(q) => updateSearch({ q })}
             />
           </div>
-          <section
-            aria-label="Active filters"
-            className="flex max-h-36 shrink-0 flex-wrap items-center gap-2 overflow-y-auto border-b border-border p-3 text-xs"
-          >
-            <span className="mr-1 text-muted-foreground">Filters</span>
-            {search.kinds.map((kind) => (
-              <Button
-                variant="outline"
-                size="xs"
-                key={kind}
-                type="button"
-                aria-label={`Remove type: ${kind}`}
-                className="rounded border border-border bg-muted px-2 py-1"
-                onPress={() =>
-                  updateSearch((current) => ({
-                    ...current,
-                    kinds: current.kinds.filter((value) => value !== kind),
-                  }))
-                }
-              >
-                Type: {datasetKindLabel[kind]} <span aria-hidden="true">×</span>
-              </Button>
-            ))}
-            {facets.flatMap(({ key, label }) =>
-              search[key].map((item) => (
+          {hasActiveFilters && (
+            <section
+              aria-label="Active filters"
+              className="flex max-h-36 shrink-0 flex-wrap items-center gap-2 overflow-y-auto border-b border-border p-3 text-xs"
+            >
+              <span className="mr-1 text-muted-foreground">Filters</span>
+              {search.kinds.map((kind) => (
                 <Button
                   variant="outline"
                   size="xs"
-                  key={`${key}:${item.id}`}
+                  key={kind}
                   type="button"
-                  aria-label={`Remove ${label.toLowerCase()}: ${item.name}`}
-                  className="rounded border border-border bg-muted px-2 py-1"
+                  aria-label={`Remove type: ${kind}`}
                   onPress={() =>
                     updateSearch((current) => ({
                       ...current,
-                      [key]: current[key].filter((value) => value.id !== item.id),
+                      kinds: current.kinds.filter((value) => value !== kind),
                     }))
                   }
                 >
-                  {label}: {item.name} <span aria-hidden="true">×</span>
+                  Type: {datasetKindLabel[kind]} <X data-icon="inline-end" />
                 </Button>
-              )),
-            )}
-            {!hasActiveFilters && (
-              <span className="text-muted-foreground">None · showing all foods</span>
-            )}
-            {hasActiveFilters && (
-              <Button
-                variant="outline"
-                size="xs"
-                type="button"
-                className="ml-auto text-primary"
-                onPress={() =>
-                  updateSearch((current) => ({
-                    ...parseCatalogSearch({}),
-                    q: current.q,
-                    brandQuery: current.brandQuery,
-                    restaurantQuery: current.restaurantQuery,
-                  }))
-                }
-              >
-                Clear filters
-              </Button>
-            )}
-          </section>
+              ))}
+              {facets.flatMap(({ key, label }) =>
+                search[key].map((item) => (
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    key={`${key}:${item.id}`}
+                    type="button"
+                    aria-label={`Remove ${label.toLowerCase()}: ${item.name}`}
+                    onPress={() =>
+                      updateSearch((current) => ({
+                        ...current,
+                        [key]: current[key].filter((value) => value.id !== item.id),
+                      }))
+                    }
+                  >
+                    {label}: {item.name} <X data-icon="inline-end" />
+                  </Button>
+                )),
+              )}
+              {hasActiveFilters && (
+                <Button
+                  variant="outline"
+                  size="xs"
+                  type="button"
+                  className="ml-auto"
+                  onPress={() =>
+                    updateSearch((current) => ({
+                      ...parseCatalogSearch({}),
+                      q: current.q,
+                      brandQuery: current.brandQuery,
+                      restaurantQuery: current.restaurantQuery,
+                    }))
+                  }
+                >
+                  Clear filters
+                </Button>
+              )}
+            </section>
+          )}
           <div role="status" className="catalog-results-status">
             <span>
               {isPending
@@ -207,7 +204,7 @@ export function FoodExplorerPage({
                         }}
                         size="xs"
                         variant="ghost"
-                        aria-label={`Filter ${header.id}`}
+                        aria-label={`Filter ${header.id === 'group' ? 'category' : header.id}`}
                         aria-haspopup="dialog"
                         aria-expanded={openColumn === header.id}
                         onHoverStart={(event) => {
@@ -221,7 +218,7 @@ export function FoodExplorerPage({
                         }}
                       >
                         {flexRender(header.column.columnDef.header, header.getContext())}
-                        <Filter className="size-3" />
+                        <Filter data-icon="inline-end" />
                         {filterCount(header.id, search) > 0 && (
                           <Badge variant="secondary">{filterCount(header.id, search)}</Badge>
                         )}
@@ -276,7 +273,11 @@ export function FoodExplorerPage({
                 if (!open) filter.close()
               }}
               column={openColumn}
-              label={openColumn[0]?.toUpperCase() + openColumn.slice(1)}
+              label={
+                openColumn === 'group'
+                  ? 'Category'
+                  : openColumn[0]?.toUpperCase() + openColumn.slice(1)
+              }
               search={search}
               workspace={workspace}
               updateSearch={updateSearch}

@@ -12,7 +12,6 @@ import {
 import { formatNutritionAmount } from './nutrition'
 import { tableNutrients } from './table-nutrients'
 import { CatalogSourceBadge } from '~/components/CatalogSourceBadge'
-import { Badge } from '~/components/ui/badge'
 
 export const catalogColumns: ColumnDef<CatalogFood>[] = [
   {
@@ -48,7 +47,7 @@ export const catalogColumns: ColumnDef<CatalogFood>[] = [
     cell: ({ row: { original: food } }) => (
       <>
         <CatalogSourceBadge source={food.source} />
-        <span className="mt-1 pl-2 text-[11px] leading-4 text-muted-foreground">
+        <span className="mt-1 text-[11px] leading-4 text-muted-foreground">
           {datasetKindLabel[food.datasetKind]}
         </span>
       </>
@@ -56,21 +55,17 @@ export const catalogColumns: ColumnDef<CatalogFood>[] = [
   },
   {
     id: 'group',
-    header: 'Group',
+    header: 'Category',
     size: 170,
     cell: ({ row: { original: food } }) => (
       <>
-        <Badge
-          variant="outline"
-          title={food.foodGroup}
-          className="h-auto min-h-6 max-w-full shrink rounded-md border-border bg-muted px-2 py-1 text-[11px] leading-4 whitespace-normal justify-start"
-        >
+        <span title={food.foodGroup} className="text-xs font-medium leading-5">
           {food.foodGroup}
-        </Badge>
+        </span>
         {food.foodSubgroup !== null && (
           <span
             title={food.foodSubgroup}
-            className="mt-1 max-w-full truncate pl-2 text-[11px] leading-4 text-muted-foreground"
+            className="mt-1 max-w-full truncate border-l-2 border-border pl-2 text-xs leading-4 text-muted-foreground"
           >
             {food.foodSubgroup}
           </span>

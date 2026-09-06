@@ -22,25 +22,25 @@ test('filters sources and subtypes across the catalog and preserves selections o
   await expect(page.getByRole('status')).not.toContainText('Updating')
   await expect(page.locator('[data-slot=table-row]').first()).toContainText('USDA Branded Foods')
   await page.getByRole('button', { name: 'Clear filters', exact: true }).click()
-  await openFilters(page, 'Group')
+  await openFilters(page, 'Category')
   await page
-    .getByRole('listbox', { name: 'Subtypes', exact: true })
+    .getByRole('listbox', { name: 'Subcategories', exact: true })
     .getByRole('option', { name: /^Beef/ })
     .click()
   await page.keyboard.press('Escape')
   await expect(
-    page.getByRole('button', { name: 'Remove subtype: Beef', exact: true }),
+    page.getByRole('button', { name: 'Remove subcategory: Beef', exact: true }),
   ).toBeVisible()
   await expect(page.getByRole('status')).not.toContainText('Updating')
   await expect(page.locator('[data-slot=table-row]').first()).toContainText('Beef')
   await page.reload()
   await expect(
-    page.getByRole('button', { name: 'Remove subtype: Beef', exact: true }),
+    page.getByRole('button', { name: 'Remove subcategory: Beef', exact: true }),
   ).toBeVisible()
-  await openFilters(page, 'Group')
+  await openFilters(page, 'Category')
   await expect(
     page
-      .getByRole('listbox', { name: 'Subtypes', exact: true })
+      .getByRole('listbox', { name: 'Subcategories', exact: true })
       .getByRole('option', { name: /^Beef/ }),
   ).toHaveAttribute('aria-selected', 'true')
 })
@@ -121,32 +121,34 @@ test('browses by default, combines selections, and removes chips independently',
   ).toBeVisible()
   release.resolve()
   await page.waitForLoadState('networkidle')
-  await openFilters(page, 'Group')
-  const groups = page.getByRole('listbox', { name: 'Food groups', exact: true })
+  await openFilters(page, 'Category')
+  const groups = page.getByRole('listbox', { name: 'Categories', exact: true })
   await groups.getByRole('option', { name: /^Beverages/ }).click()
   await page.keyboard.press('Escape')
   await expect(
-    page.getByRole('button', { name: 'Remove group: Beverages', exact: true }),
+    page.getByRole('button', { name: 'Remove category: Beverages', exact: true }),
   ).toBeVisible()
-  await openFilters(page, 'Group')
+  await openFilters(page, 'Category')
   await groups.getByRole('option', { name: /^Dairy/ }).click()
   await page.keyboard.press('Escape')
-  await expect(page.getByRole('button', { name: 'Remove group: Dairy', exact: true })).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: 'Remove category: Dairy', exact: true }),
+  ).toBeVisible()
   await page.waitForLoadState('networkidle')
   await page.reload()
   await page.waitForLoadState('networkidle')
   await expect(
     page.getByRole('region', { name: 'Active filters' }).getByRole('button'),
   ).toHaveCount(5)
-  await page.getByRole('button', { name: 'Remove group: Dairy', exact: true }).click()
-  await expect(page.getByRole('button', { name: 'Remove group: Dairy', exact: true })).toHaveCount(
-    0,
-  )
+  await page.getByRole('button', { name: 'Remove category: Dairy', exact: true }).click()
   await expect(
-    page.getByRole('button', { name: 'Remove group: Beverages', exact: true }),
+    page.getByRole('button', { name: 'Remove category: Dairy', exact: true }),
+  ).toHaveCount(0)
+  await expect(
+    page.getByRole('button', { name: 'Remove category: Beverages', exact: true }),
   ).toBeVisible()
   await page.getByRole('button', { name: 'Clear filters', exact: true }).click()
-  await expect(page.getByRole('region', { name: 'Active filters' })).toContainText('None')
+  await expect(page.getByRole('region', { name: 'Active filters' })).toHaveCount(0)
   await expect(table).toHaveAttribute('data-loaded-count', '50')
   await openFilters(page, 'Source')
   await page.getByRole('button', { name: 'All', exact: true }).click()
