@@ -50,7 +50,12 @@ Selections are serialized in the URL and restored on reload; old single-selectio
 Changes replace the current URL entry, preserve focus, and reset table pagination. The table loads
 50 rows at a time near the bottom. Brand and restaurant pickers load 30 items per page; the small
 food-group taxonomy fits in one page. TanStack Table owns the food table's column definitions,
-sizes, row model, stable row IDs, and cell rendering. Filtering and pagination stay server-side;
+sizes, row model, sorting state, stable row IDs, and cell rendering. Each column heading cycles
+ascending, descending, then default order; its separate filter button keeps sorting and filtering
+independent. Sorting is saved in the URL, resets scroll pagination, and survives clearing filters.
+Nutrients sort by the displayed portion amount, with missing values last in either direction and
+food IDs breaking ties. Without an explicit sort, browsing uses ID order and searches use relevance.
+Filtering, sorting, and pagination stay server-side;
 the table never filters or paginates just the loaded subset. React Aria provides the accessible
 table surface and virtualizes all pickers and the table,
 including horizontally virtualized macro/micronutrient columns. Food, Source, and Group are pinned

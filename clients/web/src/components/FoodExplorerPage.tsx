@@ -1,7 +1,7 @@
 import { ThemeToggle } from './ThemeToggle'
 import { flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
 import { catalogColumns } from '~/features/catalog/catalog-columns'
-import { datasetKindLabel } from '~/features/catalog/catalog-search'
+import { datasetKindLabel, isCatalogSort } from '~/features/catalog/catalog-search'
 import { Link } from '@tanstack/react-router'
 import { Collection, Table, TableLoadMoreItem } from 'react-aria-components'
 import { Virtualizer } from 'react-aria-components/Virtualizer'
@@ -12,7 +12,7 @@ import { useCatalogPages } from '~/features/catalog/use-catalog-pages'
 import { useColumnFilter } from '~/features/catalog/use-column-filter'
 import { Button } from './ui/button'
 import { Badge } from './ui/badge'
-import { Filter, X } from 'lucide-react'
+import { ArrowDown, ArrowUp, ArrowUpDown, Filter, X } from 'lucide-react'
 import { CatalogColumnFilter, filterCount } from './CatalogColumnFilter'
 import { CatalogSearchField } from './CatalogSearchField'
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table'
@@ -46,6 +46,16 @@ export function FoodExplorerPage({
     getRowId: (food) => `${food.datasetKind}:${food.foodId}`,
     getCoreRowModel: getCoreRowModel(),
     manualFiltering: true,
+    manualSorting: true,
+    state: { sorting: search.sort ? [{ id: search.sort, desc: search.direction === 'desc' }] : [] },
+    onSortingChange: (update) => {
+      const next = typeof update === 'function' ? update(table.getState().sorting) : update
+      const first = next[0]
+      updateSearch({
+        sort: first && isCatalogSort(first.id) ? first.id : '',
+        direction: first?.desc ? 'desc' : 'asc',
+      })
+    },
     manualPagination: true,
     autoResetPageIndex: false,
   })
@@ -145,6 +155,8 @@ export function FoodExplorerPage({
                     updateSearch((current) => ({
                       ...parseCatalogSearch({}),
                       q: current.q,
+                      sort: current.sort,
+                      direction: current.direction,
                       brandQuery: current.brandQuery,
                       restaurantQuery: current.restaurantQuery,
                     }))
@@ -172,6 +184,19 @@ export function FoodExplorerPage({
           >
             <Table
               key={searchKey}
+              onSortChange={(descriptor) =>
+                table.setSorting([
+                  { id: String(descriptor.column), desc: descriptor.direction === 'descending' },
+                ])
+              }
+              {...(search.sort
+                ? {
+                    sortDescriptor: {
+                      column: search.sort,
+                      direction: search.direction === 'desc' ? 'descending' : 'ascending',
+                    },
+                  }
+                : {})}
               aria-label="Food catalog results"
               aria-busy={isPending}
               className="catalog-table"
@@ -195,37 +220,67 @@ export function FoodExplorerPage({
                     key={header.id}
                     id={header.id}
                     isRowHeader={header.id === 'food'}
+                    allowsSorting
                     width={header.getSize()}
                   >
-                    {['food', 'source', 'group'].includes(header.id) ? (
+                    <div className="flex items-center gap-1">
                       <Button
-                        ref={(element) => {
-                          if (element && openColumn === header.id) triggerRef.current = element
-                        }}
                         size="xs"
                         variant="ghost"
-                        aria-label={`Filter ${header.id === 'group' ? 'category' : header.id}`}
-                        aria-haspopup="dialog"
-                        aria-expanded={openColumn === header.id}
-                        onHoverStart={(event) => {
-                          if (event.target instanceof HTMLElement)
-                            filter.hover(header.id, event.target)
-                        }}
-                        onHoverEnd={filter.leave}
-                        onPress={(event) => {
-                          if (!(event.target instanceof HTMLElement)) return
-                          filter.open(header.id, event.target)
+                        className="min-w-0 max-w-full"
+                        aria-label={`Sort by ${header.column.columnDef.header}`}
+                        onPress={() => {
+                          const current = header.column.getIsSorted()
+                          table.setSorting(
+                            current === 'desc' ? [] : [{ id: header.id, desc: current === 'asc' }],
+                          )
                         }}
                       >
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                        <Filter data-icon="inline-end" />
-                        {filterCount(header.id, search) > 0 && (
-                          <Badge variant="secondary">{filterCount(header.id, search)}</Badge>
+                        <span
+                          className="truncate"
+                          title={
+                            typeof header.column.columnDef.header === 'string'
+                              ? header.column.columnDef.header
+                              : header.id
+                          }
+                        >
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                        </span>
+                        {header.column.getIsSorted() === 'asc' ? (
+                          <ArrowUp data-icon="inline-end" />
+                        ) : header.column.getIsSorted() === 'desc' ? (
+                          <ArrowDown data-icon="inline-end" />
+                        ) : (
+                          <ArrowUpDown data-icon="inline-end" />
                         )}
                       </Button>
-                    ) : (
-                      flexRender(header.column.columnDef.header, header.getContext())
-                    )}
+                      {['food', 'source', 'group'].includes(header.id) ? (
+                        <Button
+                          ref={(element) => {
+                            if (element && openColumn === header.id) triggerRef.current = element
+                          }}
+                          size="xs"
+                          variant="ghost"
+                          aria-label={`Filter ${header.id === 'group' ? 'category' : header.id}`}
+                          aria-haspopup="dialog"
+                          aria-expanded={openColumn === header.id}
+                          onHoverStart={(event) => {
+                            if (event.target instanceof HTMLElement)
+                              filter.hover(header.id, event.target)
+                          }}
+                          onHoverEnd={filter.leave}
+                          onPress={(event) => {
+                            if (!(event.target instanceof HTMLElement)) return
+                            filter.open(header.id, event.target)
+                          }}
+                        >
+                          <Filter data-icon="inline-end" />
+                          {filterCount(header.id, search) > 0 && (
+                            <Badge variant="secondary">{filterCount(header.id, search)}</Badge>
+                          )}
+                        </Button>
+                      ) : null}
+                    </div>
                   </TableHead>
                 ))}
               </TableHeader>

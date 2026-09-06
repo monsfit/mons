@@ -61,7 +61,7 @@ test('pins food, source and group while scrolling nutrients, with a narrow-scree
     element.scrollLeft = element.scrollWidth
   })
   await expect(
-    page.getByRole('columnheader', { name: 'Vitamin K (mcg)', exact: true }),
+    page.getByRole('columnheader', { name: 'Sort by Vitamin K (mcg)', exact: true }),
   ).toBeVisible()
   expect(await positions()).toEqual(initial)
   const heads = await page
@@ -81,7 +81,7 @@ test('pins food, source and group while scrolling nutrients, with a narrow-scree
     .poll(async () => (await page.locator('[data-slot=table-head]').first().boundingBox())?.x)
     .toBeLessThan(0)
   await expect(
-    page.getByRole('columnheader', { name: 'Vitamin K (mcg)', exact: true }),
+    page.getByRole('columnheader', { name: 'Sort by Vitamin K (mcg)', exact: true }),
   ).toBeVisible()
 })
 

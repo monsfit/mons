@@ -1,3 +1,10 @@
+import { tableNutrients } from './table-nutrients'
+
+export const isCatalogSort = (value: unknown): value is string =>
+  typeof value === 'string' &&
+  (['food', 'source', 'group', 'calories', 'protein', 'fat', 'carbs'].includes(value) ||
+    tableNutrients.some((nutrient) => nutrient.field === value))
+
 export type CatalogDatasetKind = 'raw' | 'branded' | 'restaurant'
 export const datasetKindLabel: Record<CatalogDatasetKind, string> = {
   raw: 'Raw Ingredient',
@@ -9,6 +16,8 @@ export interface CatalogFilter {
   readonly name: string
 }
 export interface CatalogSearch {
+  readonly sort: string
+  readonly direction: 'asc' | 'desc'
   readonly sources: ReadonlyArray<CatalogFilter>
   readonly subgroups: ReadonlyArray<CatalogFilter>
   readonly brands: ReadonlyArray<CatalogFilter>
@@ -48,6 +57,8 @@ function readFilters(
 export function parseCatalogSearch(search: Record<string, unknown>): CatalogSearch {
   const q = readText(search.q, 200)
   return {
+    sort: isCatalogSort(search.sort) ? search.sort : '',
+    direction: search.direction === 'desc' ? 'desc' : 'asc',
     brands: readFilters(search.brands, search.brandId, search.brandName),
     sources: readFilters(search.sources, undefined, undefined),
     subgroups: readFilters(search.subgroups, undefined, undefined),
@@ -71,6 +82,8 @@ export function toggleFilter(
 }
 export function toCatalogQuery(search: CatalogSearch) {
   return {
+    sort: search.sort,
+    direction: search.direction,
     q: search.q,
     brandIds: search.brands.map((item) => item.id),
     sourceKeys: search.sources.map((item) => item.id),

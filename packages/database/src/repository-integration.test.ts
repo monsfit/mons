@@ -178,6 +178,112 @@ const testLayer = Layer.merge(fixtureLayer, repositoryLayers).pipe(
 
 integration('feature repositories with PostgreSQL', () => {
   layer(testLayer)((it) => {
+    it.effect(
+      'sorts full filtered results by displayed nutrition with stable pages and missing values last',
+      () =>
+        Effect.gen(function* () {
+          const catalog = yield* CatalogReader
+          const fields = [
+            'food',
+            'source',
+            'group',
+            'calories',
+            'protein',
+            'fat',
+            'carbs',
+            'fiber',
+            'total_sugars',
+            'added_sugars',
+            'saturated_fat',
+            'trans_fat',
+            'dietary_cholesterol',
+            'sodium',
+            'potassium',
+            'calcium',
+            'iron',
+            'magnesium',
+            'zinc',
+            'vitamin_c_ascorbic_acid',
+            'vitamin_d_calciferol',
+            'vitamin_b6',
+            'vitamin_b12_cobalamin',
+            'folate_dfe',
+            'vitamin_a_retinol',
+            'vitamin_e_tocopherol',
+            'vitamin_k_phylloquinone',
+          ]
+          for (const sort of fields) {
+            const all = yield* catalog.search({ query: '', limit: 500, sort, direction: 'desc' })
+            const first = yield* catalog.search({ query: '', limit: 2, sort, direction: 'desc' })
+            const second = yield* catalog.search({
+              query: '',
+              limit: 2,
+              offset: 2,
+              sort,
+              direction: 'desc',
+            })
+            expect([...first, ...second].map((food) => food.food_id)).toEqual(
+              all.slice(0, 4).map((food) => food.food_id),
+            )
+            if (sort === 'calories' || sort === 'sodium') {
+              const amounts = all.map((food) => {
+                const value =
+                  sort === 'calories' ? food.calories : (food.additional_nutrients.sodium ?? null)
+                const portion = food.default_portion
+                return value === null
+                  ? null
+                  : value *
+                      (portion?.unit === food.nutrient_basis.unit
+                        ? portion.amount / food.nutrient_basis.amount
+                        : 1)
+              })
+              expect(amounts).toEqual(
+                amounts.toSorted((a, b) =>
+                  a === null ? (b === null ? 0 : 1) : b === null ? -1 : b - a,
+                ),
+              )
+            }
+          }
+          const matches = yield* catalog.search({ query: 'apple', limit: 500 })
+          const ascending = yield* catalog.search({
+            query: '',
+            limit: 500,
+            sort: 'sodium',
+            direction: 'asc',
+          })
+          const sodium = ascending.map((food) => food.additional_nutrients.sodium ?? null)
+          const firstMissing = sodium.indexOf(null)
+          if (firstMissing !== -1)
+            expect(sodium.slice(firstMissing).every((value) => value === null)).toBe(true)
+          const sorted = yield* catalog.search({
+            query: 'apple',
+            limit: 500,
+            sort: 'food',
+            direction: 'asc',
+          })
+          expect(sorted.map((food) => food.food_id).toSorted()).toEqual(
+            matches.map((food) => food.food_id).toSorted(),
+          )
+          const filtered = yield* catalog.search({
+            query: '',
+            limit: 500,
+            sort: 'food',
+            kinds: ['branded'],
+            sourceKeys: ['1', '30000'],
+          })
+          expect(filtered.length).toBeGreaterThan(0)
+          expect(filtered.every((food) => food.dataset_kind === 'branded')).toBe(true)
+          expect(
+            yield* catalog.search({
+              query: '',
+              limit: 50,
+              sort: 'food',
+              kinds: ['raw'],
+              restaurantIds: ['1'],
+            }),
+          ).toEqual([])
+        }),
+    )
     it.effect('resolves complete barcode nutrition', () =>
       Effect.gen(function* () {
         const catalog = yield* CatalogReader

@@ -245,7 +245,8 @@ export function CatalogColumnFilter({
             />
           ))}
           <p className="text-[10px] text-muted-foreground">
-            Match any within a filter; match all across filters.
+            Match any within a filter; match all across filters. Counts cover the whole catalog,
+            before your other filters.
           </p>
         </div>
       </div>
