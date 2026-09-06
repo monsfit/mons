@@ -168,7 +168,7 @@ export function FoodExplorerPage({
           </div>
           <Virtualizer
             layout={CatalogTableLayout}
-            layoutOptions={{ rowHeight: 76, headingHeight: 38, loaderHeight: 48 }}
+            layoutOptions={{ rowHeight: 88, headingHeight: 38, loaderHeight: 48 }}
           >
             <Table
               key={searchKey}

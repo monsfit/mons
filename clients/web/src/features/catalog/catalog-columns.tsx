@@ -12,6 +12,7 @@ import {
 import { formatNutritionAmount } from './nutrition'
 import { tableNutrients } from './table-nutrients'
 import { CatalogSourceBadge } from '~/components/CatalogSourceBadge'
+import { Badge } from '~/components/ui/badge'
 
 export const catalogColumns: ColumnDef<CatalogFood>[] = [
   {
@@ -24,6 +25,9 @@ export const catalogColumns: ColumnDef<CatalogFood>[] = [
         params={{ kind: food.datasetKind, foodId: food.foodId }}
         className="block min-w-0 rounded outline-offset-2 focus-visible:outline-2 focus-visible:outline-ring"
       >
+        <Badge variant="subtle" className="mb-1 rounded-md">
+          {datasetKindLabel[food.datasetKind]}
+        </Badge>
         <span
           className="block truncate text-sm font-medium"
           title={`${food.name} ${foodAttribution(food) ?? ''}`}
@@ -44,14 +48,7 @@ export const catalogColumns: ColumnDef<CatalogFood>[] = [
     id: 'source',
     header: 'Source',
     size: 220,
-    cell: ({ row: { original: food } }) => (
-      <>
-        <CatalogSourceBadge source={food.source} />
-        <span className="mt-1 text-[11px] leading-4 text-muted-foreground">
-          {datasetKindLabel[food.datasetKind]}
-        </span>
-      </>
-    ),
+    cell: ({ row: { original: food } }) => <CatalogSourceBadge source={food.source} />,
   },
   {
     id: 'group',
