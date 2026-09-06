@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Check } from 'lucide-react'
 import { Collection, ListBox, ListBoxItem, ListBoxLoadMoreItem } from 'react-aria-components'
 import { ListLayout, Virtualizer } from 'react-aria-components/Virtualizer'
 import { getCatalogFacetPage } from '~/features/catalog/catalog-functions'
@@ -114,10 +115,16 @@ export function CatalogFacetList({
                 aria-label={item.name}
                 className="catalog-facet-item"
               >
-                <span className="min-w-0 truncate" title={item.name}>
+                <span className="catalog-facet-check" aria-hidden="true">
+                  <Check />
+                </span>
+                <span className="min-w-0 flex-1 truncate" title={item.name}>
                   {displayName(item.name)}
                 </span>
-                <span className="text-[10px] text-muted-foreground">
+                <span
+                  className="text-xs tabular-nums text-muted-foreground"
+                  title="Foods in the full catalog"
+                >
                   {formatCompactCount(item.foodCount)}
                 </span>
               </ListBoxItem>

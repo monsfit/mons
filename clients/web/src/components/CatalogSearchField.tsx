@@ -78,7 +78,7 @@ export function CatalogSearchField({
 
   return (
     <form
-      className={primary ? 'relative flex-1' : 'relative mb-3'}
+      className={primary ? 'relative flex-1' : 'relative'}
       onSubmit={(event) => {
         event.preventDefault()
         commit(draft)

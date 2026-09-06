@@ -1,9 +1,10 @@
-import { useState, type RefObject } from 'react'
-import { CircleHelp } from 'lucide-react'
+import { Fragment, useState, type RefObject } from 'react'
+import { CircleHelp, X } from 'lucide-react'
 import { Dialog } from 'react-aria-components'
 import { getCatalogSource } from '~/features/catalog/catalog-sources'
 import { datasetKindLabel } from '~/features/catalog/catalog-search'
 import { Button } from './ui/button'
+import { Separator } from './ui/separator'
 import { Popover, PopoverTitle, PopoverTrigger } from './ui/popover'
 import { CatalogSearchField } from './CatalogSearchField'
 import { CatalogFacetList } from './CatalogFacetList'
@@ -65,9 +66,12 @@ function Picker({
       })
   return (
     <section className="flex flex-col gap-2">
-      <div className="flex items-center justify-between text-xs font-medium">
+      <div className="flex h-7 items-center justify-between text-xs font-medium">
         <div className="flex items-center gap-1">
           <h3>{labels[facet]}</h3>
+          {search[facet].length > 0 && (
+            <span className="ml-1 text-muted-foreground">{search[facet].length} selected</span>
+          )}
           {facet === 'sources' && (
             <PopoverTrigger>
               <Button variant="ghost" size="icon-xs" aria-label="Explain source abbreviations">
@@ -99,9 +103,16 @@ function Picker({
             </PopoverTrigger>
           )}
         </div>
-        <Button variant="ghost" size="xs" onPress={() => updateSearch({ [facet]: [] })}>
-          Clear {labels[facet].toLowerCase()}
-        </Button>
+        {search[facet].length > 0 && (
+          <Button
+            variant="ghost"
+            size="xs"
+            aria-label={`Clear ${labels[facet].toLowerCase()}`}
+            onPress={() => updateSearch({ [facet]: [] })}
+          >
+            Clear
+          </Button>
+        )}
       </div>
       <CatalogSearchField
         label={`Search ${labels[facet].toLowerCase()}`}
@@ -197,7 +208,18 @@ export function CatalogColumnFilter({
             }
           }}
         >
-          <PopoverTitle>{label} filters</PopoverTitle>
+          <div className="flex items-center justify-between">
+            <PopoverTitle>{label} filters</PopoverTitle>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              aria-label={`Close ${label.toLowerCase()} filters`}
+              onPress={() => setOpen(false)}
+            >
+              <X />
+            </Button>
+          </div>
+          <Separator />
           {column === 'group' && (
             <p className="text-xs text-muted-foreground">
               Choose a broad category or narrow by subcategory.
@@ -236,19 +258,32 @@ export function CatalogColumnFilter({
               </div>
             </section>
           )}
-          {columns.map((facet) => (
-            <Picker
-              key={facet}
-              facet={facet}
-              search={search}
-              workspace={workspace}
-              updateSearch={updateSearch}
-            />
+          {columns.map((facet, index) => (
+            <Fragment key={facet}>
+              {index > 0 && <Separator />}
+              <Picker
+                facet={facet}
+                search={search}
+                workspace={workspace}
+                updateSearch={updateSearch}
+              />
+            </Fragment>
           ))}
-          <p className="text-[10px] text-muted-foreground">
-            Match any within a filter; match all across filters. Counts cover the whole catalog,
-            before your other filters.
-          </p>
+          <Separator />
+          <div className="flex items-center justify-between gap-3">
+            <details className="text-xs text-muted-foreground">
+              <summary className="cursor-pointer rounded outline-offset-2">
+                How filters work
+              </summary>
+              <p className="mt-2 max-w-64 leading-relaxed">
+                Selections apply immediately. Match any within a filter and all across filters.
+                Counts cover the whole catalog.
+              </p>
+            </details>
+            <Button variant="secondary" size="xs" onPress={() => setOpen(false)}>
+              Done
+            </Button>
+          </div>
         </div>
       </div>
     </Popover>

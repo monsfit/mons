@@ -1,5 +1,31 @@
 import { expect, test } from '@playwright/test'
 
+test('shows selection controls only when needed and keeps selections after Done', async ({
+  page,
+}) => {
+  await page.goto('/foods')
+  await page.waitForLoadState('networkidle')
+  await page.getByRole('button', { name: 'Filter food', exact: true }).click()
+  const dialog = page.getByRole('dialog', { name: 'Food filters', exact: true })
+  await expect(dialog.getByRole('button', { name: 'Clear restaurants' })).toHaveCount(0)
+  await dialog.getByRole('option', { name: '7-Eleven', exact: true }).click()
+  await expect(dialog.getByText('1 selected', { exact: true })).toBeVisible()
+  await expect(dialog.getByRole('option', { name: '7-Eleven', exact: true })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  )
+  await dialog.getByRole('button', { name: 'Done', exact: true }).click()
+  await expect(dialog).toHaveCount(0)
+  await expect(
+    page.getByRole('button', { name: 'Remove restaurant: 7-Eleven', exact: true }),
+  ).toBeVisible()
+  await page.getByRole('button', { name: 'Filter food', exact: true }).click()
+  await dialog.getByRole('button', { name: 'Clear restaurants' }).click()
+  await expect(dialog.getByText('1 selected', { exact: true })).toHaveCount(0)
+  await dialog.getByRole('button', { name: 'Close food filters', exact: true }).click()
+  await expect(dialog).toHaveCount(0)
+})
+
 test('keeps the menu anchor mounted through selections and toggles or switches on click', async ({
   page,
 }) => {

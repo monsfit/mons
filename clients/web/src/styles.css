@@ -34,6 +34,8 @@
   overflow: auto;
   outline-offset: 2px;
   overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--input) transparent;
 }
 .catalog-facet-item {
   display: flex;
@@ -50,6 +52,32 @@
 .catalog-facet-item[data-selected] {
   background: var(--accent);
   color: var(--accent-foreground);
+}
+.catalog-facet-item[data-hovered] {
+  background: var(--muted);
+  color: var(--foreground);
+}
+.catalog-facet-check {
+  display: grid;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  border: 1px solid var(--input);
+  border-radius: 4px;
+}
+.catalog-facet-check svg {
+  width: 11px;
+  height: 11px;
+  visibility: hidden;
+}
+.catalog-facet-item[data-selected] .catalog-facet-check {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+}
+.catalog-facet-item[data-selected] .catalog-facet-check svg {
+  visibility: visible;
 }
 .catalog-facet-item[data-focused] {
   outline: 1px solid var(--ring);
