@@ -20,11 +20,17 @@ export function useColumnFilter() {
 
   const close = () => {
     cancel()
+    if (popoverRef.current?.contains(document.activeElement))
+      triggerRef.current?.focus({ preventScroll: true })
     pinned.current = false
     setColumn(null)
   }
   const open = (id: string, target: HTMLElement) => {
     cancel()
+    if (pinned.current && column === id) {
+      close()
+      return
+    }
     pinned.current = true
     triggerRef.current = target
     setColumn(id)
@@ -37,7 +43,7 @@ export function useColumnFilter() {
       if (!target.isConnected) return
       triggerRef.current = target
       setColumn(id)
-    }, 180)
+    }, 200)
   }
   const leave = () => {
     cancel()
@@ -45,7 +51,7 @@ export function useColumnFilter() {
     timer.current = setTimeout(() => {
       if (popoverRef.current?.contains(document.activeElement)) return
       setColumn(null)
-    }, 300)
+    }, 400)
   }
 
   return { column, triggerRef, popoverRef, open, close, hover, leave, cancel }

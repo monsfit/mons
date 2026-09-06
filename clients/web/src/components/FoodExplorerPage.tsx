@@ -1,4 +1,5 @@
 import { ThemeToggle } from './ThemeToggle'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
 import { catalogColumns } from '~/features/catalog/catalog-columns'
 import { datasetKindLabel, isCatalogSort } from '~/features/catalog/catalog-search'
@@ -40,6 +41,24 @@ export function FoodExplorerPage({
   const filter = useColumnFilter()
   const { column: openColumn, triggerRef } = filter
   const searchKey = JSON.stringify(search)
+  // Keep the menu anchor mounted while editing; reset the table after dismissal.
+  const [tableKey, setTableKey] = useState(searchKey)
+  const restoreFilterFocus = useRef<string | null>(null)
+  useLayoutEffect(() => {
+    if (openColumn === null && tableKey !== searchKey) {
+      restoreFilterFocus.current =
+        document.activeElement?.getAttribute('data-catalog-filter-trigger') ?? null
+      setTableKey(searchKey)
+    } else if (restoreFilterFocus.current) {
+      const id = restoreFilterFocus.current
+      restoreFilterFocus.current = null
+      if (['food', 'source', 'group'].includes(id)) {
+        document
+          .querySelector<HTMLElement>(`[data-catalog-filter-trigger="${id}"]`)
+          ?.focus({ preventScroll: true })
+      }
+    }
+  }, [openColumn, searchKey, tableKey])
   const table = useReactTable({
     data: foods,
     columns: catalogColumns,
@@ -180,10 +199,10 @@ export function FoodExplorerPage({
           </div>
           <Virtualizer
             layout={CatalogTableLayout}
-            layoutOptions={{ rowHeight: 88, headingHeight: 38, loaderHeight: 48 }}
+            layoutOptions={{ rowHeight: 96, headingHeight: 42, loaderHeight: 48 }}
           >
             <Table
-              key={searchKey}
+              key={tableKey}
               onSortChange={(descriptor) =>
                 table.setSorting([
                   { id: String(descriptor.column), desc: descriptor.direction === 'descending' },
@@ -263,6 +282,7 @@ export function FoodExplorerPage({
                           variant="ghost"
                           aria-label={`Filter ${header.id === 'group' ? 'category' : header.id}`}
                           aria-haspopup="dialog"
+                          data-catalog-filter-trigger={header.id}
                           aria-expanded={openColumn === header.id}
                           onHoverStart={(event) => {
                             if (event.target instanceof HTMLElement)

@@ -172,8 +172,9 @@ export function CatalogColumnFilter({
       triggerRef={triggerRef}
       isOpen={isOpen}
       onOpenChange={setOpen}
+      shouldCloseOnInteractOutside={(element) => !element.closest('[data-catalog-filter-trigger]')}
       placement="bottom start"
-      className="w-80 max-h-[min(720px,80dvh)] overflow-y-auto"
+      className="w-96 max-w-[calc(100vw-24px)] max-h-[min(720px,80dvh)] overflow-y-auto"
     >
       <div
         role="dialog"

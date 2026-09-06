@@ -1,5 +1,34 @@
 import { expect, test } from '@playwright/test'
 
+test('keeps the menu anchor mounted through selections and toggles or switches on click', async ({
+  page,
+}) => {
+  await page.goto('/foods')
+  await page.waitForLoadState('networkidle')
+  const trigger = page.getByRole('button', { name: 'Filter category', exact: true })
+  await trigger.click()
+  const anchor = await trigger.elementHandle()
+  const dialog = page.getByRole('dialog', { name: 'Category filters', exact: true })
+  const menu = await dialog.elementHandle()
+  await page.getByRole('option', { name: /^Beverages/ }).click()
+  await expect(
+    page.getByRole('button', { name: 'Remove category: Beverages', exact: true }),
+  ).toBeVisible()
+  await expect(dialog).toBeVisible()
+  expect(await anchor?.evaluate((element) => element.isConnected)).toBe(true)
+  expect(await menu?.evaluate((element) => element.isConnected)).toBe(true)
+  await trigger.click()
+  await expect(dialog).toBeHidden()
+  await trigger.click()
+  await expect(dialog).toBeVisible()
+  const source = page.getByRole('button', { name: 'Filter source', exact: true })
+  await source.click()
+  await expect(page.getByRole('dialog', { name: 'Source filters', exact: true })).toBeVisible()
+  await expect(dialog).toBeHidden()
+  await page.keyboard.press('Escape')
+  await expect(source).toBeFocused()
+})
+
 test('hover opens without stealing focus, bridges into the menu, and dismisses on leave', async ({
   page,
 }) => {
