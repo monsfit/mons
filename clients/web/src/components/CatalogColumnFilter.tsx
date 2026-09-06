@@ -1,8 +1,11 @@
-import { useState, type RefObject } from 'react'
+import { Fragment, useState, type RefObject } from 'react'
+import { CircleHelp, X } from 'lucide-react'
 import { Dialog } from 'react-aria-components'
+import { getCatalogSource } from '~/features/catalog/catalog-sources'
 import { datasetKindLabel } from '~/features/catalog/catalog-search'
 import { Button } from './ui/button'
-import { Popover, PopoverTitle } from './ui/popover'
+import { Separator } from './ui/separator'
+import { Popover, PopoverTitle, PopoverTrigger } from './ui/popover'
 import { CatalogSearchField } from './CatalogSearchField'
 import { CatalogFacetList } from './CatalogFacetList'
 import {
@@ -17,8 +20,8 @@ type Facet = 'brands' | 'restaurants' | 'groups' | 'subgroups' | 'sources'
 const labels = {
   brands: 'Brands',
   restaurants: 'Restaurants',
-  groups: 'Food groups',
-  subgroups: 'Subtypes',
+  groups: 'Categories',
+  subgroups: 'Subcategories',
   sources: 'Data sources',
 }
 const facets: Record<string, Facet[]> = {
@@ -55,14 +58,61 @@ function Picker({
   const items = facet === 'groups' ? workspace.foodGroups : workspace[facet]
   const visibleItems = remote
     ? items
-    : items.filter((item) => item.name.toLowerCase().includes(localQuery.toLowerCase()))
+    : items.filter((item) => {
+        const metadata = facet === 'sources' ? getCatalogSource(item.name) : undefined
+        return [item.name, metadata?.abbreviation, metadata?.fullName].some((name) =>
+          name?.toLowerCase().includes(localQuery.toLowerCase()),
+        )
+      })
   return (
-    <section className="space-y-2">
-      <div className="flex items-center justify-between text-xs font-medium">
-        <h3>{labels[facet]}</h3>
-        <Button variant="ghost" size="xs" onPress={() => updateSearch({ [facet]: [] })}>
-          Clear {labels[facet].toLowerCase()}
-        </Button>
+    <section className="flex flex-col gap-2">
+      <div className="flex h-7 items-center justify-between text-xs font-medium">
+        <div className="flex items-center gap-1">
+          <h3>{labels[facet]}</h3>
+          {search[facet].length > 0 && (
+            <span className="ml-1 text-muted-foreground">{search[facet].length} selected</span>
+          )}
+          {facet === 'sources' && (
+            <PopoverTrigger>
+              <Button variant="ghost" size="icon-xs" aria-label="Explain source abbreviations">
+                <CircleHelp />
+              </Button>
+              <Popover className="max-h-96 overflow-y-auto">
+                <Dialog
+                  aria-label="Source abbreviations"
+                  className="flex flex-col gap-3 outline-none"
+                >
+                  <PopoverTitle>Source names</PopoverTitle>
+                  <dl className="flex flex-col gap-3">
+                    {items.map((item) => {
+                      const metadata = getCatalogSource(item.name)
+                      return (
+                        <div key={item.id}>
+                          <dt className="text-xs font-medium">
+                            {metadata.abbreviation ?? metadata.label}
+                          </dt>
+                          <dd className="text-xs text-muted-foreground">
+                            {metadata.fullName ?? metadata.label}
+                          </dd>
+                        </div>
+                      )
+                    })}
+                  </dl>
+                </Dialog>
+              </Popover>
+            </PopoverTrigger>
+          )}
+        </div>
+        {search[facet].length > 0 && (
+          <Button
+            variant="ghost"
+            size="xs"
+            aria-label={`Clear ${labels[facet].toLowerCase()}`}
+            onPress={() => updateSearch({ [facet]: [] })}
+          >
+            Clear
+          </Button>
+        )}
       </div>
       <CatalogSearchField
         label={`Search ${labels[facet].toLowerCase()}`}
@@ -77,6 +127,9 @@ function Picker({
         key={`${workspace.releaseId}:${loadedQuery}`}
         label={labels[facet]}
         items={visibleItems}
+        displayName={
+          facet === 'sources' ? (name) => getCatalogSource(name).abbreviation ?? name : undefined
+        }
         {...(remote
           ? {
               kind: facet,
@@ -96,6 +149,9 @@ function Picker({
 
 export function CatalogColumnFilter({
   triggerRef,
+  popoverRef,
+  onPointerEnter,
+  onPointerLeave,
   isOpen,
   onOpenChange: setOpen,
   column,
@@ -105,6 +161,9 @@ export function CatalogColumnFilter({
   updateSearch,
 }: {
   triggerRef: RefObject<HTMLElement | null>
+  popoverRef: RefObject<HTMLDivElement | null>
+  onPointerEnter: () => void
+  onPointerLeave: () => void
   isOpen: boolean
   onOpenChange: (open: boolean) => void
   column: string
@@ -117,25 +176,57 @@ export function CatalogColumnFilter({
   if (!columns) return label
   return (
     <Popover
+      ref={popoverRef}
+      isNonModal
+      onPointerEnter={onPointerEnter}
+      onPointerLeave={onPointerLeave}
       triggerRef={triggerRef}
       isOpen={isOpen}
       onOpenChange={setOpen}
+      shouldCloseOnInteractOutside={(element) => !element.closest('[data-catalog-filter-trigger]')}
       placement="bottom start"
-      className="dark w-80 max-h-[min(720px,80dvh)] overflow-y-auto border border-white/15 bg-[#1d1d1d] text-white"
+      className="w-96 max-w-[calc(100vw-24px)] max-h-[min(720px,80dvh)] overflow-y-auto"
     >
-      <Dialog aria-label={`${label} filters`} className="space-y-4 outline-none">
+      <div
+        role="dialog"
+        tabIndex={-1}
+        aria-label={`${label} filters`}
+        className="flex flex-col gap-4 outline-none"
+      >
         <div
-          className="space-y-4"
+          className="flex flex-col gap-4"
           onKeyDownCapture={(event) => {
+            if (
+              event.target instanceof Element &&
+              event.target.closest('[role="dialog"]') !==
+                event.currentTarget.closest('[role="dialog"]')
+            )
+              return
             if (event.key === 'Escape') {
               event.stopPropagation()
               setOpen(false)
             }
           }}
         >
-          <PopoverTitle>{label} filters</PopoverTitle>
+          <div className="flex items-center justify-between">
+            <PopoverTitle>{label} filters</PopoverTitle>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              aria-label={`Close ${label.toLowerCase()} filters`}
+              onPress={() => setOpen(false)}
+            >
+              <X />
+            </Button>
+          </div>
+          <Separator />
+          {column === 'group' && (
+            <p className="text-xs text-muted-foreground">
+              Choose a broad category or narrow by subcategory.
+            </p>
+          )}
           {column === 'source' && (
-            <section className="space-y-2">
+            <section className="flex flex-col gap-2">
               <h3 className="text-xs font-medium">Type</h3>
               <div className="flex gap-1" role="group" aria-label="Dataset type">
                 <Button
@@ -167,20 +258,34 @@ export function CatalogColumnFilter({
               </div>
             </section>
           )}
-          {columns.map((facet) => (
-            <Picker
-              key={facet}
-              facet={facet}
-              search={search}
-              workspace={workspace}
-              updateSearch={updateSearch}
-            />
+          {columns.map((facet, index) => (
+            <Fragment key={facet}>
+              {index > 0 && <Separator />}
+              <Picker
+                facet={facet}
+                search={search}
+                workspace={workspace}
+                updateSearch={updateSearch}
+              />
+            </Fragment>
           ))}
-          <p className="text-[10px] text-white/40">
-            Match any within a filter; match all across filters.
-          </p>
+          <Separator />
+          <div className="flex items-center justify-between gap-3">
+            <details className="text-xs text-muted-foreground">
+              <summary className="cursor-pointer rounded outline-offset-2">
+                How filters work
+              </summary>
+              <p className="mt-2 max-w-64 leading-relaxed">
+                Selections apply immediately. Match any within a filter and all across filters.
+                Counts cover the whole catalog.
+              </p>
+            </details>
+            <Button variant="secondary" size="xs" onPress={() => setOpen(false)}>
+              Done
+            </Button>
+          </div>
         </div>
-      </Dialog>
+      </div>
     </Popover>
   )
 }

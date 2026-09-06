@@ -7,7 +7,7 @@ import {
   type FoodSearchRecord,
 } from '@mons/database'
 import { Effect, Layer, Schema } from 'effect'
-import { isCatalogId } from './catalog-search'
+import { isCatalogId, isCatalogSort } from './catalog-search'
 import { getCatalogSource } from './catalog-sources'
 
 export const CATALOG_PAGE_SIZE = 50
@@ -22,6 +22,10 @@ const catalogOffsetSchema = Schema.Number.check(
 )
 
 const catalogQuerySchema = Schema.Struct({
+  sort: Schema.optionalKey(
+    Schema.String.check(Schema.makeFilter((value) => value === '' || isCatalogSort(value))),
+  ),
+  direction: Schema.optionalKey(Schema.Literals(['asc', 'desc'])),
   sourceKeys: Schema.Array(catalogIdSchema).check(Schema.isMaxLength(50)),
   foodSubgroupIds: Schema.Array(catalogIdSchema).check(Schema.isMaxLength(50)),
   brandIds: Schema.Array(catalogIdSchema).check(Schema.isMaxLength(50)),
@@ -105,6 +109,7 @@ const searchCatalog = Effect.fn('WebCatalog.search')(function* (
   if (data.q.trim().length === 1) return []
   const catalog = yield* CatalogReader
   return yield* catalog.search({
+    ...(data.sort ? { sort: data.sort, direction: data.direction ?? 'asc' } : {}),
     limit: CATALOG_PAGE_SIZE + 1,
     offset,
     query: data.q,

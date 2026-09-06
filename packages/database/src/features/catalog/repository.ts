@@ -101,6 +101,8 @@ export type BrandRecord = typeof brandRecordSchema.Type
 export type RestaurantRecord = typeof restaurantRecordSchema.Type
 
 export interface FoodSearchOptions {
+  readonly sort?: string
+  readonly direction?: 'asc' | 'desc'
   readonly sourceKeys?: ReadonlyArray<string>
   readonly foodSubgroupIds?: ReadonlyArray<string>
   readonly brandIds?: ReadonlyArray<string>
@@ -453,6 +455,107 @@ export const makeCatalogReader = (schema = 'mons_catalog') =>
         restaurantIds.length === 0 ? sql`TRUE` : sql.in('f.restaurant_id', restaurantIds),
         groupIds.length === 0 ? sql`TRUE` : sql.in('f.food_group_id', groupIds),
       ])
+      if (options.sort) {
+        const textColumns: Record<string, string> = {
+          food: 'lower(f.name) COLLATE "C"',
+          source: sourceCode('f'),
+          group: 'lower(fg.name) COLLATE "C"',
+        }
+        const nutrientColumns: Record<string, string> = {
+          calories: 'f.calories',
+          protein: 'f.protein',
+          fat: 'f.total_fat',
+          carbs: 'coalesce(f.carbohydrates_total, f.carbohydrates_available)',
+        }
+        const additionalFields = new Set([
+          'fiber',
+          'total_sugars',
+          'added_sugars',
+          'saturated_fat',
+          'trans_fat',
+          'dietary_cholesterol',
+          'sodium',
+          'potassium',
+          'calcium',
+          'iron',
+          'magnesium',
+          'zinc',
+          'vitamin_c_ascorbic_acid',
+          'vitamin_d_calciferol',
+          'vitamin_b6',
+          'vitamin_b12_cobalamin',
+          'folate_dfe',
+          'vitamin_a_retinol',
+          'vitamin_e_tocopherol',
+          'vitamin_k_phylloquinone',
+        ])
+        const additionalColumn = additionalFields.has(options.sort)
+          ? yield* sql<{ present: boolean }>`SELECT EXISTS (
+              SELECT 1 FROM information_schema.columns
+              WHERE table_schema = ${safeSchema} AND table_name = 'foods' AND column_name = ${options.sort}
+            ) AS present`
+          : []
+        const nutrient =
+          (Object.hasOwn(nutrientColumns, options.sort)
+            ? nutrientColumns[options.sort]
+            : undefined) ??
+          (additionalFields.has(options.sort)
+            ? additionalColumn[0]?.present
+              ? `f.${options.sort}`
+              : 'NULL::double precision'
+            : undefined)
+        const order =
+          nutrient === undefined
+            ? sql.literal(
+                Object.hasOwn(textColumns, options.sort)
+                  ? (textColumns[options.sort] ?? 'f.food_id')
+                  : 'f.food_id',
+              )
+            : sql`${sql.literal(nutrient)} * coalesce((
+              SELECT CASE WHEN portion.unit = f.nutrient_basis_unit
+                THEN portion.amount / nullif(f.nutrient_basis_amount, 0) ELSE 1 END
+              FROM ${sql(`${safeSchema}.portions`)} AS portion
+              WHERE portion.food_id = f.food_id ORDER BY portion.ordinal LIMIT 1
+            ), 1)`
+        const direction = options.direction === 'desc' ? sql`DESC` : sql`ASC`
+        const prefix = `${options.query.trim().toLowerCase().replaceAll('!', '!!').replaceAll('%', '!%').replaceAll('_', '!_')}%`
+        const matching =
+          options.query.trim() === ''
+            ? sql`TRUE`
+            : sql`f.food_id IN (
+          WITH search_query AS (
+            SELECT to_tsquery('simple', string_agg(quote_literal(term) || ':*', ' & ')) AS value
+            FROM unnest(tsvector_to_array(to_tsvector('simple', ${options.query}))) AS term
+          )
+          SELECT matched.food_id FROM ${foods} AS matched CROSS JOIN search_query
+            WHERE matched.search_document @@ search_query.value
+          UNION
+          SELECT matched.food_id FROM ${foods} AS matched
+            WHERE (lower(matched.name) COLLATE "C") LIKE ${prefix} ESCAPE '!'
+          UNION
+          SELECT matched.food_id FROM ${brands} AS brand
+            INNER JOIN ${foods} AS matched ON matched.brand_id = brand.brand_id
+            CROSS JOIN search_query
+            WHERE to_tsvector('simple', brand.name) @@ search_query.value
+          UNION
+          SELECT matched.food_id FROM ${restaurants} AS restaurant
+            INNER JOIN ${foods} AS matched ON matched.restaurant_id = restaurant.restaurant_id
+            CROSS JOIN search_query
+            WHERE to_tsvector('simple', restaurant.name) @@ search_query.value
+        )`
+        const rows = yield* sql`
+          SELECT ${selectedSearchColumns('f')}
+          FROM ${foods} AS f
+          LEFT JOIN ${brands} AS b ON b.brand_id = f.brand_id
+          LEFT JOIN ${restaurants} AS r ON r.restaurant_id = f.restaurant_id
+          INNER JOIN ${foodGroups} AS fg ON fg.food_group_id = f.food_group_id
+          LEFT JOIN ${foodSubgroups} AS fsg ON fsg.food_subgroup_id = f.food_subgroup_id
+          WHERE ${filters} AND ${validFood} AND ${matching}
+          ORDER BY ${order} ${direction} NULLS LAST, f.food_id ASC
+          LIMIT ${options.limit} OFFSET ${offset}
+        `
+        return yield* decodeFoodSearchRows(rows)
+      }
       if (options.query.trim() === '') {
         const rows = yield* sql`
           SELECT ${selectedSearchColumns('f')}

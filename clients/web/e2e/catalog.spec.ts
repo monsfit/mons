@@ -20,27 +20,27 @@ test('filters sources and subtypes across the catalog and preserves selections o
     page.getByRole('button', { name: 'Remove source: USDA Branded Foods', exact: true }),
   ).toBeVisible()
   await expect(page.getByRole('status')).not.toContainText('Updating')
-  await expect(page.locator('[data-slot=table-row]').first()).toContainText('USDA Branded Foods')
+  await expect(page.locator('[data-slot=table-row]').first()).toContainText('USDA')
   await page.getByRole('button', { name: 'Clear filters', exact: true }).click()
-  await openFilters(page, 'Group')
+  await openFilters(page, 'Category')
   await page
-    .getByRole('listbox', { name: 'Subtypes', exact: true })
+    .getByRole('listbox', { name: 'Subcategories', exact: true })
     .getByRole('option', { name: /^Beef/ })
     .click()
   await page.keyboard.press('Escape')
   await expect(
-    page.getByRole('button', { name: 'Remove subtype: Beef', exact: true }),
+    page.getByRole('button', { name: 'Remove subcategory: Beef', exact: true }),
   ).toBeVisible()
   await expect(page.getByRole('status')).not.toContainText('Updating')
   await expect(page.locator('[data-slot=table-row]').first()).toContainText('Beef')
   await page.reload()
   await expect(
-    page.getByRole('button', { name: 'Remove subtype: Beef', exact: true }),
+    page.getByRole('button', { name: 'Remove subcategory: Beef', exact: true }),
   ).toBeVisible()
-  await openFilters(page, 'Group')
+  await openFilters(page, 'Category')
   await expect(
     page
-      .getByRole('listbox', { name: 'Subtypes', exact: true })
+      .getByRole('listbox', { name: 'Subcategories', exact: true })
       .getByRole('option', { name: /^Beef/ }),
   ).toHaveAttribute('aria-selected', 'true')
 })
@@ -61,7 +61,7 @@ test('pins food, source and group while scrolling nutrients, with a narrow-scree
     element.scrollLeft = element.scrollWidth
   })
   await expect(
-    page.getByRole('columnheader', { name: 'Vitamin K (mcg)', exact: true }),
+    page.getByRole('columnheader', { name: 'Sort by Vitamin K (mcg)', exact: true }),
   ).toBeVisible()
   expect(await positions()).toEqual(initial)
   const heads = await page
@@ -81,7 +81,7 @@ test('pins food, source and group while scrolling nutrients, with a narrow-scree
     .poll(async () => (await page.locator('[data-slot=table-head]').first().boundingBox())?.x)
     .toBeLessThan(0)
   await expect(
-    page.getByRole('columnheader', { name: 'Vitamin K (mcg)', exact: true }),
+    page.getByRole('columnheader', { name: 'Sort by Vitamin K (mcg)', exact: true }),
   ).toBeVisible()
 })
 
@@ -95,6 +95,12 @@ test('browses by default, combines selections, and removes chips independently',
   await expect(page.locator('main').getByRole('textbox', { name: 'Search foods' })).toBeVisible()
   await expect(table).toHaveAttribute('data-loaded-count', '50')
   await page.waitForLoadState('networkidle')
+  const firstRow = page.locator('[data-slot=table-row]').first()
+  await expect(firstRow.locator('a [data-slot=badge]')).toHaveText('RAW')
+  await expect(firstRow.locator('a [data-slot=badge]')).toHaveAttribute('data-variant', 'raw')
+  await expect(firstRow.locator('[data-slot=table-cell]').nth(1)).not.toContainText(
+    'Raw Ingredient',
+  )
   const release = Promise.withResolvers<void>()
   await page.route(
     (url) => url.pathname.includes('_server'),
@@ -121,32 +127,34 @@ test('browses by default, combines selections, and removes chips independently',
   ).toBeVisible()
   release.resolve()
   await page.waitForLoadState('networkidle')
-  await openFilters(page, 'Group')
-  const groups = page.getByRole('listbox', { name: 'Food groups', exact: true })
+  await openFilters(page, 'Category')
+  const groups = page.getByRole('listbox', { name: 'Categories', exact: true })
   await groups.getByRole('option', { name: /^Beverages/ }).click()
   await page.keyboard.press('Escape')
   await expect(
-    page.getByRole('button', { name: 'Remove group: Beverages', exact: true }),
+    page.getByRole('button', { name: 'Remove category: Beverages', exact: true }),
   ).toBeVisible()
-  await openFilters(page, 'Group')
+  await openFilters(page, 'Category')
   await groups.getByRole('option', { name: /^Dairy/ }).click()
   await page.keyboard.press('Escape')
-  await expect(page.getByRole('button', { name: 'Remove group: Dairy', exact: true })).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: 'Remove category: Dairy', exact: true }),
+  ).toBeVisible()
   await page.waitForLoadState('networkidle')
   await page.reload()
   await page.waitForLoadState('networkidle')
   await expect(
     page.getByRole('region', { name: 'Active filters' }).getByRole('button'),
   ).toHaveCount(5)
-  await page.getByRole('button', { name: 'Remove group: Dairy', exact: true }).click()
-  await expect(page.getByRole('button', { name: 'Remove group: Dairy', exact: true })).toHaveCount(
-    0,
-  )
+  await page.getByRole('button', { name: 'Remove category: Dairy', exact: true }).click()
   await expect(
-    page.getByRole('button', { name: 'Remove group: Beverages', exact: true }),
+    page.getByRole('button', { name: 'Remove category: Dairy', exact: true }),
+  ).toHaveCount(0)
+  await expect(
+    page.getByRole('button', { name: 'Remove category: Beverages', exact: true }),
   ).toBeVisible()
   await page.getByRole('button', { name: 'Clear filters', exact: true }).click()
-  await expect(page.getByRole('region', { name: 'Active filters' })).toContainText('None')
+  await expect(page.getByRole('region', { name: 'Active filters' })).toHaveCount(0)
   await expect(table).toHaveAttribute('data-loaded-count', '50')
   await openFilters(page, 'Source')
   await page.getByRole('button', { name: 'All', exact: true }).click()
@@ -340,7 +348,7 @@ test('debounces food and facet searches, filters results, and loads more on scro
   await expect(page.getByRole('grid')).toHaveAttribute('data-loaded-count', '50')
   await expect.poll(() => rows.count()).toBeGreaterThan(0)
   expect(await rows.count()).toBeLessThan(30)
-  await expect(rows.first()).toContainText('Raw Ingredient')
+  await expect(rows.first().locator('[data-slot=badge]').first()).toHaveText('RAW')
   expect(
     await rows.evaluateAll((elements) =>
       elements.every((row) => {

@@ -1,7 +1,8 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import { datasetKindLabel } from './catalog-search'
 import { Link } from '@tanstack/react-router'
-import { Flame } from 'lucide-react'
+import { CircleCheck, Flame } from 'lucide-react'
+import { getCatalogSource } from './catalog-sources'
 import type { CatalogFood } from './catalog-functions'
 import {
   foodAttribution,
@@ -12,6 +13,8 @@ import {
 import { formatNutritionAmount } from './nutrition'
 import { tableNutrients } from './table-nutrients'
 import { CatalogSourceBadge } from '~/components/CatalogSourceBadge'
+import { Badge } from '~/components/ui/badge'
+import { CatalogTags } from '~/components/CatalogTags'
 
 export const catalogColumns: ColumnDef<CatalogFood>[] = [
   {
@@ -22,16 +25,34 @@ export const catalogColumns: ColumnDef<CatalogFood>[] = [
       <Link
         to="/food/$kind/$foodId"
         params={{ kind: food.datasetKind, foodId: food.foodId }}
-        className="block min-w-0 rounded outline-offset-2 focus-visible:outline-2 focus-visible:outline-lime-200"
+        className="block min-w-0 rounded outline-offset-2 focus-visible:outline-2 focus-visible:outline-ring"
       >
-        <span
-          className="block truncate text-sm font-medium"
-          title={`${food.name} ${foodAttribution(food) ?? ''}`}
+        <Badge
+          variant={food.datasetKind === 'raw' ? 'raw' : 'secondary'}
+          className="mb-1 rounded-md"
         >
-          {food.name} <span className="font-normal text-white/55">{foodAttribution(food)}</span>
+          {food.datasetKind === 'raw' ? 'RAW' : datasetKindLabel[food.datasetKind]}
+        </Badge>
+        <span className="flex min-w-0 items-center gap-1.5">
+          <span
+            className="truncate text-sm font-medium"
+            title={`${food.name} ${foodAttribution(food) ?? ''}`}
+          >
+            {food.name}{' '}
+            <span className="font-normal text-muted-foreground">{foodAttribution(food)}</span>
+          </span>
+          {getCatalogSource(food.source).verified && (
+            <span
+              className="shrink-0"
+              title="Verified scientific source"
+              aria-label="Verified scientific source"
+            >
+              <CircleCheck className="size-3.5 text-muted-foreground" />
+            </span>
+          )}
         </span>
-        <span className="mt-1 flex items-center gap-1 text-xs text-white/50">
-          <Flame className="size-3.5 shrink-0 text-orange-400" />
+        <span className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+          <Flame className="size-3.5 shrink-0 text-primary" />
           {formatFoodNutrient(food, food.calories, 'kcal')}
           <span>·</span>
           <span className="truncate">{foodPortionLabel(food)}</span>
@@ -42,37 +63,15 @@ export const catalogColumns: ColumnDef<CatalogFood>[] = [
   {
     id: 'source',
     header: 'Source',
-    size: 190,
-    cell: ({ row: { original: food } }) => (
-      <>
-        <CatalogSourceBadge source={food.source} />
-        <span className="mt-1 w-fit rounded-full border border-white/10 bg-white/5 px-2 text-[10px] text-white/50">
-          {datasetKindLabel[food.datasetKind]}
-        </span>
-      </>
-    ),
+    size: 220,
+    cell: ({ row: { original: food } }) => <CatalogSourceBadge source={food.source} />,
   },
   {
     id: 'group',
-    header: 'Group',
-    size: 150,
+    header: 'Category',
+    size: 170,
     cell: ({ row: { original: food } }) => (
-      <>
-        <span
-          title={food.foodGroup}
-          className="w-fit max-w-full truncate rounded-full border border-violet-300/20 bg-violet-300/5 px-2 py-1 text-[10px] text-violet-100/80"
-        >
-          {food.foodGroup}
-        </span>
-        {food.foodSubgroup !== null && (
-          <span
-            title={food.foodSubgroup}
-            className="mt-1 w-fit max-w-full truncate rounded-full border border-white/10 bg-white/5 px-2 text-[10px] text-white/50"
-          >
-            {food.foodSubgroup}
-          </span>
-        )}
-      </>
+      <CatalogTags tags={[food.foodGroup, food.foodSubgroup]} />
     ),
   },
   {

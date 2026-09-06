@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Check } from 'lucide-react'
 import { Collection, ListBox, ListBoxItem, ListBoxLoadMoreItem } from 'react-aria-components'
 import { ListLayout, Virtualizer } from 'react-aria-components/Virtualizer'
 import { getCatalogFacetPage } from '~/features/catalog/catalog-functions'
@@ -18,6 +19,7 @@ interface CatalogFacetListProps {
   readonly kind?: 'brands' | 'restaurants'
   readonly query?: string
   readonly nextOffset?: number | null
+  readonly displayName?: ((name: string) => string) | undefined
 }
 
 export function CatalogFacetList({
@@ -28,6 +30,7 @@ export function CatalogFacetList({
   kind,
   query = '',
   nextOffset = null,
+  displayName = (name) => name,
 }: CatalogFacetListProps) {
   const [page, setPage] = useState(() =>
     kind === undefined
@@ -101,14 +104,27 @@ export function CatalogFacetList({
             if (item !== undefined) onSelect(item)
           }}
           renderEmptyState={() => (
-            <span className="p-2 text-xs text-white/45">No results found</span>
+            <span className="p-2 text-xs text-muted-foreground">No results found</span>
           )}
         >
           <Collection items={page.items}>
             {(item) => (
-              <ListBoxItem id={item.id} textValue={item.name} className="catalog-facet-item">
-                <span className="min-w-0 truncate">{item.name}</span>
-                <span className="text-[10px] text-white/45">
+              <ListBoxItem
+                id={item.id}
+                textValue={item.name}
+                aria-label={item.name}
+                className="catalog-facet-item"
+              >
+                <span className="catalog-facet-check" aria-hidden="true">
+                  <Check />
+                </span>
+                <span className="min-w-0 flex-1 truncate" title={item.name}>
+                  {displayName(item.name)}
+                </span>
+                <span
+                  className="text-xs tabular-nums text-muted-foreground"
+                  title="Foods in the full catalog"
+                >
                   {formatCompactCount(item.foodCount)}
                 </span>
               </ListBoxItem>
@@ -118,7 +134,7 @@ export function CatalogFacetList({
             <ListBoxLoadMoreItem
               onLoadMore={() => void loadMore()}
               isLoading={status === 'loading'}
-              className="p-2 text-xs text-white/40"
+              className="p-2 text-xs text-muted-foreground"
             >
               Loading more…
             </ListBoxLoadMoreItem>
@@ -126,11 +142,7 @@ export function CatalogFacetList({
         </ListBox>
       </Virtualizer>
       {status === 'error' && (
-        <button
-          type="button"
-          className="py-2 text-xs text-amber-300"
-          onClick={() => void loadMore()}
-        >
+        <button type="button" className="py-2 text-xs text-warning" onClick={() => void loadMore()}>
           Couldn’t load more. Retry
         </button>
       )}

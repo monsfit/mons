@@ -32,6 +32,8 @@ describe('catalog search presentation', () => {
     expect(parseCatalogSearch({})).toEqual({
       brands: [],
       brandQuery: '',
+      sort: '',
+      direction: 'asc',
       sources: [],
       subgroups: [],
       groups: [],
@@ -62,6 +64,8 @@ describe('catalog search presentation', () => {
     })
     expect(toCatalogQuery(search)).toEqual({
       brandIds: ['12'],
+      sort: '',
+      direction: 'asc',
       sourceKeys: [],
       foodSubgroupIds: [],
       foodGroupIds: [],
@@ -80,6 +84,31 @@ describe('catalog search presentation', () => {
     expect(parseCatalogSearch({ brandId: '9223372036854775807' }).brands[0]?.id).toBe(
       '9223372036854775807',
     )
+  })
+
+  it('validates sorting without losing filters', () => {
+    expect(
+      toCatalogQuery(
+        parseCatalogSearch({
+          sort: 'sodium',
+          direction: 'desc',
+          kinds: ['branded'],
+          sources: [
+            { id: '1', name: 'USDA Branded Foods' },
+            { id: '5', name: 'USDA Food Surveys' },
+          ],
+        }),
+      ),
+    ).toMatchObject({
+      sort: 'sodium',
+      direction: 'desc',
+      kinds: ['branded'],
+      sourceKeys: ['1', '5'],
+    })
+    expect(parseCatalogSearch({ sort: 'DROP TABLE foods', direction: 'sideways' })).toMatchObject({
+      sort: '',
+      direction: 'asc',
+    })
   })
 
   it('formats catalog totals and nutrients for dense tables', () => {
