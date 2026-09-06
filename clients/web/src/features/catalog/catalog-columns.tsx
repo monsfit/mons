@@ -1,7 +1,8 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import { datasetKindLabel } from './catalog-search'
 import { Link } from '@tanstack/react-router'
-import { Flame } from 'lucide-react'
+import { CircleCheck, Flame } from 'lucide-react'
+import { getCatalogSource } from './catalog-sources'
 import type { CatalogFood } from './catalog-functions'
 import {
   foodAttribution,
@@ -26,15 +27,29 @@ export const catalogColumns: ColumnDef<CatalogFood>[] = [
         params={{ kind: food.datasetKind, foodId: food.foodId }}
         className="block min-w-0 rounded outline-offset-2 focus-visible:outline-2 focus-visible:outline-ring"
       >
-        <Badge variant={food.datasetKind === 'raw' ? 'raw' : 'subtle'} className="mb-1 rounded-md">
+        <Badge
+          variant={food.datasetKind === 'raw' ? 'raw' : 'secondary'}
+          className="mb-1 rounded-md"
+        >
           {food.datasetKind === 'raw' ? 'RAW' : datasetKindLabel[food.datasetKind]}
         </Badge>
-        <span
-          className="block truncate text-sm font-medium"
-          title={`${food.name} ${foodAttribution(food) ?? ''}`}
-        >
-          {food.name}{' '}
-          <span className="font-normal text-muted-foreground">{foodAttribution(food)}</span>
+        <span className="flex min-w-0 items-center gap-1.5">
+          <span
+            className="truncate text-sm font-medium"
+            title={`${food.name} ${foodAttribution(food) ?? ''}`}
+          >
+            {food.name}{' '}
+            <span className="font-normal text-muted-foreground">{foodAttribution(food)}</span>
+          </span>
+          {getCatalogSource(food.source).verified && (
+            <span
+              className="shrink-0"
+              title="Verified scientific source"
+              aria-label="Verified scientific source"
+            >
+              <CircleCheck className="size-3.5 text-muted-foreground" />
+            </span>
+          )}
         </span>
         <span className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
           <Flame className="size-3.5 shrink-0 text-primary" />

@@ -1,6 +1,7 @@
-import { CircleCheck, CircleHelp } from 'lucide-react'
+import { CircleHelp } from 'lucide-react'
 import { Dialog } from 'react-aria-components'
 import { Button } from './ui/button'
+import { Badge } from './ui/badge'
 import { Popover, PopoverTitle, PopoverTrigger } from './ui/popover'
 
 import { getCatalogSource } from '~/features/catalog/catalog-sources'
@@ -14,12 +15,9 @@ export function CatalogSourceBadge({ source }: Readonly<{ source: string }>) {
       title={metadata.label}
       className="inline-flex max-w-full items-center gap-1 text-xs text-muted-foreground"
     >
-      <span>{short}</span>
-      {metadata.verified ? (
-        <span title="Verified scientific source" aria-label="Verified scientific source">
-          <CircleCheck className="size-3.5 shrink-0 text-success" />
-        </span>
-      ) : null}
+      <Badge variant="subtle" className="rounded-md">
+        {short}
+      </Badge>
       <PopoverTrigger>
         <Button variant="ghost" size="icon-xs" aria-label={`About ${short}`}>
           <CircleHelp />

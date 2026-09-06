@@ -105,7 +105,7 @@ export function FoodExplorerPage({
   return (
     <div className="catalog-shell">
       <header className="catalog-header">
-        <Link to="/" aria-label="Mons home" className="text-lg font-bold tracking-widest">
+        <Link to="/" aria-label="Mons home" className="text-sm font-semibold tracking-wide">
           MONS
         </Link>
         <h1 className="border-l border-border pl-4 text-sm text-muted-foreground">Foods</h1>
@@ -114,7 +114,7 @@ export function FoodExplorerPage({
       </header>
       <div className="catalog-layout">
         <main className="catalog-main">
-          <div className="border-b border-border p-3">
+          <div className="w-full max-w-xl px-3 pb-5">
             <CatalogSearchField
               primary
               label="Search foods"
