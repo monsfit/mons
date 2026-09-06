@@ -25,8 +25,8 @@ export const catalogColumns: ColumnDef<CatalogFood>[] = [
         params={{ kind: food.datasetKind, foodId: food.foodId }}
         className="block min-w-0 rounded outline-offset-2 focus-visible:outline-2 focus-visible:outline-ring"
       >
-        <Badge variant="subtle" className="mb-1 rounded-md">
-          {datasetKindLabel[food.datasetKind]}
+        <Badge variant={food.datasetKind === 'raw' ? 'raw' : 'subtle'} className="mb-1 rounded-md">
+          {food.datasetKind === 'raw' ? 'RAW' : datasetKindLabel[food.datasetKind]}
         </Badge>
         <span
           className="block truncate text-sm font-medium"

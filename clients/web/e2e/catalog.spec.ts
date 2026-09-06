@@ -96,7 +96,8 @@ test('browses by default, combines selections, and removes chips independently',
   await expect(table).toHaveAttribute('data-loaded-count', '50')
   await page.waitForLoadState('networkidle')
   const firstRow = page.locator('[data-slot=table-row]').first()
-  await expect(firstRow.locator('a [data-slot=badge]')).toHaveText('Raw Ingredient')
+  await expect(firstRow.locator('a [data-slot=badge]')).toHaveText('RAW')
+  await expect(firstRow.locator('a [data-slot=badge]')).toHaveAttribute('data-variant', 'raw')
   await expect(firstRow.locator('[data-slot=table-cell]').nth(1)).not.toContainText('Raw Ingredient')
   const release = Promise.withResolvers<void>()
   await page.route(
