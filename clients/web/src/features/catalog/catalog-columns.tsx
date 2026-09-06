@@ -13,6 +13,7 @@ import { formatNutritionAmount } from './nutrition'
 import { tableNutrients } from './table-nutrients'
 import { CatalogSourceBadge } from '~/components/CatalogSourceBadge'
 import { Badge } from '~/components/ui/badge'
+import { CatalogTags } from '~/components/CatalogTags'
 
 export const catalogColumns: ColumnDef<CatalogFood>[] = [
   {
@@ -55,19 +56,7 @@ export const catalogColumns: ColumnDef<CatalogFood>[] = [
     header: 'Category',
     size: 170,
     cell: ({ row: { original: food } }) => (
-      <>
-        <span title={food.foodGroup} className="text-xs font-medium leading-5">
-          {food.foodGroup}
-        </span>
-        {food.foodSubgroup !== null && (
-          <span
-            title={food.foodSubgroup}
-            className="mt-1 max-w-full truncate border-l-2 border-border pl-2 text-xs leading-4 text-muted-foreground"
-          >
-            {food.foodSubgroup}
-          </span>
-        )}
-      </>
+      <CatalogTags tags={[food.foodGroup, food.foodSubgroup]} />
     ),
   },
   {

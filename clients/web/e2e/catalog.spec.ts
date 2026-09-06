@@ -20,7 +20,7 @@ test('filters sources and subtypes across the catalog and preserves selections o
     page.getByRole('button', { name: 'Remove source: USDA Branded Foods', exact: true }),
   ).toBeVisible()
   await expect(page.getByRole('status')).not.toContainText('Updating')
-  await expect(page.locator('[data-slot=table-row]').first()).toContainText('USDA Branded Foods')
+  await expect(page.locator('[data-slot=table-row]').first()).toContainText('USDA Branded')
   await page.getByRole('button', { name: 'Clear filters', exact: true }).click()
   await openFilters(page, 'Category')
   await page
@@ -98,7 +98,9 @@ test('browses by default, combines selections, and removes chips independently',
   const firstRow = page.locator('[data-slot=table-row]').first()
   await expect(firstRow.locator('a [data-slot=badge]')).toHaveText('RAW')
   await expect(firstRow.locator('a [data-slot=badge]')).toHaveAttribute('data-variant', 'raw')
-  await expect(firstRow.locator('[data-slot=table-cell]').nth(1)).not.toContainText('Raw Ingredient')
+  await expect(firstRow.locator('[data-slot=table-cell]').nth(1)).not.toContainText(
+    'Raw Ingredient',
+  )
   const release = Promise.withResolvers<void>()
   await page.route(
     (url) => url.pathname.includes('_server'),
@@ -346,7 +348,7 @@ test('debounces food and facet searches, filters results, and loads more on scro
   await expect(page.getByRole('grid')).toHaveAttribute('data-loaded-count', '50')
   await expect.poll(() => rows.count()).toBeGreaterThan(0)
   expect(await rows.count()).toBeLessThan(30)
-  await expect(rows.first()).toContainText('Raw Ingredient')
+  await expect(rows.first().locator('[data-slot=badge]').first()).toHaveText('RAW')
   expect(
     await rows.evaluateAll((elements) =>
       elements.every((row) => {

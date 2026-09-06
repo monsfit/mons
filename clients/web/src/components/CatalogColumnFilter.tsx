@@ -1,7 +1,10 @@
 import { useState, type RefObject } from 'react'
+import { CircleHelp } from 'lucide-react'
+import { Dialog } from 'react-aria-components'
+import { getCatalogSource } from '~/features/catalog/catalog-sources'
 import { datasetKindLabel } from '~/features/catalog/catalog-search'
 import { Button } from './ui/button'
-import { Popover, PopoverTitle } from './ui/popover'
+import { Popover, PopoverTitle, PopoverTrigger } from './ui/popover'
 import { CatalogSearchField } from './CatalogSearchField'
 import { CatalogFacetList } from './CatalogFacetList'
 import {
@@ -54,11 +57,48 @@ function Picker({
   const items = facet === 'groups' ? workspace.foodGroups : workspace[facet]
   const visibleItems = remote
     ? items
-    : items.filter((item) => item.name.toLowerCase().includes(localQuery.toLowerCase()))
+    : items.filter((item) => {
+        const metadata = facet === 'sources' ? getCatalogSource(item.name) : undefined
+        return [item.name, metadata?.abbreviation, metadata?.fullName].some((name) =>
+          name?.toLowerCase().includes(localQuery.toLowerCase()),
+        )
+      })
   return (
     <section className="flex flex-col gap-2">
       <div className="flex items-center justify-between text-xs font-medium">
-        <h3>{labels[facet]}</h3>
+        <div className="flex items-center gap-1">
+          <h3>{labels[facet]}</h3>
+          {facet === 'sources' && (
+            <PopoverTrigger>
+              <Button variant="ghost" size="icon-xs" aria-label="Explain source abbreviations">
+                <CircleHelp />
+              </Button>
+              <Popover className="max-h-96 overflow-y-auto">
+                <Dialog
+                  aria-label="Source abbreviations"
+                  className="flex flex-col gap-3 outline-none"
+                >
+                  <PopoverTitle>Source names</PopoverTitle>
+                  <dl className="flex flex-col gap-3">
+                    {items.map((item) => {
+                      const metadata = getCatalogSource(item.name)
+                      return (
+                        <div key={item.id}>
+                          <dt className="text-xs font-medium">
+                            {metadata.abbreviation ?? metadata.label}
+                          </dt>
+                          <dd className="text-xs text-muted-foreground">
+                            {metadata.fullName ?? metadata.label}
+                          </dd>
+                        </div>
+                      )
+                    })}
+                  </dl>
+                </Dialog>
+              </Popover>
+            </PopoverTrigger>
+          )}
+        </div>
         <Button variant="ghost" size="xs" onPress={() => updateSearch({ [facet]: [] })}>
           Clear {labels[facet].toLowerCase()}
         </Button>
@@ -76,6 +116,9 @@ function Picker({
         key={`${workspace.releaseId}:${loadedQuery}`}
         label={labels[facet]}
         items={visibleItems}
+        displayName={
+          facet === 'sources' ? (name) => getCatalogSource(name).abbreviation ?? name : undefined
+        }
         {...(remote
           ? {
               kind: facet,
@@ -141,6 +184,12 @@ export function CatalogColumnFilter({
         <div
           className="flex flex-col gap-4"
           onKeyDownCapture={(event) => {
+            if (
+              event.target instanceof Element &&
+              event.target.closest('[role="dialog"]') !==
+                event.currentTarget.closest('[role="dialog"]')
+            )
+              return
             if (event.key === 'Escape') {
               event.stopPropagation()
               setOpen(false)

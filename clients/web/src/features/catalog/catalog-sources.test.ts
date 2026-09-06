@@ -6,6 +6,7 @@ describe('catalog source presentation', () => {
   it('marks curated scientific composition sources as verified', () => {
     expect(getCatalogSource('usda_fooddata_central_foundation')).toEqual({
       label: 'USDA Foundation Foods',
+      abbreviation: 'USDA Foundation',
       verified: true,
     })
     expect(getCatalogSource('canadian_nutrient_file').verified).toBe(true)

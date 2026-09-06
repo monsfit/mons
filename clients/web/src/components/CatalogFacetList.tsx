@@ -18,6 +18,7 @@ interface CatalogFacetListProps {
   readonly kind?: 'brands' | 'restaurants'
   readonly query?: string
   readonly nextOffset?: number | null
+  readonly displayName?: ((name: string) => string) | undefined
 }
 
 export function CatalogFacetList({
@@ -28,6 +29,7 @@ export function CatalogFacetList({
   kind,
   query = '',
   nextOffset = null,
+  displayName = (name) => name,
 }: CatalogFacetListProps) {
   const [page, setPage] = useState(() =>
     kind === undefined
@@ -106,8 +108,15 @@ export function CatalogFacetList({
         >
           <Collection items={page.items}>
             {(item) => (
-              <ListBoxItem id={item.id} textValue={item.name} className="catalog-facet-item">
-                <span className="min-w-0 truncate">{item.name}</span>
+              <ListBoxItem
+                id={item.id}
+                textValue={item.name}
+                aria-label={item.name}
+                className="catalog-facet-item"
+              >
+                <span className="min-w-0 truncate" title={item.name}>
+                  {displayName(item.name)}
+                </span>
                 <span className="text-[10px] text-muted-foreground">
                   {formatCompactCount(item.foodCount)}
                 </span>
